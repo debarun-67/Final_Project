@@ -14,19 +14,7 @@ gcc src/validate.c src/blockchain/block.c src/crypto/hash.c -o validate_record
 .\validate_record.exe
 
 
-gcc -g \
-src/test_node.c \
-src/network/node.c \
-src/network/protocol.c \
-src/network/serializer.c \
-src/network/proposal.c \
-src/network/sync.c \
-src/blockchain/blockchain.c \
-src/blockchain/block.c \
-src/crypto/hash.c \
-src/crypto/signature.c \
--o node_app \
--lpthread -lcrypto
+gcc -g src/test_node.c src/network/node.c src/network/protocol.c src/network/serializer.c src/network/proposal.c src/network/sync.c src/blockchain/blockchain.c src/blockchain/block.c src/crypto/hash.c src/crypto/signature.c -o node_app -lpthread -lcrypto
 
 
 ./node_app 8001 8002 8003
