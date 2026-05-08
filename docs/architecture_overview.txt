@@ -1,0 +1,17 @@
+# Project Architecture Overview
+
+## Folder Structure
+- backend/core: C Blockchain Engine
+- backend/api: Node.js Express API
+- frontend: React Application
+- tests: Categorized test suites
+- docs: Documentation and Logs
+
+## Tech Stack
+- C11 + OpenSSL
+- Node.js + Express + JWT
+- React + Vite + TS + Tailwind
+
+## Key Data Types
+- Transaction: patient_id, doctor_id, data_hash, data_pointer, timestamp
+- Block: index, timestamp, prev_hash, block_hash, merkle_root, signature, transactions

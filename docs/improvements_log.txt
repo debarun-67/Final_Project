@@ -1,0 +1,65 @@
+IMPROVEMENTS LOG - MEDICAL BLOCKCHAIN PROJECT
+=============================================
+
+[DATE: 2026-05-08]
+
+1. SECURITY: Replaced manual SHA-256 implementation with OpenSSL EVP API.
+   - Benefit: Robust, industry-standard, and optimized cryptographic hashing.
+   - File: src/crypto/hash.c
+
+2. INTEGRITY: Fixed record hashing logic in main application.
+   - Change: The system now hashes the ENTIRE medical record file instead of just the first and last lines.
+   - Benefit: Prevents middle-of-file tampering.
+   - File: src/main.c
+
+3. INTEGRITY: Fixed block hash calculation.
+   - Change: Blocks now correctly hash the entire block structure (index, timestamp, previous hash, transactions) instead of only the data hash.
+   - Benefit: Restores the integrity of the blockchain linkage.
+   - File: src/main.c
+
+4. ARCHITECTURE: Fixed function call mismatches.
+   - Change: Genesis block creation now correctly provides the validator port.
+   - File: src/main.c
+
+5. ARCHITECTURE: Improved data abstraction.
+   - Change: Replaced manual file operations with centralized blockchain API calls (e.g., transaction_hash_exists).
+   - File: src/main.c
+
+6. SECURITY: Standardized key management.
+   - Change: Updated signing logic to use the standard 'keys/' directory and port-based naming convention.
+   - File: src/main.c
+
+7. ARCHITECTURE: Centralized hashing logic.
+   - Change: Moved file-content hashing to a common utility function in the crypto layer.
+   - Benefit: Ensures consistency between record creation (main.c) and record validation (validate.c).
+   - Files: src/crypto/hash.c, src/crypto/hash.h, src/main.c, src/validate.c
+
+8. RELIABILITY: Explicit disk synchronization (Durability).
+   - Change: Added _commit (Windows) / fsync (Linux) calls after block writes.
+   - Benefit: Protects against ledger corruption during power failures or system crashes.
+   - File: src/blockchain/blockchain.c
+
+9. PERFORMANCE: Transaction Indexing (Hash Map).
+   - Change: Implemented an in-memory Hash Map to index transaction hashes on startup.
+   - Benefit: Optimized duplicate detection from O(n) linear scan to O(1) constant time lookup.
+   - Files: src/blockchain/blockchain.c, src/blockchain/blockchain.h
+
+10. RESILIENCE: Application-level Rate Limiting.
+    - Change: Added message tracking per peer with a threshold of 20 messages/second.
+    - Benefit: Protects nodes from flooding attacks and improves network stability.
+    - Files: src/network/node.c, src/network/node.h
+
+11. SECURITY: SSL/TLS Networking (Encryption).
+    - Change: Integrated OpenSSL TLS to encrypt all peer-to-peer communication.
+    - Benefit: Prevents eavesdropping and man-in-the-middle attacks on the blockchain network.
+    - Files: src/network/node.c, src/network/node.h, src/test_node.c
+
+12. ARCHITECTURE: Merkle Tree Integration.
+    - Change: Replaced flat transaction hashing with a Merkle Tree (Binary Hash Tree) structure.
+    - Benefit: Provides efficient integrity verification and enables future "Light Client" support (SPV).
+    - Files: src/blockchain/block.c, src/blockchain/block.h
+
+13. PRIVACY: AES-256-GCM Off-Chain Encryption.
+    - Change: Implemented a full encryption utility using AES-256-GCM with PBKDF2 key derivation.
+    - Benefit: Ensures medical records are encrypted with military-grade security before hashing, providing confidentiality and tamper-evidence (via Auth Tags).
+    - Files: src/crypto/encryption.c, src/crypto/encryption.h
