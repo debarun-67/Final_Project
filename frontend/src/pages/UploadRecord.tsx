@@ -36,8 +36,8 @@ const UploadRecord: React.FC = () => {
   return (
     <div className="p-6 max-w-2xl mx-auto space-y-6">
       <div className="space-y-1">
-        <h2 className="text-2xl font-bold text-slate-800">New Medical Record</h2>
-        <p className="text-slate-500">Securely encrypt and anchor a patient record on the ledger</p>
+        <h2 className="text-2xl font-bold text-black">New Medical Record</h2>
+        <p className="text-black">Securely encrypt and anchor a patient record on the ledger</p>
       </div>
 
       <form onSubmit={handleUpload} className="space-y-4">
@@ -49,7 +49,7 @@ const UploadRecord: React.FC = () => {
                 type="text" 
                 value={patientId}
                 onChange={(e) => setPatientId(e.target.value)}
-                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 bg-white border border-black rounded-none outline-none"
                 placeholder="PAT-2025-001"
                 required
               />
@@ -60,7 +60,7 @@ const UploadRecord: React.FC = () => {
                 type="text" 
                 value={doctorId}
                 onChange={(e) => setDoctorId(e.target.value)}
-                className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 bg-white border border-black rounded-none outline-none"
                 placeholder="DOC-MED-45"
                 required
               />
@@ -75,7 +75,7 @@ const UploadRecord: React.FC = () => {
                 type="password" 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-10 pr-4 py-2 bg-white border border-black rounded-none outline-none"
                 placeholder="Master key for this record"
                 required
               />
@@ -85,7 +85,7 @@ const UploadRecord: React.FC = () => {
           <div className="space-y-1">
             <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Medical File</label>
             <div 
-              className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${file ? 'border-blue-400 bg-blue-50/30' : 'border-slate-200 hover:border-slate-300'}`}
+              className={`border-2 border-dashed rounded-none p-8 text-center  ${file ? 'border-black bg-blue-50/30' : 'border-black hover:border-black'}`}
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => {
                 e.preventDefault();
@@ -101,7 +101,7 @@ const UploadRecord: React.FC = () => {
               ) : (
                 <label className="cursor-pointer space-y-2">
                   <Upload className="mx-auto text-slate-300" size={48} />
-                  <p className="text-slate-500">Drag and drop or <span className="text-blue-600 font-medium">browse</span></p>
+                  <p className="text-black">Drag and drop or <span className="text-blue-600 font-medium">browse</span></p>
                   <p className="text-[10px] text-slate-400 uppercase tracking-tighter">Maximum file size 10MB</p>
                   <input type="file" className="hidden" onChange={(e) => e.target.files && setFile(e.target.files[0])} />
                 </label>
@@ -111,14 +111,14 @@ const UploadRecord: React.FC = () => {
         </div>
 
         {status === 'success' && (
-          <div className="flex items-center gap-3 p-4 bg-emerald-50 text-emerald-700 rounded-xl border border-emerald-100">
+          <div className="flex items-center gap-3 p-4 bg-emerald-50 text-emerald-700 rounded-none border border-emerald-100">
             <CheckCircle size={20} />
             <p className="text-sm font-medium">{message}</p>
           </div>
         )}
 
         {status === 'error' && (
-          <div className="flex items-center gap-3 p-4 bg-red-50 text-red-700 rounded-xl border border-red-100">
+          <div className="flex items-center gap-3 p-4 bg-red-50 text-red-700 rounded-none border border-red-100">
             <AlertCircle size={20} />
             <p className="text-sm font-medium">{message}</p>
           </div>
@@ -127,7 +127,7 @@ const UploadRecord: React.FC = () => {
         <button 
           type="submit" 
           disabled={status === 'uploading' || !file}
-          className="w-full btn-primary h-12 text-lg disabled:opacity-50 flex items-center justify-center gap-2 shadow-xl shadow-blue-200"
+          className="w-full btn-primary h-12 text-lg disabled:opacity-50 flex items-center justify-center gap-2 -blue-200"
         >
           {status === 'uploading' ? 'Processing Transaction...' : 'Register Record'}
         </button>

@@ -37,20 +37,20 @@ const Dashboard: React.FC = () => {
       </div>
 
       <div className="flex justify-between items-end">
-        <h2 className="text-2xl font-bold text-slate-800">Recent Blocks</h2>
-        <p className="text-slate-500 text-sm">Showing the latest verified blocks on the ledger</p>
+        <h2 className="text-2xl font-bold text-black">Recent Blocks</h2>
+        <p className="text-black text-sm">Showing the latest verified blocks on the ledger</p>
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-pulse">
-          {[1, 2, 3].map(i => <div key={i} className="h-48 bg-slate-200 rounded-xl" />)}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3].map(i => <div key={i} className="h-48 bg-white rounded-none" />)}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {blocks.map(block => (
-            <div key={block.index} className="glass-card p-5 hover:shadow-md transition-shadow cursor-pointer">
+            <div key={block.index} className="glass-card p-5 hover: - cursor-pointer">
               <div className="flex justify-between items-start mb-4">
-                <span className="px-2 py-1 bg-blue-50 text-blue-600 rounded text-xs font-bold uppercase tracking-wider">
+                <span className="px-2 py-1 bg-blue-50 text-blue-600 rounded-none text-xs font-bold uppercase tracking-wider">
                   Block #{block.index}
                 </span>
                 <span className="text-slate-400 text-xs">
@@ -62,8 +62,8 @@ const Dashboard: React.FC = () => {
                 <HashEntry label="Block Hash" value={block.block_hash} />
                 <HashEntry label="Merkle Root" value={block.merkle_root} />
                 
-                <div className="pt-3 border-t border-slate-100 flex justify-between items-center">
-                  <span className="text-sm text-slate-600">
+                <div className="pt-3 border-t border-black flex justify-between items-center">
+                  <span className="text-sm text-black">
                     <span className="font-bold">{block.transaction_count}</span> Transactions
                   </span>
                   <span className="text-[10px] text-slate-400 font-mono">
@@ -81,10 +81,10 @@ const Dashboard: React.FC = () => {
 
 const StatCard = ({ icon, label, value }: { icon: any, label: string, value: string }) => (
   <div className="glass-card p-4 flex items-center gap-4">
-    <div className="p-3 bg-slate-50 rounded-xl">{icon}</div>
+    <div className="p-3 bg-white rounded-none">{icon}</div>
     <div>
-      <p className="text-xs text-slate-500 font-medium">{label}</p>
-      <p className="text-xl font-bold text-slate-800">{value}</p>
+      <p className="text-xs text-black font-medium">{label}</p>
+      <p className="text-xl font-bold text-black">{value}</p>
     </div>
   </div>
 );
@@ -92,7 +92,7 @@ const StatCard = ({ icon, label, value }: { icon: any, label: string, value: str
 const HashEntry = ({ label, value }: { label: string, value: string }) => (
   <div>
     <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{label}</p>
-    <p className="text-xs text-slate-600 font-mono truncate" title={value}>{value}</p>
+    <p className="text-xs text-black font-mono truncate" title={value}>{value}</p>
   </div>
 );
 

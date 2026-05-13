@@ -19,15 +19,15 @@ function App() {
 
   if (loading) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center bg-slate-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="h-screen w-screen flex items-center justify-center bg-white">
+        <div className="text-black font-bold text-xl">Loading...</div>
       </div>
     );
   }
 
   return (
     <Router>
-      <div className="min-h-screen bg-slate-50 flex flex-col">
+      <div className="min-h-screen bg-white flex flex-col">
         {user && <Navbar user={user} onLogout={logout} />}
         
         <div className="flex flex-1">
@@ -48,25 +48,25 @@ function App() {
               {/* Doctor Routes */}
               <Route 
                 path="/upload" 
-                element={user?.role === 'doctor' ? <UploadRecord /> : <Navigate to="/" />} 
+                element={(user?.role === 'doctor' || user?.role === 'admin') ? <UploadRecord /> : <Navigate to="/" />} 
               />
               <Route 
                 path="/patients" 
-                element={user?.role === 'doctor' ? <PatientSearch /> : <Navigate to="/" />} 
+                element={(user?.role === 'doctor' || user?.role === 'admin') ? <PatientSearch /> : <Navigate to="/" />} 
               />
               <Route 
                 path="/activity" 
-                element={user?.role === 'doctor' ? <ActivityLogs /> : <Navigate to="/" />} 
+                element={(user?.role === 'doctor' || user?.role === 'admin') ? <ActivityLogs /> : <Navigate to="/" />} 
               />
 
               {/* Patient Routes */}
               <Route 
                 path="/my-records" 
-                element={user?.role === 'patient' ? <MyRecords /> : <Navigate to="/" />} 
+                element={(user?.role === 'patient' || user?.role === 'admin') ? <MyRecords /> : <Navigate to="/" />} 
               />
               <Route 
                 path="/verify" 
-                element={user?.role === 'patient' ? <VerifyRecord /> : <Navigate to="/" />} 
+                element={(user?.role === 'patient' || user?.role === 'admin') ? <VerifyRecord /> : <Navigate to="/" />} 
               />
 
               {/* Admin / Explorer Routes */}

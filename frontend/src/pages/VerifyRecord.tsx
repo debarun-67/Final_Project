@@ -18,17 +18,17 @@ const VerifyRecord: React.FC = () => {
   return (
     <div className="p-6 max-w-2xl mx-auto space-y-6">
       <div className="text-center space-y-2">
-        <div className="inline-flex p-3 bg-emerald-100 text-emerald-600 rounded-2xl mb-2">
+        <div className="inline-flex p-3 bg-emerald-100 text-emerald-600 rounded-none mb-2">
           <ShieldCheck size={32} />
         </div>
-        <h2 className="text-2xl font-bold text-slate-800">Integrity Verification</h2>
-        <p className="text-slate-500">Upload a medical file to check if it matches the blockchain record</p>
+        <h2 className="text-2xl font-bold text-black">Integrity Verification</h2>
+        <p className="text-black">Upload a medical file to check if it matches the blockchain record</p>
       </div>
 
       <div className="glass-card p-8 space-y-6">
         <div 
-          className={`border-2 border-dashed rounded-2xl p-10 text-center transition-all ${
-            file ? 'border-emerald-400 bg-emerald-50/30' : 'border-slate-200 hover:border-slate-300'
+          className={`border-2 border-dashed rounded-none p-10 text-center  ${
+            file ? 'border-emerald-400 bg-emerald-50/30' : 'border-black hover:border-black'
           }`}
           onDragOver={(e) => e.preventDefault()}
           onDrop={(e) => { e.preventDefault(); if(e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]); }}
@@ -37,7 +37,7 @@ const VerifyRecord: React.FC = () => {
             <div className="space-y-4">
               <FileCheck size={48} className="mx-auto text-emerald-600" />
               <div>
-                <p className="font-bold text-slate-800">{file.name}</p>
+                <p className="font-bold text-black">{file.name}</p>
                 <p className="text-xs text-slate-400">{(file.size / 1024).toFixed(2)} KB</p>
               </div>
               <button onClick={() => {setFile(null); setResult('none');}} className="text-xs text-slate-400 underline">Change File</button>
@@ -45,7 +45,7 @@ const VerifyRecord: React.FC = () => {
           ) : (
             <label className="cursor-pointer space-y-4 block">
               <Upload size={48} className="mx-auto text-slate-200" />
-              <p className="text-slate-500 italic">Drop your encrypted report here</p>
+              <p className="text-black italic">Drop your encrypted report here</p>
               <span className="btn-secondary inline-block">Select File</span>
               <input type="file" className="hidden" onChange={(e) => e.target.files && setFile(e.target.files[0])} />
             </label>
@@ -53,7 +53,7 @@ const VerifyRecord: React.FC = () => {
         </div>
 
         {result === 'success' && (
-          <div className="p-4 bg-emerald-100 border border-emerald-200 rounded-xl flex items-center gap-3 text-emerald-800 animate-in fade-in slide-in-from-bottom-2">
+          <div className="p-4 bg-emerald-100 border border-emerald-200 rounded-none flex items-center gap-3 text-emerald-800 fade-in slide-in-">
             <ShieldCheck size={24} />
             <div>
               <p className="font-bold">Verified Successfully</p>
@@ -63,7 +63,7 @@ const VerifyRecord: React.FC = () => {
         )}
 
         {result === 'fail' && (
-          <div className="p-4 bg-red-100 border border-red-200 rounded-xl flex items-center gap-3 text-red-800 animate-in fade-in slide-in-from-bottom-2">
+          <div className="p-4 bg-red-100 border border-red-200 rounded-none flex items-center gap-3 text-red-800 fade-in slide-in-">
             <XCircle size={24} />
             <div>
               <p className="font-bold">Tampering Detected!</p>
@@ -79,14 +79,14 @@ const VerifyRecord: React.FC = () => {
         >
           {isVerifying ? (
             <>
-              <div className="animate-spin h-4 w-4 border-2 border-white/30 border-t-white rounded-full" />
+              <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-none" />
               Computing SHA-256...
             </>
           ) : 'Check Authenticity'}
         </button>
       </div>
 
-      <div className="flex gap-4 p-4 bg-blue-50/50 border border-blue-100 rounded-xl text-blue-600">
+      <div className="flex gap-4 p-4 bg-blue-50/50 border border-black rounded-none text-blue-600">
         <AlertTriangle size={20} className="shrink-0" />
         <p className="text-xs leading-relaxed">
           <strong>Note:</strong> We compare the re-computed SHA-256 fingerprint of your file against the 

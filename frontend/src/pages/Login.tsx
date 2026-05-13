@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Shield, Lock, Mail } from 'lucide-react';
+import axios from 'axios';
 
 interface LoginProps {
   onLogin: (credentials: any) => Promise<any>;
@@ -15,36 +16,37 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     e.preventDefault();
     setLoading(true);
     setError('');
+
     try {
       await onLogin({ email, password });
-    } catch (err) {
-      setError('Invalid credentials. Please try again.');
+    } catch (err: any) {
+      setError(err.response?.data?.message || err.message || 'Invalid credentials. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-[calc(100vh-64px)] flex items-center justify-center bg-slate-50 p-4">
+    <div className="min-h-[calc(100vh-64px)] flex items-center justify-center bg-white p-4">
       <div className="w-full max-w-md glass-card p-8 space-y-6">
         <div className="text-center space-y-2">
-          <div className="inline-flex p-3 bg-blue-600 rounded-2xl shadow-lg shadow-blue-200 mb-2">
+          <div className="inline-flex p-3 bg-blue-600 rounded-none -blue-200 mb-2">
             <Shield className="text-white" size={32} />
           </div>
-          <h2 className="text-2xl font-bold text-slate-800">Secure Access</h2>
-          <p className="text-slate-500">Sign in to the Medical Blockchain</p>
+          <h2 className="text-2xl font-bold text-black">Secure Access</h2>
+          <p className="text-black">Sign in to the Medical Blockchain</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1">
-            <label className="text-sm font-semibold text-slate-700">Email Address</label>
+            <label className="text-sm font-semibold text-black">Email Address</label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
               <input 
                 type="email" 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                className="w-full pl-10 pr-4 py-2 bg-white border border-black rounded-none focus:border-transparent outline-none"
                 placeholder="doctor@hospital.org"
                 required
               />
@@ -52,14 +54,14 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           </div>
 
           <div className="space-y-1">
-            <label className="text-sm font-semibold text-slate-700">Password</label>
+            <label className="text-sm font-semibold text-black">Password</label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
               <input 
                 type="password" 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                className="w-full pl-10 pr-4 py-2 bg-white border border-black rounded-none focus:border-transparent outline-none"
                 placeholder="••••••••"
                 required
               />
@@ -71,7 +73,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           <button 
             type="submit" 
             disabled={loading}
-            className="w-full py-3 bg-blue-600 text-white rounded-lg font-bold shadow-lg shadow-blue-200 hover:bg-blue-700 hover:shadow-blue-300 transition-all disabled:opacity-50"
+            className="w-full py-3 bg-blue-600 text-white rounded-none font-bold -blue-200 hover:bg-blue-700 hover:-blue-300 disabled:opacity-50"
           >
             {loading ? 'Authenticating...' : 'Sign In'}
           </button>

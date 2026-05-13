@@ -12,7 +12,8 @@ async function seed() {
 
     const users = [
         { email: 'doctor1@hospital.org', password: 'password123', role: 'doctor', doctor_id: 'DOC-2025-01' },
-        { email: 'patient1@patient.org', password: 'password123', role: 'patient', patient_id: 'PAT-2025-99' }
+        { email: 'patient1@patient.org', password: 'password123', role: 'patient', patient_id: 'PAT-2025-99' },
+        { email: 'admin@system.org', password: 'password123', role: 'admin', admin_id: 'ADM-2025-01' }
     ];
 
     try {

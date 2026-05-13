@@ -4,6 +4,7 @@ const dotenv = require('dotenv');
 const blockchainRoutes = require('./routes/blockchain');
 const authRoutes = require('./routes/auth');
 const recordsRoutes = require('./routes/records');
+const networkRoutes = require('./routes/network');
 
 dotenv.config();
 
@@ -17,6 +18,7 @@ app.use(express.json());
 app.use('/api', blockchainRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/records', recordsRoutes);
+app.use('/api/network', networkRoutes);
 
 app.get('/', (req, res) => {
     res.send('Medical Blockchain API is running...');
