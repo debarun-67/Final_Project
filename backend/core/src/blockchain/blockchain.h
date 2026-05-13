@@ -6,6 +6,7 @@
 void initialize_blockchain();
 void create_genesis_block(Block *block, int validator_port);
 void add_block(Block *new_block);
+int verify_block(Block *block);
 int get_last_block(Block *last_block);
 int verify_blockchain();
 int get_last_block_hash(char *output_hash);

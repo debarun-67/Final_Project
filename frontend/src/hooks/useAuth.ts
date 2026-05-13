@@ -1,104 +1,62 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../services/supabase';
+
+const DEFAULT_MOCK_USERS = [
+  { email: "doctor@hospital.org", password: "password123", role: "doctor", username: "Dr. Smith", id: "mock-doc-1", doctor_id: "DOC_001" },
+  { email: "patient@test.com", password: "password123", role: "patient", username: "John Doe", id: "mock-pat-1", patient_id: "PAT_001" },
+  { email: "admin@chain.com", password: "password123", role: "admin", username: "Network Admin", id: "mock-adm-1" }
+];
 
 export const useAuth = () => {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async (sessionUser: any) => {
-    try {
-      const profilePromise = supabase
-        .from('profiles')
-        .select('role, patient_id, doctor_id')
-        .eq('id', sessionUser.id)
-        .single();
-        
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Profile fetch timeout')), 5000)
-      );
-
-      const { data: profile, error } = await Promise.race([profilePromise, timeoutPromise]) as any;
-
-      if (!error && profile) {
-        setUser({ ...sessionUser, ...profile });
-      } else {
-        setUser(sessionUser);
-      }
-    } catch (err) {
-      console.warn('Could not fetch profile, falling back to session user:', err);
-      setUser(sessionUser);
-    }
-  };
+  const MOCK_USERS = JSON.parse(import.meta.env.VITE_MOCK_USERS || JSON.stringify(DEFAULT_MOCK_USERS));
 
   useEffect(() => {
-    let mounted = true;
-
-    // Fast path: if there is absolutely no token in sessionStorage,
-    // we don't need to wait for Supabase's network verification to show the login screen.
-    const hasSession = Object.keys(sessionStorage).some(k => k.startsWith('sb-') && k.endsWith('-auth-token'));
-    
-    if (!hasSession) {
-      setLoading(false);
-    }
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      if (!mounted) return;
+    const savedSession = localStorage.getItem('medchain_session');
+    if (savedSession) {
       try {
-        if (session) {
-          await fetchProfile(session.user);
-        } else {
-          setUser(null);
+        const sessionData = JSON.parse(savedSession);
+        // Find matching user in our current mock list
+        const match = MOCK_USERS.find((u: any) => u.email === sessionData.email);
+        if (match) {
+          setUser(match);
         }
-      } catch (err) {
-        console.error('Auth State Change Error:', err);
-      } finally {
-        if (mounted) setLoading(false);
+      } catch (e) {
+        console.error("Session recovery failed", e);
       }
-    });
-
-    // Fallback failsafe just in case
-    const fallback = setTimeout(() => {
-      if (mounted) setLoading(false);
-    }, 1500);
-
-    return () => {
-      mounted = false;
-      clearTimeout(fallback);
-      subscription.unsubscribe();
-    };
+    }
+    // Small delay to simulate auth check
+    const timer = setTimeout(() => setLoading(false), 500);
+    return () => clearTimeout(timer);
   }, []);
 
   const login = async (credentials: any) => {
-    // Failsafe timeout to prevent infinite "Authenticating..."
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Network timeout: Authentication server did not respond')), 10000);
+    setLoading(true);
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        const match = MOCK_USERS.find(
+          (u: any) => u.email === credentials.email && u.password === credentials.password
+        );
+
+        if (match) {
+          setUser(match);
+          localStorage.setItem('medchain_session', JSON.stringify({ email: match.email, id: match.id }));
+          localStorage.setItem('medchain_role', match.role);
+          setLoading(false);
+          resolve(match);
+        } else {
+          setLoading(false);
+          reject(new Error('Invalid local credentials. Check your .env file.'));
+        }
+      }, 800);
     });
-
-    const loginPromise = supabase.auth.signInWithPassword({
-      email: credentials.email,
-      password: credentials.password
-    });
-
-    const { data, error } = await Promise.race([loginPromise, timeoutPromise]) as any;
-
-    if (error) throw error;
-    
-    // Forcefully fetch profile and update state in case onAuthStateChange is delayed
-    if (data && data.user) {
-      await fetchProfile(data.user);
-    }
-
-    return data;
   };
 
   const logout = async () => {
-    try {
-      await supabase.auth.signOut();
-    } catch (err) {
-      console.error('Error signing out:', err);
-    } finally {
-      setUser(null);
-    }
+    localStorage.removeItem('medchain_session');
+    localStorage.removeItem('medchain_role');
+    setUser(null);
   };
 
   return { user, loading, login, logout };

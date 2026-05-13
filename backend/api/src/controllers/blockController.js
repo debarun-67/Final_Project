@@ -1,13 +1,15 @@
 const { runCoreCommand } = require('../config/core_bridge');
 const { parseBlockOutput } = require('../utils/parser');
+const { logEvent } = require('../utils/logger');
 
 const getBlocks = async (req, res) => {
     try {
-        // Fetch last blocks (this depends on the viewer's capabilities)
-        // For demo, let's assume 'LAST' returns the full details of the latest block
-        const output = await runCoreCommand('LAST');
+        logEvent('INFO', 'Client requested full blockchain history');
+        const output = await runCoreCommand('ALL');
         const blocks = parseBlockOutput(output);
-        res.json(blocks);
+        logEvent('INFO', `Successfully parsed ${blocks.length} blocks`);
+        // Show newest blocks first
+        res.json(blocks.reverse());
     } catch (error) {
         res.status(500).json({ error: error.toString() });
     }
@@ -30,11 +32,23 @@ const getBlockByIndex = async (req, res) => {
 const getHeight = async (req, res) => {
     try {
         const output = await runCoreCommand('HEIGHT');
-        const match = output.match(/Height: (\d+)/);
-        res.json({ height: parseInt(match?.[1] || "0") });
+        res.json({ height: parseInt(output.split(':')[1]) || 0 });
     } catch (error) {
         res.status(500).json({ error: error.toString() });
     }
 };
 
-module.exports = { getBlocks, getBlockByIndex, getHeight };
+const verifyChain = async (req, res) => {
+    try {
+        logEvent('INFO', 'Full chain cryptographic audit initiated');
+        const output = await runCoreCommand('VERIFY');
+        logEvent('INFO', `VERIFY Output: ${output.trim()}`);
+        const isValid = output.includes('VALID');
+        res.json({ valid: isValid });
+    } catch (error) {
+        logEvent('ERROR', `Audit failed: ${error}`);
+        res.status(500).json({ error: error.toString() });
+    }
+};
+
+module.exports = { getBlocks, getBlockByIndex, getHeight, verifyChain };

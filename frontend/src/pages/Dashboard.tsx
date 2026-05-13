@@ -6,17 +6,22 @@ import { Database, Activity, Server, Hash } from 'lucide-react';
 const Dashboard: React.FC = () => {
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [height, setHeight] = useState(0);
+  const [activeNodes, setActiveNodes] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [heightRes, blocksRes] = await Promise.all([
+        const [heightRes, blocksRes, networkRes] = await Promise.all([
           blockchainService.getHeight(),
-          blockchainService.getBlocks()
+          blockchainService.getBlocks(),
+          blockchainService.getNetworkHealth()
         ]);
         setHeight(heightRes.data.height);
         setBlocks(blocksRes.data);
+        
+        const onlineCount = networkRes.data.nodes.filter((n: any) => n.status === 'online').length;
+        setActiveNodes(onlineCount);
       } catch (err) {
         console.error('Failed to fetch dashboard data', err);
       } finally {
@@ -24,6 +29,8 @@ const Dashboard: React.FC = () => {
       }
     };
     fetchData();
+    const interval = setInterval(fetchData, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -31,8 +38,8 @@ const Dashboard: React.FC = () => {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <StatCard icon={<Database className="text-blue-600" />} label="Chain Height" value={height.toString()} />
-        <StatCard icon={<Activity className="text-emerald-600" />} label="Network Status" value="Healthy" />
-        <StatCard icon={<Server className="text-purple-600" />} label="Active Peers" value="3" />
+        <StatCard icon={<Activity className="text-emerald-600" />} label="Network Status" value={activeNodes > 0 ? "Healthy" : "Offline"} />
+        <StatCard icon={<Server className="text-purple-600" />} label="Active Nodes" value={activeNodes.toString()} />
         <StatCard icon={<Hash className="text-orange-600" />} label="Algorithm" value="SHA-256" />
       </div>
 

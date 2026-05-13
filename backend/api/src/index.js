@@ -6,7 +6,10 @@ const authRoutes = require('./routes/auth');
 const recordsRoutes = require('./routes/records');
 const networkRoutes = require('./routes/network');
 
+const { initLogger, logEvent } = require('./utils/logger');
+
 dotenv.config();
+initLogger();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -15,10 +18,10 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-app.use('/api', blockchainRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/records', recordsRoutes);
 app.use('/api/network', networkRoutes);
+app.use('/api', blockchainRoutes);
 
 app.get('/', (req, res) => {
     res.send('Medical Blockchain API is running...');

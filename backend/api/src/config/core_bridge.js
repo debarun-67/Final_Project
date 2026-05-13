@@ -15,13 +15,25 @@ const runCoreCommand = (cmd, args = []) => {
         // Use viewer or blockchain depending on command
         // For now, let's assume we use the 'viewer' or a specialized CLI tool
         const binary = process.platform === 'win32' ? 'viewer.exe' : './viewer';
-        const fullPath = path.join(CORE_BIN_PATH, binary);
+        const fullPath = path.resolve(CORE_BIN_PATH, binary);
         
-        // This is a placeholder logic. In production, we would use a more robust
-        // socket-based communication or a better-formatted CLI output.
-        exec(`${fullPath} ${cmd} ${args.join(' ')}`, { cwd: path.join(CORE_BIN_PATH, '..') }, (error, stdout, stderr) => {
+        // POINT TO THE LIVE DEMO INSTANCE (Node 1)
+        const LIVE_NODE_PATH = path.resolve(__dirname, '../../../../demo_instances/node1');
+        
+        const fullCmd = `"${fullPath}" ${cmd} ${args.join(' ')}`;
+        
+        exec(fullCmd, { cwd: LIVE_NODE_PATH }, (error, stdout, stderr) => {
             if (error) {
-                reject(stderr || error.message);
+                console.warn(`[BRIDGE] Demo node execution failed at ${LIVE_NODE_PATH}. Falling back...`);
+                const CENTRAL_DATA_PATH = path.resolve(__dirname, '../../../core/data');
+                
+                exec(fullCmd, { cwd: CENTRAL_DATA_PATH }, (err2, out2, stderr2) => {
+                    if (err2) {
+                        console.error(`[BRIDGE FATAL] Failed to execute: ${fullCmd}`);
+                        resolve("");
+                    }
+                    else resolve(out2);
+                });
                 return;
             }
             resolve(stdout);

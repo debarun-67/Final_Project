@@ -9,79 +9,99 @@ const SystemLogs: React.FC = () => {
   useEffect(() => {
     const fetchSystemData = async () => {
       try {
-        const [blocksRes, healthRes] = await Promise.all([
+        const [blocksRes, healthRes, logsRes] = await Promise.all([
           blockchainService.getBlocks(),
-          blockchainService.getNetworkHealth()
+          blockchainService.getNetworkHealth(),
+          blockchainService.getNetworkLogs()
         ]);
         
         const logs: any[] = [];
         let idCounter = 1;
 
-        // Generate Network Logs
-        if (healthRes.data && healthRes.data.nodes) {
+        // 1. Add Real Network & System Logs
+        if (logsRes.data && logsRes.data.logs) {
+          logsRes.data.logs.forEach((logStr: string) => {
+            // Updated regex: Optional prefix [NODE1] followed by [Timestamp] Message
+            const match = logStr.match(/^(?:\[(NODE\d+)\] )?\[(.*?)\] (.*)/);
+            if (match) {
+              const nodePrefix = match[1]; // e.g. "NODE1"
+              const rawTime = match[2];
+              let msg = nodePrefix ? `(${nodePrefix}) ${match[3]}` : match[3];
+              
+              // Clean up "INFO: " or "WARN: " prefixes if they exist in the message part
+              let level: 'INFO' | 'WARN' | 'ERROR' = 'INFO';
+              if (msg.startsWith('INFO:')) {
+                level = 'INFO';
+                msg = msg.replace('INFO:', '').trim();
+              } else if (msg.startsWith('WARN:')) {
+                level = 'WARN';
+                msg = msg.replace('WARN:', '').trim();
+              } else if (msg.startsWith('ERROR:')) {
+                level = 'ERROR';
+                msg = msg.replace('ERROR:', '').trim();
+              } else if (logStr.toLowerCase().includes('disconnected')) {
+                level = 'WARN';
+              }
+
+              let dateObj = new Date(rawTime);
+              if (isNaN(dateObj.getTime())) dateObj = new Date();
+
+              logs.push({
+                id: idCounter++,
+                level: level,
+                msg: msg,
+                time: dateObj.toLocaleTimeString(),
+                timestamp: dateObj.getTime(),
+                type: logStr.includes('API') || logStr.includes('Client') ? 'system' : 'network'
+              });
+            }
+          });
+        }
+
+        // 2. Fallback: Add UI-generated health status if file is empty
+        if (logs.length === 0 && healthRes.data && healthRes.data.nodes) {
           healthRes.data.nodes.forEach((node: any) => {
             if (node.status === 'online') {
               logs.push({
                 id: idCounter++,
                 level: 'INFO',
-                msg: `P2P Handshake successful with peer :${node.port} (${node.latency})`,
+                msg: `Node detected on port :${node.port}`,
                 time: new Date().toLocaleTimeString(),
                 timestamp: Date.now(),
                 type: 'network'
               });
-            } else {
-              logs.push({
-                id: idCounter++,
-                level: 'WARN',
-                msg: `Peer :${node.port} is unreachable. Status: offline`,
-                time: new Date().toLocaleTimeString(),
-                timestamp: Date.now() - 1000,
-                type: 'network'
-              });
             }
           });
         }
 
-        // Generate Blockchain Logs
+        // 3. Add Blockchain Storage Logs
         if (blocksRes.data && Array.isArray(blocksRes.data)) {
-          blocksRes.data.slice(0, 10).forEach((block: any) => {
+          blocksRes.data.forEach((block: any) => {
             logs.push({
               id: idCounter++,
               level: 'INFO',
-              msg: `New block appended to local ledger. Hash: ${block.block_hash.substring(0, 16)}...`,
+              msg: `Ledger Update: Block #${block.index} synchronized. Hash: ${block.block_hash.substring(0, 12)}...`,
               time: new Date(block.timestamp * 1000).toLocaleTimeString(),
               timestamp: block.timestamp * 1000,
               type: 'storage'
             });
-
-            if (block.transactions && block.transactions.length > 0) {
-              logs.push({
-                id: idCounter++,
-                level: 'INFO',
-                msg: `Validated ${block.transactions.length} transaction(s) in Block #${block.index}`,
-                time: new Date((block.timestamp + 1) * 1000).toLocaleTimeString(),
-                timestamp: (block.timestamp + 1) * 1000,
-                type: 'consensus'
-              });
-            }
           });
         }
 
-        // Sort descending
+        // Sort descending by timestamp
         logs.sort((a, b) => b.timestamp - a.timestamp);
         
-        setSystemLogs(logs);
+        setSystemLogs(logs.slice(0, 50)); // Keep last 50
       } catch (err) {
         console.error('Failed to fetch system logs:', err);
-        setSystemLogs([{
-          id: 1, level: 'ERROR', msg: 'Failed to connect to backend validator node.', time: new Date().toLocaleTimeString(), type: 'system'
-        }]);
       } finally {
         setLoading(false);
       }
     };
 
     fetchSystemData();
+    const interval = setInterval(fetchSystemData, 5000);
+    return () => clearInterval(interval);
   }, []);
 
   return (

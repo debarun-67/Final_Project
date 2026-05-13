@@ -31,7 +31,7 @@ function App() {
         {user && <Navbar user={user} onLogout={logout} />}
         
         <div className="flex flex-1">
-          {user && <Sidebar role={user.role} />}
+          {user && user.role && <Sidebar role={user.role} />}
           
           <main className="flex-1 overflow-auto">
             <Routes>

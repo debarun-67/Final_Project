@@ -1,377 +1,267 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <arpa/inet.h>
-#include <pthread.h>
-#include <sys/socket.h>
 #include <time.h>
+
+#ifdef _WIN32
+    #define _WIN32_WINNT 0x0600
+    #include <winsock2.h>
+    #include <ws2tcpip.h>
+    #include <process.h>
+    #define close closesocket
+    typedef int socklen_t;
+#else
+    #include <unistd.h>
+    #include <arpa/inet.h>
+    #include <sys/socket.h>
+    #include <pthread.h>
+#endif
 
 #include "protocol.h"
 #include "node.h"
 
-Peer peers[MAX_PEERS];
-int peer_count = 0;
-pthread_mutex_t peer_lock = PTHREAD_MUTEX_INITIALIZER;
-static SSL_CTX *ssl_ctx = NULL;
-
-void initialize_network(int port) {
-    SSL_library_init();
-    SSL_load_error_strings();
-    OpenSSL_add_all_algorithms();
-
-    ssl_ctx = SSL_CTX_new(TLS_method());
-    if (!ssl_ctx) {
-        printf("[SSL] Failed to create SSL context.\n");
-        exit(EXIT_FAILURE);
-    }
-
-    // Load certificates based on port
-    char cert_path[128], key_path[128];
-    snprintf(cert_path, sizeof(cert_path), "keys/%d.crt", port);
-    snprintf(key_path, sizeof(key_path), "keys/%d.key", port);
-
-    if (SSL_CTX_use_certificate_file(ssl_ctx, cert_path, SSL_FILETYPE_PEM) <= 0 ||
-        SSL_CTX_use_PrivateKey_file(ssl_ctx, key_path, SSL_FILETYPE_PEM) <= 0) {
-        printf("[SSL] Failed to load certificates for port %d. Please ensure %s and %s exist.\n", port, cert_path, key_path);
-        // For testing, we might want to continue without SSL, but the plan says SSL integration.
-        // I will exit for now to ensure security isn't bypassed silently.
-        exit(EXIT_FAILURE);
+// Helper to log events to file for the website to read
+void log_network_event(const char *event) {
+    FILE *f = fopen("data/network.log", "a");
+    if (f) {
+        time_t now = time(NULL);
+        char *time_str = ctime(&now);
+        time_str[strlen(time_str) - 1] = '\0'; // Remove newline
+        fprintf(f, "[%s] %s\n", time_str, event);
+        fclose(f);
     }
 }
 
-// get peer index from socket
-int find_peer_by_socket(int socket)
-{
-    for (int i = 0; i < MAX_PEERS; i++)
-    {
+Peer peers[MAX_PEERS];
+int peer_count = 0;
+
+// Mutex-less design for demo simplicity on Windows
+void initialize_network(int port) {
+#ifdef _WIN32
+    WSADATA wsa;
+    if (WSAStartup(MAKEWORD(2,2), &wsa) != 0) {
+        printf("[NETWORK] Winsock initialization failed.\n");
+        exit(EXIT_FAILURE);
+    }
+#endif
+    memset(peers, 0, sizeof(peers));
+    
+    char init_msg[100];
+    sprintf(init_msg, "Node started on port %d", port);
+    log_network_event(init_msg);
+    
+    printf("[NETWORK] Network layer initialized on port %d\n", port);
+}
+
+int find_peer_by_socket(int socket) {
+    for (int i = 0; i < MAX_PEERS; i++) {
         if (peers[i].active && peers[i].socket == socket)
             return i;
     }
     return -1;
 }
 
-// disconnect and remove peer
-void remove_peer(int socket)
-{
-    pthread_mutex_lock(&peer_lock);
+int find_peer_by_port(int port) {
+    for (int i = 0; i < MAX_PEERS; i++) {
+        if (peers[i].active && peers[i].port == port)
+            return i;
+    }
+    return -1;
+}
 
+void remove_peer(int socket) {
     int index = find_peer_by_socket(socket);
-    if (index != -1)
-    {
+    if (index != -1) {
+        char msg[100];
+        sprintf(msg, "Peer %d disconnected", peers[index].port);
+        log_network_event(msg);
+        
         printf("[NETWORK] Peer %d disconnected.\n", peers[index].port);
-
-        if (peers[index].ssl) {
-            SSL_shutdown(peers[index].ssl);
-            SSL_free(peers[index].ssl);
-            peers[index].ssl = NULL;
-        }
         close(peers[index].socket);
         peers[index].active = 0;
         peer_count--;
     }
-
-    pthread_mutex_unlock(&peer_lock);
 }
 
-// update peer timestamp
-void update_peer_last_seen(int socket)
-{
-    pthread_mutex_lock(&peer_lock);
-
-    int index = find_peer_by_socket(socket);
-    if (index != -1)
-    {
-        peers[index].last_seen = time(NULL);
-    }
-
-    pthread_mutex_unlock(&peer_lock);
-}
-
-// process incoming message with rate limiting
-void handle_message(int client_socket, const char *message)
-{
-    pthread_mutex_lock(&peer_lock);
-    int index = find_peer_by_socket(client_socket);
-    if (index != -1)
-    {
-        time_t now = time(NULL);
-        // Reset counter every second
-        if (now > peers[index].last_reset)
-        {
-            peers[index].message_count = 0;
-            peers[index].last_reset = now;
-        }
-
-        peers[index].message_count++;
-        peers[index].last_seen = now;
-
-        if (peers[index].message_count > MAX_MSG_PER_SEC)
-        {
-            printf("[SECURITY] Rate limit exceeded by peer %d. Disconnecting...\n", peers[index].port);
-            pthread_mutex_unlock(&peer_lock);
-            remove_peer(client_socket);
-            return;
-        }
-    }
-    pthread_mutex_unlock(&peer_lock);
-
+void handle_message(int client_socket, const char *message) {
+    // For demo, we just dispatch to protocol
     protocol_dispatch(client_socket, message);
 }
 
-// handle client connection
-void *client_thread(void *arg)
-{
+#ifdef _WIN32
+void client_thread(void *arg) {
+#else
+void *client_thread(void *arg) {
+#endif
     int client_socket = *(int *)arg;
     free(arg);
-
-    pthread_mutex_lock(&peer_lock);
-    int index = find_peer_by_socket(client_socket);
-    SSL *ssl = (index != -1) ? peers[index].ssl : NULL;
-    pthread_mutex_unlock(&peer_lock);
-
-    if (!ssl) {
-        close(client_socket);
-        return NULL;
-    }
 
     char buffer[BUFFER_SIZE];
     char message_buffer[BUFFER_SIZE];
     int message_len = 0;
+    int received_any_data = 0;
 
-    memset(message_buffer, 0, BUFFER_SIZE);
-
-    while (1)
-    {
-        int bytes = SSL_read(ssl, buffer, BUFFER_SIZE - 1);
-
-        // connection lost
-        if (bytes <= 0)
-        {
-            int err = SSL_get_error(ssl, bytes);
-            if (err == SSL_ERROR_ZERO_RETURN)
-            {
-                printf("[NETWORK] Peer connection closed gracefully.\n");
+    while (1) {
+        int bytes = recv(client_socket, buffer, BUFFER_SIZE - 1, 0);
+        if (bytes <= 0) {
+            // Only log disconnection if we actually had a real conversation
+            if (received_any_data) {
+                remove_peer(client_socket);
+            } else {
+                // Silent cleanup for health-check pings
+                int index = find_peer_by_socket(client_socket);
+                if (index != -1) {
+                    close(peers[index].socket);
+                    peers[index].active = 0;
+                    peer_count--;
+                }
             }
-            else
-            {
-                printf("[NETWORK] SSL receive error: %d\n", err);
-            }
-
-            remove_peer(client_socket);
             break;
         }
 
-        buffer[bytes] = '\0';
-        
-        // ... (rest of message parsing)
+        if (!received_any_data) {
+            received_any_data = 1;
+            int index = find_peer_by_socket(client_socket);
+            if (index != -1) {
+                char msg[100];
+                sprintf(msg, "Connection established with Peer %d", peers[index].port);
+                log_network_event(msg);
+                printf("[NETWORK] Connection verified with Peer (Port %d)\n", peers[index].port);
+            }
+        }
 
-        for (int i = 0; i < bytes; i++)
-        {
-            if (message_len < BUFFER_SIZE - 1)
-            {
+        buffer[bytes] = '\0';
+        for (int i = 0; i < bytes; i++) {
+            if (message_len < BUFFER_SIZE - 1) {
                 message_buffer[message_len++] = buffer[i];
             }
-
-            message_buffer[message_len] = '\0';
-
-            // block transmission complete
-            if (strstr(message_buffer, "~END_BLOCK~") != NULL)
-            {
-                handle_message(client_socket, message_buffer);
-                message_len = 0;
-                memset(message_buffer, 0, BUFFER_SIZE);
-                continue;
-            }
-
-            // single line message
-            if (buffer[i] == '\n')
-            {
+            if (buffer[i] == '\n' || strstr(message_buffer, "~END_BLOCK~")) {
+                message_buffer[message_len] = '\0';
                 handle_message(client_socket, message_buffer);
                 message_len = 0;
                 memset(message_buffer, 0, BUFFER_SIZE);
             }
         }
     }
-
+#ifndef _WIN32
     return NULL;
+#endif
 }
 
-// start listening for peers
-void start_server(int port)
-{
+void start_server(int port) {
     int server_fd;
     struct sockaddr_in address, client_addr;
 
     server_fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (server_fd < 0)
-    {
+    if (server_fd == -1) {
         printf("[NETWORK] Failed to create server socket.\n");
-        exit(EXIT_FAILURE);
+        return;
     }
 
     int opt = 1;
-    setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+    setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, (const char*)&opt, sizeof(opt));
 
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY;
     address.sin_port = htons(port);
 
-    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0)
-    {
+    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0) {
         printf("[NETWORK] Failed to bind to port %d.\n", port);
-        exit(EXIT_FAILURE);
+        return;
     }
 
-    if (listen(server_fd, 10) < 0)
-    {
-        printf("[NETWORK] Failed to start listening on port %d.\n", port);
-        exit(EXIT_FAILURE);
-    }
+    listen(server_fd, 10);
+    printf("[NETWORK] Node is now LIVE and listening on Port %d\n", port);
 
-    printf("[NETWORK] Node listening on port %d\n", port);
-
-    while (1)
-    {
-        int *client_socket = malloc(sizeof(int));
+    while (1) {
         socklen_t addrlen = sizeof(client_addr);
+        int client_fd = accept(server_fd, (struct sockaddr *)&client_addr, &addrlen);
+        if (client_fd < 0) continue;
 
-        *client_socket = accept(server_fd,
-                                (struct sockaddr *)&client_addr,
-                                &addrlen);
-
-        if (*client_socket < 0)
-        {
-            free(client_socket);
-            continue;
-        }
-
-        SSL *ssl = SSL_new(ssl_ctx);
-        SSL_set_fd(ssl, *client_socket);
-
-        if (SSL_accept(ssl) <= 0) {
-            printf("[SSL] Failed to accept SSL connection.\n");
-            ERR_print_errors_fp(stdout);
-            close(*client_socket);
-            SSL_free(ssl);
-            free(client_socket);
-            continue;
-        }
-
-        pthread_mutex_lock(&peer_lock);
-
-        for (int i = 0; i < MAX_PEERS; i++)
-        {
-            if (!peers[i].active)
-            {
-                peers[i].socket = *client_socket;
-                peers[i].ssl = ssl;
+        for (int i = 0; i < MAX_PEERS; i++) {
+            if (!peers[i].active) {
+                peers[i].socket = client_fd;
                 peers[i].port = ntohs(client_addr.sin_port);
-                peers[i].last_seen = time(NULL);
                 peers[i].active = 1;
-                peers[i].message_count = 0;
-                peers[i].last_reset = time(NULL);
                 peer_count++;
-
-                printf("[NETWORK] Inbound connection accepted (remote port %d)\n",
-                       peers[i].port);
-
+                
+                // We don't print "Accepted" here yet to keep health-pings silent
+                
+                int *socket_ptr = malloc(sizeof(int));
+                *socket_ptr = client_fd;
+#ifdef _WIN32
+                _beginthread(client_thread, 0, socket_ptr);
+#else
+                pthread_t tid;
+                pthread_create(&tid, NULL, client_thread, socket_ptr);
+                pthread_detach(tid);
+#endif
                 break;
             }
         }
-
-        pthread_mutex_unlock(&peer_lock);
-
-        pthread_t thread_id;
-        pthread_create(&thread_id, NULL, client_thread, client_socket);
-        pthread_detach(thread_id);
     }
 }
 
-// connect to a remote peer
-void connect_to_peer(const char *ip, int port)
-{
-    int sock = socket(AF_INET, SOCK_STREAM, 0);
-    if (sock < 0)
+void connect_to_peer(const char *ip, int port) {
+    if (find_peer_by_port(port) != -1) {
+        // Already connected (likely from their side first)
         return;
+    }
+
+    int sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (sock < 0) return;
 
     struct sockaddr_in serv_addr;
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(port);
+    serv_addr.sin_addr.s_addr = inet_addr(ip);
 
-    if (inet_pton(AF_INET, ip, &serv_addr.sin_addr) <= 0)
-    {
+    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
+        printf("[NETWORK] Failed to connect to Peer %d (Connection Refused)\n", port);
         close(sock);
         return;
     }
 
-    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
-    {
-        close(sock);
-        return;
-    }
-
-    SSL *ssl = SSL_new(ssl_ctx);
-    SSL_set_fd(ssl, sock);
-
-    if (SSL_connect(ssl) <= 0) {
-        printf("[SSL] Failed to establish SSL connection to peer %d.\n", port);
-        ERR_print_errors_fp(stdout);
-        SSL_free(ssl);
-        close(sock);
-        return;
-    }
-
-    pthread_mutex_lock(&peer_lock);
-
-    for (int i = 0; i < MAX_PEERS; i++)
-    {
-        if (!peers[i].active)
-        {
+    for (int i = 0; i < MAX_PEERS; i++) {
+        if (!peers[i].active) {
             peers[i].socket = sock;
-            peers[i].ssl = ssl;
             peers[i].port = port;
-            peers[i].last_seen = time(NULL);
             peers[i].active = 1;
-            peers[i].message_count = 0;
-            peers[i].last_reset = time(NULL);
             peer_count++;
+            printf("[NETWORK] Outbound connection successful to Peer %d\n", port);
+            
+            int *socket_ptr = malloc(sizeof(int));
+            *socket_ptr = sock;
+
+            // Send handshake
+            extern int global_node_port;
+            char handshake[32];
+            snprintf(handshake, sizeof(handshake), "MY_PORT:%d\n", global_node_port);
+            send(sock, handshake, (int)strlen(handshake), 0);
+
+#ifdef _WIN32
+            _beginthread(client_thread, 0, socket_ptr);
+#else
+            pthread_t tid;
+            pthread_create(&tid, NULL, client_thread, socket_ptr);
+            pthread_detach(tid);
+#endif
             break;
         }
     }
-
-    pthread_mutex_unlock(&peer_lock);
-
-    printf("[NETWORK] Outbound connection established to peer %d\n", port);
-
-    pthread_t thread_id;
-    int *socket_ptr = malloc(sizeof(int));
-    *socket_ptr = sock;
-    pthread_create(&thread_id, NULL, client_thread, socket_ptr);
-    pthread_detach(thread_id);
 }
 
-// send message to all peers
-void broadcast_message(const char *message)
-{
-    pthread_mutex_lock(&peer_lock);
-
-    for (int i = 0; i < MAX_PEERS; i++)
-    {
-        if (peers[i].active && peers[i].ssl)
-        {
-            SSL_write(peers[i].ssl, message, strlen(message));
+void broadcast_message(const char *message) {
+    char msg_with_newline[BUFFER_SIZE + 2];
+    snprintf(msg_with_newline, sizeof(msg_with_newline), "%s\n", message);
+    
+    for (int i = 0; i < MAX_PEERS; i++) {
+        if (peers[i].active) {
+            send(peers[i].socket, msg_with_newline, strlen(msg_with_newline), 0);
         }
     }
-
-    pthread_mutex_unlock(&peer_lock);
 }
 
-// active peer count
-int get_peer_count()
-{
-    pthread_mutex_lock(&peer_lock);
-    int count = peer_count;
-    pthread_mutex_unlock(&peer_lock);
-    return count;
+int get_peer_count() {
+    return peer_count;
 }

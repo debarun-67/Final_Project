@@ -8,10 +8,10 @@ const api = axios.create({
 });
 
 api.interceptors.request.use(async (config) => {
-  const { data } = await supabase.auth.getSession();
-  const token = data.session?.access_token;
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+  const savedSession = localStorage.getItem('medchain_session');
+  if (savedSession) {
+    const session = JSON.parse(savedSession);
+    config.headers['X-Mock-User-ID'] = session.id;
   }
   return config;
 });
@@ -21,6 +21,8 @@ export const blockchainService = {
   getBlocks: () => api.get('/blocks'),
   getBlock: (index: number) => api.get(`/block/${index}`),
   getNetworkHealth: () => api.get('/network/health'),
+  getNetworkLogs: () => api.get('/network/logs'),
+  verifyChain: () => api.get('/verify'),
 };
 
 export const authService = {

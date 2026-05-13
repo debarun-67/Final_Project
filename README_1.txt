@@ -1,72 +1,64 @@
-gcc src/main.c src/blockchain/block.c src/blockchain/blockchain.c src/crypto/hash.c src/crypto/signature.c -o blockchain
+===========================================================
+MEDICAL BLOCKCHAIN - DISTRIBUTED NETWORK SYSTEM
+===========================================================
 
-blockchain.exe -- first and add
+1. SYSTEM PREREQUISITES
+-----------------------
+- Windows OS (MinGW/GCC installed)
+- Node.js & npm (for Dashboard)
+- PowerShell (for Automation scripts)
 
-./blockchain
+2. INITIAL SETUP (ONE-TIME)
+---------------------------
+To build all C binaries and prepare the environment:
+> cd backend/core
+> mingw32-make all
 
-gcc src/viewer.c src/blockchain/block.c src/blockchain/blockchain.c src/crypto/hash.c src/crypto/signature.c -o viewer
+To install Dashboard dependencies:
+> cd backend/api && npm install
+> cd frontend && npm install
 
+3. HOW TO RUN THE FULL SYSTEM
+-----------------------------
+A. START THE NETWORK (4 NODES):
+   > .\scripts\demo_launcher.ps1
+   (This opens 4 independent node terminals with a fresh blockchain)
 
-viewer.exe
+B. START THE BACKEND API:
+   > cd backend/api
+   > npm start
 
-gcc src/validate.c src/blockchain/block.c src/crypto/hash.c -o validate_record
+C. START THE DASHBOARD:
+   > cd frontend
+   > npm run dev
 
-.\validate_record.exe
+4. NODE MANAGEMENT COMMANDS
+---------------------------
+- RESTART A SPECIFIC NODE:
+  > .\scripts\run_node.ps1 -NodeIndex <1-4>
 
+- ADD A NEW DYNAMIC NODE (Node 5+):
+  > .\scripts\add_new_node.ps1 -NodeIndex 5
 
-gcc -g src/test_node.c src/network/node.c src/network/protocol.c src/network/serializer.c src/network/proposal.c src/network/sync.c src/blockchain/blockchain.c src/blockchain/block.c src/crypto/hash.c src/crypto/signature.c -o node_app -lpthread -lcrypto
+5. PERFORMANCE BENCHMARKING & SPEED TEST
+----------------------------------------
+To measure the speed of block creation and network mesh propagation:
+1. Go to any running node terminal (e.g. Node 1)
+2. Type: > bench 50
+3. Observe all other nodes instantly verifying the 50 new blocks.
 
+The node will display:
+- Total execution time
+- Blocks Per Second (BPS) throughput
 
-./node_app 8001 8002 8003
-./node_app 8002 8001 8003
-./node_app 8003 8001 8002
+6. TERMINAL COMMANDS (Inside Node Windows)
+------------------------------------------
+- help   : Show all commands
+- add    : Create a new medical record block
+- status : Show node port and last hash
+- height : Show current ledger size
+- verify : Run full chain cryptographic audit
 
-add record1.enc
-
-for generating keys:
-openssl genrsa -out keys/8001_private.pem 2048
-openssl rsa -in keys/8001_private.pem -pubout -out keys/8001_public.pem
-
-
-gcc src/generate_keys.c -o generate_keys -lcrypto
-
-./generate_keys 8001 8002 8003
-
-
-Added Commands
-
-HEIGHT
-
-LAST
-
-PRINT <index>
-
-VERIFY
-
-PEERS
-
-SYNC
-
-HASH <file>
-
-CHECKDUP <file>
-
-CHECKSIG <index>
-
-STATS
-
-HELP
-
-
-gcc test/benchmark_node.c \
-src/network/node.c \
-src/network/proposal.c \
-src/network/protocol.c \
-src/network/sync.c \
-src/network/serializer.c \
-src/blockchain/block.c \
-src/blockchain/blockchain.c \
-src/crypto/hash.c \
-src/crypto/signature.c \
--lssl -lcrypto -lpthread \
--o benchmark_node
+===========================================================
+Secure. Distributed. Immutable.
+===========================================================

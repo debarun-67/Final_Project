@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { Shield, Lock, Mail } from 'lucide-react';
-import axios from 'axios';
+import { Shield, Lock, Mail, Eye, EyeOff } from 'lucide-react';
 
 interface LoginProps {
   onLogin: (credentials: any) => Promise<any>;
@@ -9,6 +8,7 @@ interface LoginProps {
 const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -30,23 +30,23 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     <div className="min-h-[calc(100vh-64px)] flex items-center justify-center bg-white p-4">
       <div className="w-full max-w-md glass-card p-8 space-y-6">
         <div className="text-center space-y-2">
-          <div className="inline-flex p-3 bg-blue-600 rounded-none -blue-200 mb-2">
+          <div className="inline-flex p-3 bg-blue-600 rounded-none mb-2 shadow-lg">
             <Shield className="text-white" size={32} />
           </div>
-          <h2 className="text-2xl font-bold text-black">Secure Access</h2>
-          <p className="text-black">Sign in to the Medical Blockchain</p>
+          <h2 className="text-2xl font-black text-black">Secure Access</h2>
+          <p className="text-slate-500 font-medium">Sign in to the Medical Blockchain</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1">
-            <label className="text-sm font-semibold text-black">Email Address</label>
+            <label className="text-xs font-bold text-black uppercase tracking-wider">Email Address</label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
               <input 
                 type="email" 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-white border border-black rounded-none focus:border-transparent outline-none"
+                className="w-full pl-10 pr-4 py-2.5 bg-white border border-black rounded-none focus:ring-2 focus:ring-blue-100 outline-none transition-all"
                 placeholder="doctor@hospital.org"
                 required
               />
@@ -54,17 +54,25 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           </div>
 
           <div className="space-y-1">
-            <label className="text-sm font-semibold text-black">Password</label>
+            <label className="text-xs font-bold text-black uppercase tracking-wider">Password</label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
               <input 
-                type="password" 
+                type={showPassword ? "text" : "password"} 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-white border border-black rounded-none focus:border-transparent outline-none"
+                className="w-full pl-10 pr-12 py-2.5 bg-white border border-black rounded-none focus:ring-2 focus:ring-blue-100 outline-none transition-all"
                 placeholder="••••••••"
                 required
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-black transition-colors"
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
             </div>
           </div>
 

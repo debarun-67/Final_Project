@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include <pthread.h>
 
 #ifdef _WIN32
 #include <io.h>
@@ -46,8 +45,7 @@ static void add_to_index(const char *data_hash) {
 
 static char blockchain_file[128] = "data/blockchain.dat";
 
-// mutex for thread safety
-static pthread_mutex_t blockchain_lock = PTHREAD_MUTEX_INITIALIZER;
+// mutex removed for zero-dependency demo
 
 // set the blockchain file path
 void set_blockchain_file(const char *filename)
@@ -57,16 +55,13 @@ void set_blockchain_file(const char *filename)
 }
 
 void initialize_blockchain() {
-    pthread_mutex_lock(&blockchain_lock);
     if (index_loaded) {
-        pthread_mutex_unlock(&blockchain_lock);
         return;
     }
 
     FILE *fp = fopen(blockchain_file, "rb");
     if (!fp) {
         index_loaded = 1;
-        pthread_mutex_unlock(&blockchain_lock);
         return;
     }
 
@@ -79,7 +74,6 @@ void initialize_blockchain() {
 
     fclose(fp);
     index_loaded = 1;
-    pthread_mutex_unlock(&blockchain_lock);
 }
 
 // create the first block (genesis)
@@ -89,7 +83,7 @@ void create_genesis_block(Block *block, int validator_port)
 
     block->index = 0;
     block->timestamp = 1737280140;
-    block->validator_port = validator_port;
+    block->validator_port = 8001; // UNIVERSAL GENESIS VALIDATOR
 
     strcpy(block->previous_hash, "0");
 
@@ -113,8 +107,7 @@ void create_genesis_block(Block *block, int validator_port)
     calculate_block_hash(block);
 
     char private_key_path[64];
-    snprintf(private_key_path, sizeof(private_key_path),
-             "keys/%d_private.pem", validator_port);
+    snprintf(private_key_path, sizeof(private_key_path), "keys/8001_private.pem");
 
     if (!sign_data(block->block_hash,
                    private_key_path,
@@ -124,19 +117,16 @@ void create_genesis_block(Block *block, int validator_port)
         exit(1);
     }
 
-    printf("[BLOCKCHAIN] Genesis block created (node %d)\n",
-           validator_port);
+    printf("[BLOCKCHAIN] Genesis block created (node 8001)\n");
 }
 
 // append a block securely
 void add_block(Block *new_block)
 {
-    pthread_mutex_lock(&blockchain_lock);
 
     FILE *fp = fopen(blockchain_file, "ab");
     if (!fp)
     {
-        pthread_mutex_unlock(&blockchain_lock);
         printf("[STORAGE] Failed to open blockchain file.\n");
         return;
     }
@@ -158,18 +148,50 @@ void add_block(Block *new_block)
         add_to_index(new_block->transactions[i].data_hash);
     }
 
-    pthread_mutex_unlock(&blockchain_lock);
+}
+
+// validate a single block
+int verify_block(Block *block) {
+    char original_hash[HASH_SIZE];
+    strcpy(original_hash, block->block_hash);
+
+    // 1. Recompute Hash
+    calculate_block_hash(block);
+    if (strcmp(original_hash, block->block_hash) != 0) {
+        printf("[CRYPTO] Block hash mismatch!\n");
+        return 0;
+    }
+
+    // 2. Verify Signature
+    char public_key_path[64];
+    snprintf(public_key_path, sizeof(public_key_path), "keys/%d_public.pem", block->validator_port);
+    
+    if (!verify_signature(original_hash, public_key_path, block->validator_signature)) {
+        printf("[CRYPTO] Signature validation failed for node %d\n", block->validator_port);
+        return 0;
+    }
+
+    // 3. Verify Linkage (if not genesis)
+    if (block->index > 0) {
+        Block last;
+        if (get_last_block(&last)) {
+            if (strcmp(block->previous_hash, last.block_hash) != 0) {
+                printf("[CRYPTO] Linkage failed! Block %d points to wrong previous hash.\n", block->index);
+                return 0;
+            }
+        }
+    }
+
+    return 1;
 }
 
 // retrieve the last block locally
 int get_last_block(Block *last_block)
 {
-    pthread_mutex_lock(&blockchain_lock);
 
     FILE *fp = fopen(blockchain_file, "rb");
     if (!fp)
     {
-        pthread_mutex_unlock(&blockchain_lock);
         return 0;
     }
 
@@ -183,7 +205,6 @@ int get_last_block(Block *last_block)
     }
 
     fclose(fp);
-    pthread_mutex_unlock(&blockchain_lock);
 
     return found;
 }
@@ -203,12 +224,10 @@ int get_last_block_hash(char *output_hash)
 // validate the entire chain
 int verify_blockchain()
 {
-    pthread_mutex_lock(&blockchain_lock);
 
     FILE *fp = fopen(blockchain_file, "rb");
     if (!fp)
     {
-        pthread_mutex_unlock(&blockchain_lock);
         return 0;
     }
 
@@ -217,7 +236,6 @@ int verify_blockchain()
     if (fread(&prev, sizeof(Block), 1, fp) != 1)
     {
         fclose(fp);
-        pthread_mutex_unlock(&blockchain_lock);
         return 0;
     }
 
@@ -230,7 +248,6 @@ int verify_blockchain()
     {
         printf("[BLOCKCHAIN] Genesis hash validation failed.\n");
         fclose(fp);
-        pthread_mutex_unlock(&blockchain_lock);
         return 0;
     }
 
@@ -244,7 +261,6 @@ int verify_blockchain()
     {
         printf("[CRYPTO] Genesis signature validation failed.\n");
         fclose(fp);
-        pthread_mutex_unlock(&blockchain_lock);
         return 0;
     }
 
@@ -257,7 +273,6 @@ int verify_blockchain()
             printf("[BLOCKCHAIN] Previous hash mismatch at block %d.\n",
                    curr.index);
             fclose(fp);
-            pthread_mutex_unlock(&blockchain_lock);
             return 0;
         }
 
@@ -271,7 +286,6 @@ int verify_blockchain()
             printf("[BLOCKCHAIN] Hash validation failed at block %d.\n",
                    curr.index);
             fclose(fp);
-            pthread_mutex_unlock(&blockchain_lock);
             return 0;
         }
 
@@ -285,7 +299,6 @@ int verify_blockchain()
             printf("[CRYPTO] Signature validation failed at block %d.\n",
                    curr.index);
             fclose(fp);
-            pthread_mutex_unlock(&blockchain_lock);
             return 0;
         }
 
@@ -294,7 +307,6 @@ int verify_blockchain()
     }
 
     fclose(fp);
-    pthread_mutex_unlock(&blockchain_lock);
 
     return 1;
 }
@@ -302,12 +314,10 @@ int verify_blockchain()
 // get chain length
 int get_blockchain_height()
 {
-    pthread_mutex_lock(&blockchain_lock);
 
     FILE *fp = fopen(blockchain_file, "rb");
     if (!fp)
     {
-        pthread_mutex_unlock(&blockchain_lock);
         return 0;
     }
 
@@ -318,7 +328,6 @@ int get_blockchain_height()
         count++;
 
     fclose(fp);
-    pthread_mutex_unlock(&blockchain_lock);
 
     return count;
 }
@@ -326,12 +335,10 @@ int get_blockchain_height()
 // find block by index
 int get_block_by_index(int index, Block *block)
 {
-    pthread_mutex_lock(&blockchain_lock);
 
     FILE *fp = fopen(blockchain_file, "rb");
     if (!fp)
     {
-        pthread_mutex_unlock(&blockchain_lock);
         return 0;
     }
 
@@ -343,13 +350,11 @@ int get_block_by_index(int index, Block *block)
         {
             *block = temp;
             fclose(fp);
-            pthread_mutex_unlock(&blockchain_lock);
             return 1;
         }
     }
 
     fclose(fp);
-    pthread_mutex_unlock(&blockchain_lock);
 
     return 0;
 }
@@ -357,12 +362,10 @@ int get_block_by_index(int index, Block *block)
 // check if block exists
 int block_exists_by_index(int index)
 {
-    pthread_mutex_lock(&blockchain_lock);
 
     FILE *fp = fopen(blockchain_file, "rb");
     if (!fp)
     {
-        pthread_mutex_unlock(&blockchain_lock);
         return 0;
     }
 
@@ -373,13 +376,11 @@ int block_exists_by_index(int index)
         if (temp.index == index)
         {
             fclose(fp);
-            pthread_mutex_unlock(&blockchain_lock);
             return 1;
         }
     }
 
     fclose(fp);
-    pthread_mutex_unlock(&blockchain_lock);
 
     return 0;
 }
@@ -389,18 +390,15 @@ int transaction_hash_exists(const char *data_hash)
 {
     if (!index_loaded) initialize_blockchain();
 
-    pthread_mutex_lock(&blockchain_lock);
     unsigned int h = hash_tx(data_hash);
     TxIndexNode *current = tx_index[h];
     
     while (current) {
         if (strcmp(current->data_hash, data_hash) == 0) {
-            pthread_mutex_unlock(&blockchain_lock);
             return 1;
         }
         current = current->next;
     }
 
-    pthread_mutex_unlock(&blockchain_lock);
     return 0;
 }
