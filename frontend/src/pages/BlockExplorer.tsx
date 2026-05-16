@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Database, Hash, Link as LinkIcon, Cpu, ShieldCheck, Loader2 } from 'lucide-react';
 import { blockchainService } from '../services/api';
 import type { Block } from '../types/blockchain';
+import type { ReactNode } from 'react';
 
 const BlockExplorer: React.FC = () => {
   const [blocks, setBlocks] = useState<Block[]>([]);
@@ -29,7 +30,7 @@ const BlockExplorer: React.FC = () => {
       } else {
         alert('WARNING: TAMPERING DETECTED! One or more blocks have invalid hashes or signatures.');
       }
-    } catch (err) {
+    } catch {
       alert('Error: Could not connect to validator node.');
     } finally {
       setVerifying(false);
@@ -114,7 +115,7 @@ const BlockExplorer: React.FC = () => {
 // Helper for static size
 const sizeofBlock = () => 1024; // Approximation for UI
 
-const DataField = ({ icon, label, value }: { icon: any, label: string, value: string }) => (
+const DataField = ({ icon, label, value }: { icon: ReactNode, label: string, value: string }) => (
   <div className="space-y-1">
     <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
       {icon} {label}

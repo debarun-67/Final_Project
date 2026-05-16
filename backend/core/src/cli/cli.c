@@ -1,19 +1,21 @@
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 #include "../blockchain/blockchain.h"
 #include "../crypto/hash.h"
+#include "../crypto/signature.h"
 
 int main() {
+    const int validator_port = 8001;
+
     Block genesis;
-    create_genesis_block(&genesis);
+    create_genesis_block(&genesis, validator_port);
     add_block(&genesis);
 
     printf("Genesis block created.\n");
 
     Block block;
-    block.index = 1;
-    block.timestamp = time(NULL);
-    strcpy(block.previous_hash, genesis.block_hash);
+    init_block(&block, 1, genesis.block_hash);
 
     Transaction tx;
     strcpy(tx.patient_id, "PATIENT123");
@@ -24,12 +26,14 @@ int main() {
 
     block.transactions[0] = tx;
     block.transaction_count = 1;
+    block.validator_port = validator_port;
 
-    char data_to_hash[256];
-    snprintf(data_to_hash, sizeof(data_to_hash), "%d%s", block.index, tx.data_hash);
-    sha256(data_to_hash, block.block_hash);
+    calculate_block_hash(&block);
 
-    sign_data(block.block_hash, "hospital_private_key", block.validator_signature);
+    if (!sign_data(block.block_hash, "keys/8001_private.pem", block.validator_signature)) {
+        printf("Block signing failed.\n");
+        return 1;
+    }
     add_block(&block);
 
     printf("Block added.\n");

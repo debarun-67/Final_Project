@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { supabase } from './supabase';
+import type { LoginCredentials } from '../types/blockchain';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -26,7 +26,7 @@ export const blockchainService = {
 };
 
 export const authService = {
-  login: (credentials: any) => api.post('/auth/login', credentials),
+  login: (credentials: LoginCredentials) => api.post('/auth/login', credentials),
   getMe: () => api.get('/auth/me'),
 };
 

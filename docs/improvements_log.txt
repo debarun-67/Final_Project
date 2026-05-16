@@ -1,65 +1,573 @@
 IMPROVEMENTS LOG - MEDICAL BLOCKCHAIN PROJECT
 =============================================
 
-[DATE: 2026-05-08]
+Updated: May 2026
+Purpose: Compare the previous LaTeX-report version of the project with the current repository implementation.
 
-1. SECURITY: Replaced manual SHA-256 implementation with OpenSSL EVP API.
-   - Benefit: Robust, industry-standard, and optimized cryptographic hashing.
-   - File: src/crypto/hash.c
 
-2. INTEGRITY: Fixed record hashing logic in main application.
-   - Change: The system now hashes the ENTIRE medical record file instead of just the first and last lines.
-   - Benefit: Prevents middle-of-file tampering.
-   - File: src/main.c
+SUMMARY
+-------
 
-3. INTEGRITY: Fixed block hash calculation.
-   - Change: Blocks now correctly hash the entire block structure (index, timestamp, previous hash, transactions) instead of only the data hash.
-   - Benefit: Restores the integrity of the blockchain linkage.
-   - File: src/main.c
+The previous LaTeX report described the project mainly as a C/C11 permissioned blockchain for secure medical record storage. It emphasized Proof of Authority, RSA-2048 signatures, SHA-256 hash chaining, custom TCP networking, off-chain encrypted storage, performance evaluation, and formal security analysis.
 
-4. ARCHITECTURE: Fixed function call mismatches.
-   - Change: Genesis block creation now correctly provides the validator port.
-   - File: src/main.c
+The current system has changed substantially. It is now a full-stack prototype with:
 
-5. ARCHITECTURE: Improved data abstraction.
-   - Change: Replaced manual file operations with centralized blockchain API calls (e.g., transaction_hash_exists).
-   - File: src/main.c
+1. C blockchain core.
+2. Node.js/Express API bridge.
+3. Vite React/TypeScript frontend dashboard.
+4. Demo multi-node instances.
+5. Network health and log visualization.
+6. Role-based pages for admin, doctor, and patient workflows.
+7. Duplicate record detection through transaction hash indexing.
+8. Three-phase-commit-inspired node commit flow.
 
-6. SECURITY: Standardized key management.
-   - Change: Updated signing logic to use the standard 'keys/' directory and port-based naming convention.
-   - File: src/main.c
+Important correction:
+The current codebase does not fully match every claim made in the previous LaTeX report or in the older improvements log. In particular, RSA/OpenSSL-based block signatures and TLS networking are not active in the current build. The current signature implementation is a demonstration mechanism, not production cryptography. AES-256-GCM encryption utility code exists, but the web upload flow does not yet integrate it end to end.
 
-7. ARCHITECTURE: Centralized hashing logic.
-   - Change: Moved file-content hashing to a common utility function in the crypto layer.
-   - Benefit: Ensures consistency between record creation (main.c) and record validation (validate.c).
-   - Files: src/crypto/hash.c, src/crypto/hash.h, src/main.c, src/validate.c
 
-8. RELIABILITY: Explicit disk synchronization (Durability).
-   - Change: Added _commit (Windows) / fsync (Linux) calls after block writes.
-   - Benefit: Protects against ledger corruption during power failures or system crashes.
-   - File: src/blockchain/blockchain.c
+COMPARISON AGAINST PREVIOUS LATEX REPORT
+----------------------------------------
 
-9. PERFORMANCE: Transaction Indexing (Hash Map).
-   - Change: Implemented an in-memory Hash Map to index transaction hashes on startup.
-   - Benefit: Optimized duplicate detection from O(n) linear scan to O(1) constant time lookup.
-   - Files: src/blockchain/blockchain.c, src/blockchain/blockchain.h
+1. PROJECT SCOPE
 
-10. RESILIENCE: Application-level Rate Limiting.
-    - Change: Added message tracking per peer with a threshold of 20 messages/second.
-    - Benefit: Protects nodes from flooding attacks and improves network stability.
-    - Files: src/network/node.c, src/network/node.h
+Previous system:
+- Mostly described as a C-based permissioned blockchain core.
+- Focus was on low-level ledger design, PoA consensus, hashing, signatures, and off-chain storage.
+- User interaction was mainly command-line or conceptual.
 
-11. SECURITY: SSL/TLS Networking (Encryption).
-    - Change: Integrated OpenSSL TLS to encrypt all peer-to-peer communication.
-    - Benefit: Prevents eavesdropping and man-in-the-middle attacks on the blockchain network.
-    - Files: src/network/node.c, src/network/node.h, src/test_node.c
+Current system:
+- Expanded into a full-stack medical blockchain prototype.
+- Includes C core, Express API, and React dashboard.
+- Adds hospital-style user views and operational dashboards.
 
-12. ARCHITECTURE: Merkle Tree Integration.
-    - Change: Replaced flat transaction hashing with a Merkle Tree (Binary Hash Tree) structure.
-    - Benefit: Provides efficient integrity verification and enables future "Light Client" support (SPV).
-    - Files: src/blockchain/block.c, src/blockchain/block.h
+Improvement:
+- The project is now easier to demonstrate to examiners and non-technical users.
+- It shows the full vertical architecture from core blockchain engine to frontend UI.
 
-13. PRIVACY: AES-256-GCM Off-Chain Encryption.
-    - Change: Implemented a full encryption utility using AES-256-GCM with PBKDF2 key derivation.
-    - Benefit: Ensures medical records are encrypted with military-grade security before hashing, providing confidentiality and tamper-evidence (via Auth Tags).
-    - Files: src/crypto/encryption.c, src/crypto/encryption.h
+Remaining gap:
+- Some frontend workflows are still partially simulated or not fully integrated with the C core.
+
+
+2. ARCHITECTURE
+
+Previous system:
+- Architecture was described as layered: application layer, consensus layer, ledger layer, storage layer.
+- It did not include a mature web application layer in the implementation narrative.
+
+Current system:
+- Architecture now has:
+  - backend/core: C ledger and node engine.
+  - backend/api: Express API bridge.
+  - frontend: React/TypeScript dashboard.
+  - demo_instances: independent local node folders.
+  - docs and scripts for reporting and demos.
+
+Improvement:
+- Clearer separation between core, API, frontend, documentation, and demo runtime.
+- The API can convert C viewer output into JSON.
+- The frontend can consume API endpoints rather than directly touching ledger files.
+
+Remaining gap:
+- API-to-core bridge uses child_process execution of binaries. This is acceptable for demo, but production should use a stable RPC service, native binding, or database-backed integration.
+
+
+3. BLOCKCHAIN DATA MODEL
+
+Previous system:
+- Described transactions with patient_id, doctor_id, data_hash, data_pointer, timestamp.
+- Described blocks with index, timestamp, previous_hash, transactions, validator identity, and signature.
+
+Current system:
+- Same core data model is still present in backend/core/src/blockchain/block.h.
+- Block also contains merkle_root, block_hash, validator_signature, validator_port, transaction_count, and transaction array.
+
+Improvement:
+- Current implementation keeps the medical-record-specific data model.
+- Block structure is now visible through the frontend explorer and API parser.
+
+Remaining gap:
+- Ledger stores C structs directly as binary records. This is simple but may be non-portable across compilers/platforms. A canonical serialization format should replace direct struct persistence.
+
+
+4. HASHING AND BLOCK INTEGRITY
+
+Previous system:
+- Report described SHA-256 hash chaining.
+- Older improvements log claimed OpenSSL EVP hashing.
+
+Current system:
+- Current backend/core/src/crypto/hash.c uses a standalone SHA-256 implementation.
+- File hashing uses hash_file_content.
+- Block hashing includes index, timestamp, previous_hash, and merkle_root.
+- Merkle root is computed from transaction fields.
+
+Improvement:
+- Hashing is centralized and consistent across file hashing and block verification.
+- Full file contents are hashed, not only partial file contents.
+- Merkle root integration strengthens transaction-level tamper evidence.
+
+Correction from older log:
+- The active hash.c is not OpenSSL EVP-based. It is a standalone SHA-256 implementation.
+
+Remaining gap:
+- Add known-answer SHA-256 test vectors to prove correctness.
+- Add automated tests for block hash reproducibility.
+
+
+5. MERKLE ROOT / TRANSACTION INTEGRITY
+
+Previous system:
+- The report described transaction lists and hash chaining.
+- Merkle tree support was discussed as an integrity mechanism.
+
+Current system:
+- calculate_merkle_root exists in backend/core/src/blockchain/block.c.
+- Each transaction contributes patient_id, doctor_id, data_hash, data_pointer, and timestamp to the Merkle calculation.
+- Block hash depends on the Merkle root.
+
+Improvement:
+- Any transaction-level change should change the Merkle root and therefore the block hash.
+- This creates a stronger integrity chain than hashing only a single data field.
+
+Remaining gap:
+- The implementation does not yet expose Merkle proofs for light clients.
+- The frontend displays the Merkle root but does not verify Merkle branches.
+
+
+6. SIGNATURES AND VALIDATOR IDENTITY
+
+Previous system:
+- LaTeX report described RSA-2048 signing and verification.
+- It stated that validator private keys sign block hashes and public keys verify them.
+
+Current system:
+- backend/core/src/crypto/signature.c uses a simplified mock signature:
+  - sign_data checks that a key file exists.
+  - signature begins with SIG_V1_.
+  - verify_signature checks only the SIG_V1_ prefix.
+- generate_keys.c now creates demo key files instead of real RSA key pairs.
+
+Improvement:
+- The system still demonstrates where signing fits into block creation.
+- Build portability improved because the core no longer depends on OpenSSL for block signatures.
+
+Regression / correction:
+- Current signatures are not cryptographically secure.
+- The previous RSA security claim is no longer true for the current active build.
+
+Future improvement:
+- Replace mock signatures with Ed25519, ECDSA P-256, or RSA-PSS.
+- Add validator public key registry.
+- Add key rotation and revocation.
+- Add tests for forged signatures.
+
+
+7. OFF-CHAIN STORAGE AND ENCRYPTION
+
+Previous system:
+- Report described encrypted medical files stored off-chain.
+- Older improvements log claimed AES-256-GCM encryption.
+
+Current system:
+- Off-chain record folders exist under backend/core/offchain and demo_instances/node*/offchain.
+- AES-256-GCM utility code exists in backend/core/src/crypto/encryption.c and encryption.h.
+- However, the active Makefile does not build encryption.c into the main targets.
+- The web upload controller does not yet perform real encryption end to end.
+
+Improvement:
+- The architectural direction is correct: files off-chain, hashes on-chain.
+- AES-GCM utility is available as a foundation.
+
+Correction from older log:
+- AES-256-GCM is present as utility code, but not fully integrated into the current upload and blockchain commit flow.
+
+Future improvement:
+- Wire encryption into backend upload.
+- Store encrypted files in offchain/records.
+- Hash encrypted output.
+- Add decrypt/verify command or endpoint.
+
+
+8. DUPLICATE RECORD DETECTION
+
+Previous system:
+- Replay attack mitigation was discussed conceptually.
+- Duplicate hash checking was mentioned.
+
+Current system:
+- transaction_hash_exists is implemented with an in-memory hash map.
+- initialize_blockchain loads transaction hashes into the index.
+- set_blockchain_file now clears the index when switching ledgers.
+- verify_block checks duplicate hashes inside the incoming block and against the existing chain.
+- node_app checks duplicate file hashes before proposing a new block.
+
+Improvement:
+- Duplicate lookup improved from repeated linear scans to indexed lookup.
+- Recent fix prevents stale index contents when using multiple chain files.
+
+Remaining gap:
+- Duplicate policy is based only on file hash. A production system may also need nonce, patient consent, document versioning, and legitimate re-submission handling.
+
+
+9. DISK DURABILITY
+
+Previous system:
+- Report discussed append-only persistence and crash consistency.
+
+Current system:
+- add_block writes to blockchain.dat, flushes the file, and calls:
+  - _commit on Windows
+  - fsync on Unix-like systems
+
+Improvement:
+- Stronger durability than a simple fwrite only.
+- Reduces risk of losing committed blocks during power loss.
+
+Remaining gap:
+- No partial-record recovery format yet.
+- Since blocks are stored as raw structs, a crash mid-write may leave trailing garbage.
+- Future system should add length prefix, checksum, or write-ahead log.
+
+
+10. VIEWER AND VERIFICATION TOOLING
+
+Previous system:
+- Viewer and validation tools were described as command-line utilities.
+
+Current system:
+- viewer.exe supports:
+  - HEIGHT
+  - LAST
+  - ALL
+  - VERIFY
+  - PRINT <index>
+- VERIFY now reports EMPTY when the central core ledger is missing/empty instead of misleadingly reporting TAMPERED.
+- Express API depends on viewer output.
+
+Improvement:
+- Tooling is more useful for both CLI and API usage.
+- EMPTY output prevents confusing false tamper reports.
+
+Remaining gap:
+- Viewer output is plain text. API parsing depends on output format stability.
+- A JSON output mode would be cleaner.
+
+
+11. NETWORKING
+
+Previous system:
+- Report described custom TCP networking, peer synchronization, validator communication, and PoA.
+- Older improvements log claimed SSL/TLS networking and rate limiting.
+
+Current system:
+- TCP networking exists in backend/core/src/network.
+- Nodes support peer connections, MY_PORT identity message, height exchange, block requests, synchronization, and broadcast.
+- Protocol uses messages such as CHAIN_HEIGHT, GET_HEIGHT, GET_BLOCK, SYNC_BLOCK, CAN_COMMIT, VOTE_YES, PRE_COMMIT, ACK_PRE, and DO_COMMIT.
+
+Improvement:
+- Current system has a richer 3PC-inspired flow than the earlier conceptual report.
+- Synchronization can request missing blocks from peers.
+
+Correction from older log:
+- Active networking is plain TCP, not TLS.
+- No confirmed active application-level rate limiter is present in the current node path.
+
+Future improvement:
+- Add TLS/mTLS.
+- Add rate limiting.
+- Add signed peer registry.
+- Add robust malformed-message handling.
+
+
+12. CONSENSUS FLOW
+
+Previous system:
+- Report described Proof of Authority and deterministic validator leadership.
+- It discussed validators as known entities with signatures.
+
+Current system:
+- node_app uses proposer-driven consensus.
+- Protocol includes:
+  - CAN_COMMIT
+  - VOTE_YES
+  - PRE_COMMIT
+  - ACK_PRE
+  - DO_COMMIT
+- Vote masks prevent duplicate votes from the same peer port.
+
+Improvement:
+- Current implementation is more concrete than the earlier report.
+- It demonstrates distributed block commit rather than only single-validator append.
+
+Remaining gap:
+- Consensus is demo-level, not production BFT.
+- Quorum size is hard-coded around small demo assumptions.
+- No formal validator registry, leader election, timeout recovery, or partition handling.
+
+
+13. API LAYER
+
+Previous system:
+- The LaTeX report did not focus on an implemented web API bridge.
+
+Current system:
+- backend/api exposes:
+  - /api/height
+  - /api/blocks
+  - /api/block/:index
+  - /api/verify
+  - /api/network/health
+  - /api/network/logs
+  - /api/records/upload
+- core_bridge.js executes C binaries and parses output.
+- parser.js converts C viewer text into JSON.
+
+Improvement:
+- The blockchain core is now accessible from a web dashboard.
+- Network logs and health checks can be viewed through HTTP endpoints.
+
+Remaining gap:
+- child_process bridge should be replaced with a safer long-running service interface.
+- Upload endpoint needs full integration with encryption and block append.
+- API lacks meaningful automated tests.
+
+
+14. FRONTEND DASHBOARD
+
+Previous system:
+- Earlier report had little or no implemented frontend discussion.
+
+Current system:
+- React/TypeScript frontend exists under frontend.
+- Pages include:
+  - Dashboard
+  - Login
+  - Block Explorer
+  - Network Health
+  - System Logs
+  - Upload Record
+  - My Records
+  - Verify Record
+  - Patient Search
+  - Activity Logs
+  - Settings
+- UI is role-aware for patient, doctor, and admin.
+
+Improvement:
+- Project is now demonstrable as a practical hospital-facing system.
+- Admin can view blocks, network health, and logs.
+- Doctors can access upload/activity workflows.
+- Patients can view records and verification pages.
+
+Remaining gap:
+- Verify Record is currently simulated on the frontend.
+- Upload UI is ahead of backend/core integration.
+- Frontend mock auth is not unified with backend Supabase auth.
+
+
+15. AUTHENTICATION AND ROLES
+
+Previous system:
+- Report discussed identity and validator keys more than web user auth.
+
+Current system:
+- Frontend has local mock users:
+  - doctor
+  - patient
+  - admin
+- Backend middleware expects Supabase bearer tokens and role/profile records.
+
+Improvement:
+- Role-based application concept now exists.
+- Sidebar and routes change based on role.
+
+Remaining gap:
+- Frontend and backend authentication are inconsistent.
+- Need one auth model across the stack.
+
+
+16. LOGGING AND MONITORING
+
+Previous system:
+- Report described logging generally.
+
+Current system:
+- backend/api writes server.log.
+- C nodes write data/network.log.
+- API aggregates logs from demo_instances/node*/data/network.log.
+- Frontend System Logs page displays system, storage, and network events.
+- Network Health page scans local ports 8001-8010.
+
+Improvement:
+- Operational visibility is much better than before.
+- The project can show node status and historical logs through UI.
+
+Remaining gap:
+- Logs are plain files and not tamper-evident.
+- Log aggregation is demo-local.
+- Production monitoring should include alerts, metrics, and signed audit logs.
+
+
+17. PERFORMANCE AND TESTING
+
+Previous system:
+- LaTeX report stated benchmark-style numbers such as low millisecond latency and high throughput.
+
+Current system:
+- frontend npm run lint passes.
+- frontend npm run build passes.
+- backend API JavaScript syntax checks pass.
+- backend/core mingw32-make all passes.
+- viewer VERIFY returns EMPTY for empty central core ledger.
+
+Improvement:
+- Current build is verified across frontend, API syntax, and C core.
+- Frontend lint and TypeScript issues have been corrected.
+
+Remaining gap:
+- No repeatable benchmark report currently generated.
+- No standard deviation, multi-node benchmark, or automated stress test.
+- backend/api npm test remains a placeholder.
+
+
+18. DOCUMENTATION
+
+Previous system:
+- report_latex contained a thesis-style report focused on the earlier C-core design.
+
+Current system:
+- README has been corrected to reflect current repo layout and build commands.
+- docs/updated_thesis_report.txt now documents the current full-stack system.
+- docs/improvements_log.txt now tracks the actual differences between old and current systems.
+
+Improvement:
+- Documentation now better matches code reality.
+- Current limitations are explicitly documented instead of hidden.
+
+
+19. REPOSITORY AND DEMO STRUCTURE
+
+Previous system:
+- Mainly source-oriented structure.
+
+Current system:
+- Includes demo_instances/node1 through node4.
+- Each demo node has its own binaries, keys, records, blockchain data, and logs.
+
+Improvement:
+- Easier to demonstrate local multi-node behavior.
+
+Remaining gap:
+- Generated binaries, logs, demo blockchain data, and keys are tracked in the repo.
+- Future cleanup should separate source files from generated runtime artifacts.
+
+
+STATUS TABLE
+------------
+
+Feature / Claim                                Previous Report                 Current Status
+------------------------------------------------------------------------------------------------------
+C blockchain core                              Planned/implemented             Implemented
+SHA-256 hash chaining                          Implemented                     Implemented
+Merkle root                                    Described                       Implemented
+Full file hashing                              Needed/important                Implemented
+RSA-2048 block signatures                      Claimed                         Not active; mock signature
+Proof of Authority                             Claimed                         Demo PoA-style validator flow
+3-phase commit style consensus                 Not central                     Implemented in protocol flow
+TCP peer networking                            Claimed                         Implemented
+TLS networking                                 Future/older log claimed        Not active
+Duplicate record detection                     Described                       Implemented with hash index
+Disk fsync/_commit durability                  Described/improved              Implemented
+AES-256-GCM off-chain encryption               Claimed in older log            Utility exists, not fully integrated
+Express API                                    Not central                     Implemented
+React frontend dashboard                       Not central                     Implemented
+Role-based pages                               Not central                     Implemented in frontend
+Supabase authentication                        Not central                     Backend middleware exists; frontend mock auth
+Record upload from UI to chain                 Not present                     Partial; needs integration
+Record verification UI                         Not present                     Present but simulated
+Network health dashboard                       Not present                     Implemented
+System log dashboard                           Not present                     Implemented
+Automated backend tests                        Not described                   Missing
+Performance benchmark rigor                    Claimed conceptually            Needs repeatable test suite
+
+
+HIGH-PRIORITY NEXT IMPROVEMENTS
+-------------------------------
+
+1. Replace mock signatures with real cryptographic signatures.
+   - Use Ed25519, ECDSA P-256, or RSA-PSS.
+   - Verify blocks against registered validator public keys.
+
+2. Complete upload pipeline.
+   - Upload file through API.
+   - Encrypt file or accept encrypted file.
+   - Store in offchain/records.
+   - Hash encrypted file.
+   - Add transaction/block through the C core.
+   - Return committed block information to frontend.
+
+3. Replace simulated verification.
+   - Compute real file hash.
+   - Compare against blockchain transaction data_hash.
+
+4. Unify authentication.
+   - Either use Supabase end to end or keep a pure demo mode.
+   - Frontend and backend must agree on tokens and roles.
+
+5. Add TLS/mTLS for node communication.
+   - Plain TCP is not acceptable for production healthcare data systems.
+
+6. Replace raw struct persistence.
+   - Use canonical serialization with checksums and length prefixes.
+
+7. Add automated tests.
+   - C hash/block tests.
+   - serializer/deserializer tests.
+   - API route tests.
+   - frontend tests.
+   - multi-node sync tests.
+
+8. Improve consensus.
+   - Configurable validator set.
+   - Formal quorum.
+   - Timeout handling.
+   - Failed proposer recovery.
+
+9. Improve repository hygiene.
+   - Remove generated logs/binaries from normal source tracking.
+   - Keep demo data separate.
+
+10. Add thesis-grade benchmarks.
+    - Multi-run timing.
+    - Standard deviation.
+    - Multi-node performance.
+    - Stress tests.
+
+
+CONCLUSION
+----------
+
+Compared with the previous LaTeX-report system, the current project is broader and more demonstrable. It has evolved from a mostly C-core blockchain thesis into a full-stack medical blockchain prototype with API and frontend layers.
+
+The strongest improvements are:
+
+- full-stack architecture,
+- frontend dashboard,
+- API bridge,
+- Merkle-root-based block hashing,
+- duplicate transaction indexing,
+- local multi-node demo support,
+- network health/log visualization,
+- clearer documentation.
+
+The most important remaining issues are:
+
+- mock signatures instead of real cryptography,
+- incomplete upload/encryption/commit integration,
+- simulated record verification,
+- no TLS,
+- no production-ready validator governance,
+- limited automated tests,
+- raw binary ledger persistence.
+
+The project is therefore best described as a strong academic prototype and demonstration platform. It now shows both the core blockchain idea and the surrounding application experience, while clearly identifying what must be improved before production healthcare use.

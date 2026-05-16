@@ -1,6 +1,33 @@
 const supabase = require('../config/supabase');
 
+const MOCK_USERS = {
+    'mock-doc-1': {
+        id: 'mock-doc-1',
+        email: 'doctor@hospital.org',
+        role: 'doctor',
+        doctor_id: 'DOC_001'
+    },
+    'mock-pat-1': {
+        id: 'mock-pat-1',
+        email: 'patient@test.com',
+        role: 'patient',
+        patient_id: 'PAT_001'
+    },
+    'mock-adm-1': {
+        id: 'mock-adm-1',
+        email: 'admin@chain.com',
+        role: 'admin'
+    }
+};
+
 const authMiddleware = async (req, res, next) => {
+    const mockUserId = req.header('X-Mock-User-ID');
+    if (mockUserId && MOCK_USERS[mockUserId]) {
+        req.user = MOCK_USERS[mockUserId];
+        next();
+        return;
+    }
+
     const token = req.header('Authorization')?.replace('Bearer ', '');
     
     if (!token) {

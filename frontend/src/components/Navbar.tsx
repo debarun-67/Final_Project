@@ -1,8 +1,9 @@
 import React from 'react';
 import { Shield, LogOut, User } from 'lucide-react';
+import type { AuthUser } from '../types/blockchain';
 
 interface NavbarProps {
-  user: any;
+  user: AuthUser;
   onLogout: () => void;
 }
 

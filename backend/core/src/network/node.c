@@ -1,10 +1,15 @@
+#ifdef _WIN32
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT 0x0600
+#endif
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
 
 #ifdef _WIN32
-    #define _WIN32_WINNT 0x0600
     #include <winsock2.h>
     #include <ws2tcpip.h>
     #include <process.h>

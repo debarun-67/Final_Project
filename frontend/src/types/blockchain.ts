@@ -24,3 +24,27 @@ export interface NodeStatus {
     is_syncing: boolean;
     uptime: number;
 }
+
+export type UserRole = 'patient' | 'doctor' | 'admin';
+
+export interface AuthUser {
+    email: string;
+    password: string;
+    role: UserRole;
+    username: string;
+    id: string;
+    doctor_id?: string;
+    patient_id?: string;
+}
+
+export interface LoginCredentials {
+    email: string;
+    password: string;
+}
+
+export interface NetworkNode {
+    port: number;
+    status: 'online' | 'offline' | string;
+    type: string;
+    latency: string;
+}

@@ -22,6 +22,7 @@ typedef struct TxIndexNode {
 #define TX_HASH_BUCKETS 100007
 static TxIndexNode *tx_index[TX_HASH_BUCKETS] = {NULL};
 static int index_loaded = 0;
+static char blockchain_file[128] = "data/blockchain.dat";
 
 static unsigned int hash_tx(const char *hash) {
     unsigned int h = 5381;
@@ -41,9 +42,43 @@ static void add_to_index(const char *data_hash) {
         tx_index[h] = node;
     }
 }
-// ---------------------------------------
 
-static char blockchain_file[128] = "data/blockchain.dat";
+static void clear_tx_index(void) {
+    for (int i = 0; i < TX_HASH_BUCKETS; i++) {
+        TxIndexNode *current = tx_index[i];
+        while (current) {
+            TxIndexNode *next = current->next;
+            free(current);
+            current = next;
+        }
+        tx_index[i] = NULL;
+    }
+}
+
+static int transaction_hash_exists_outside_block(const char *data_hash, int block_index) {
+    FILE *fp = fopen(blockchain_file, "rb");
+    if (!fp) {
+        return 0;
+    }
+
+    Block temp;
+    while (fread(&temp, sizeof(Block), 1, fp) == 1) {
+        if (temp.index == block_index) {
+            continue;
+        }
+
+        for (int i = 0; i < temp.transaction_count; i++) {
+            if (strcmp(temp.transactions[i].data_hash, data_hash) == 0) {
+                fclose(fp);
+                return 1;
+            }
+        }
+    }
+
+    fclose(fp);
+    return 0;
+}
+// ---------------------------------------
 
 // mutex removed for zero-dependency demo
 
@@ -51,6 +86,8 @@ static char blockchain_file[128] = "data/blockchain.dat";
 void set_blockchain_file(const char *filename)
 {
     strncpy(blockchain_file, filename, sizeof(blockchain_file));
+    blockchain_file[sizeof(blockchain_file) - 1] = '\0';
+    clear_tx_index();
     index_loaded = 0; // Reset index if file changes
 }
 
@@ -179,6 +216,24 @@ int verify_block(Block *block) {
                 printf("[CRYPTO] Linkage failed! Block %d points to wrong previous hash.\n", block->index);
                 return 0;
             }
+        }
+    }
+
+    // 4. Check for duplicate transactions within the block and existing chain.
+    for (int i = 0; i < block->transaction_count; i++) {
+        for (int j = i + 1; j < block->transaction_count; j++) {
+            if (strcmp(block->transactions[i].data_hash, block->transactions[j].data_hash) == 0) {
+                printf("[SECURITY] DUPLICATE TRANSACTION DETECTED inside block %d: Hash %s.\n",
+                       block->index,
+                       block->transactions[i].data_hash);
+                return 0;
+            }
+        }
+
+        if (transaction_hash_exists_outside_block(block->transactions[i].data_hash, block->index)) {
+            printf("[SECURITY] DUPLICATE TRANSACTION DETECTED: Hash %s already on chain.\n", 
+                   block->transactions[i].data_hash);
+            return 0;
         }
     }
 

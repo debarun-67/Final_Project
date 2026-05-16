@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Shield, Lock, Mail, Eye, EyeOff } from 'lucide-react';
+import type { AuthUser, LoginCredentials } from '../types/blockchain';
 
 interface LoginProps {
-  onLogin: (credentials: any) => Promise<any>;
+  onLogin: (credentials: LoginCredentials) => Promise<AuthUser>;
 }
 
 const Login: React.FC<LoginProps> = ({ onLogin }) => {
@@ -19,8 +20,9 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
     try {
       await onLogin({ email, password });
-    } catch (err: any) {
-      setError(err.response?.data?.message || err.message || 'Invalid credentials. Please try again.');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Invalid credentials. Please try again.';
+      setError(message);
     } finally {
       setLoading(false);
     }

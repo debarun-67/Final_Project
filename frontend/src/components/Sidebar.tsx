@@ -37,7 +37,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role }) => {
       { to: "/network", icon: <Network size={20} />, label: "Node Health" },
       { to: "/logs", icon: <Activity size={20} />, label: "System Logs" },
       { to: "/upload", icon: <Upload size={20} />, label: "Upload Record" },
-      { to: "/patients", icon: <Search size={20} />, label: "Patient Search" },
+      // { to: "/patients", icon: <Search size={20} />, label: "Patient Search" },
       { to: "/activity", icon: <History size={20} />, label: "Activity Logs" },
       { to: "/my-records", icon: <FileText size={20} />, label: "All Records" },
       { to: "/verify", icon: <ShieldCheck size={20} />, label: "Verify Record" },

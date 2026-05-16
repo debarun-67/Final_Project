@@ -7,7 +7,7 @@ SRCS_COMMON = src/blockchain/block.c \
               src/blockchain/blockchain.c \
               src/crypto/hash.c \
               src/crypto/signature.c
-
+ 
 # Targets
 all: setup blockchain cli viewer validate keygen node
 

@@ -2,10 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { FileText, Download, ShieldCheck, Clock, User } from 'lucide-react';
 import { blockchainService } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
+import type { Block, Transaction } from '../types/blockchain';
+
+interface MedicalRecord {
+  id: string;
+  name: string;
+  date: string;
+  doctor: string;
+  patient_id: string;
+  status: 'verified';
+  data_pointer: string;
+}
 
 const MyRecords: React.FC = () => {
   const { user } = useAuth();
-  const [records, setRecords] = useState<any[]>([]);
+  const [records, setRecords] = useState<MedicalRecord[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -13,12 +24,12 @@ const MyRecords: React.FC = () => {
       try {
         const { data: blocks } = await blockchainService.getBlocks();
         
-        let allTransactions: any[] = [];
+        let allTransactions: MedicalRecord[] = [];
         
         // Parse blocks and extract transactions
-        blocks.forEach((block: any) => {
+        blocks.forEach((block: Block) => {
           if (block.transactions && Array.isArray(block.transactions)) {
-            block.transactions.forEach((tx: any) => {
+            block.transactions.forEach((tx: Transaction) => {
               allTransactions.push({
                 id: tx.data_hash || Math.random().toString(),
                 name: 'Encrypted Medical Record',

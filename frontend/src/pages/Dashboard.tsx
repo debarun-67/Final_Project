@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { blockchainService } from '../services/api';
-import type { Block } from '../types/blockchain';
-import { Database, Activity, Server, Hash } from 'lucide-react';
+import type { Block, NetworkNode } from '../types/blockchain';
+import type { ReactNode } from 'react';
+import { Database, Activity, Server } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
   const [blocks, setBlocks] = useState<Block[]>([]);
@@ -20,7 +21,7 @@ const Dashboard: React.FC = () => {
         setHeight(heightRes.data.height);
         setBlocks(blocksRes.data);
         
-        const onlineCount = networkRes.data.nodes.filter((n: any) => n.status === 'online').length;
+        const onlineCount = networkRes.data.nodes.filter((n: NetworkNode) => n.status === 'online').length;
         setActiveNodes(onlineCount);
       } catch (err) {
         console.error('Failed to fetch dashboard data', err);
@@ -40,7 +41,7 @@ const Dashboard: React.FC = () => {
         <StatCard icon={<Database className="text-blue-600" />} label="Chain Height" value={height.toString()} />
         <StatCard icon={<Activity className="text-emerald-600" />} label="Network Status" value={activeNodes > 0 ? "Healthy" : "Offline"} />
         <StatCard icon={<Server className="text-purple-600" />} label="Active Nodes" value={activeNodes.toString()} />
-        <StatCard icon={<Hash className="text-orange-600" />} label="Algorithm" value="SHA-256" />
+        {/* <StatCard icon={<Hash className="text-orange-600" />} label="Algorithm" value="SHA-256" /> */}
       </div>
 
       <div className="flex justify-between items-end">
@@ -86,7 +87,7 @@ const Dashboard: React.FC = () => {
   );
 };
 
-const StatCard = ({ icon, label, value }: { icon: any, label: string, value: string }) => (
+const StatCard = ({ icon, label, value }: { icon: ReactNode, label: string, value: string }) => (
   <div className="glass-card p-4 flex items-center gap-4">
     <div className="p-3 bg-white rounded-none">{icon}</div>
     <div>

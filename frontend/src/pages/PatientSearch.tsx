@@ -2,9 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { Search, User, Calendar, ChevronRight } from 'lucide-react';
 import { supabase } from '../services/supabase';
 
+interface PatientSummary {
+  id: string;
+  name: string;
+  age: string;
+  lastVisit: string;
+}
+
 const PatientSearch: React.FC = () => {
   const [query, setQuery] = useState('');
-  const [patients, setPatients] = useState<any[]>([]);
+  const [patients, setPatients] = useState<PatientSummary[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

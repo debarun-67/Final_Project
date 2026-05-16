@@ -3,22 +3,24 @@
 #include <string.h>
 #include <sys/stat.h>
 
-#include <openssl/evp.h>
-#include <openssl/pem.h>
-#include <openssl/core_names.h>
+#ifdef _WIN32
+#include <direct.h>
+#endif
 
 void ensure_keys_directory()
 {
     struct stat st = {0};
-    if (stat("keys", &st) == -1)
+    if (stat("keys", &st) == -1) {
+#ifdef _WIN32
+        _mkdir("keys");
+#else
         mkdir("keys", 0700);
+#endif
+    }
 }
 
 int generate_keypair_for_port(int port)
 {
-    EVP_PKEY_CTX *ctx = NULL;
-    EVP_PKEY *pkey = NULL;
-
     char private_path[64];
     char public_path[64];
 
@@ -27,64 +29,25 @@ int generate_keypair_for_port(int port)
     snprintf(public_path, sizeof(public_path),
              "keys/%d_public.pem", port);
 
-    // rsa context setup
-    ctx = EVP_PKEY_CTX_new_from_name(NULL, "RSA", NULL);
-    if (!ctx)
-    {
-        printf("Failed to create context\n");
-        return 0;
-    }
-
-    if (EVP_PKEY_keygen_init(ctx) <= 0)
-    {
-        printf("Keygen init failed\n");
-        EVP_PKEY_CTX_free(ctx);
-        return 0;
-    }
-
-    // set size to 2048
-    if (EVP_PKEY_CTX_set_rsa_keygen_bits(ctx, 2048) <= 0)
-    {
-        printf("Failed to set RSA bits\n");
-        EVP_PKEY_CTX_free(ctx);
-        return 0;
-    }
-
-    // key generation
-    if (EVP_PKEY_keygen(ctx, &pkey) <= 0)
-    {
-        printf("Key generation failed\n");
-        EVP_PKEY_CTX_free(ctx);
-        return 0;
-    }
-
-    EVP_PKEY_CTX_free(ctx);
-
-    // store private key
     FILE *fp = fopen(private_path, "w");
     if (!fp)
     {
         printf("Cannot open private key file\n");
-        EVP_PKEY_free(pkey);
         return 0;
     }
 
-    PEM_write_PrivateKey(fp, pkey, NULL, NULL, 0, NULL, NULL);
+    fprintf(fp, "DEMO_PRIVATE_KEY_FOR_PORT_%d\n", port);
     fclose(fp);
 
-    // store public key
     fp = fopen(public_path, "w");
     if (!fp)
     {
         printf("Cannot open public key file\n");
-        EVP_PKEY_free(pkey);
         return 0;
     }
 
-    PEM_write_PUBKEY(fp, pkey);
+    fprintf(fp, "DEMO_PUBLIC_KEY_FOR_PORT_%d\n", port);
     fclose(fp);
-
-    EVP_PKEY_free(pkey);
 
     printf("Generated keys for port %d\n", port);
     return 1;

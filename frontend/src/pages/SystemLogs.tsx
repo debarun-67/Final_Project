@@ -1,9 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Terminal } from 'lucide-react';
 import { blockchainService } from '../services/api';
+import type { Block, NetworkNode } from '../types/blockchain';
+
+interface SystemLog {
+  id: number;
+  level: 'INFO' | 'WARN' | 'ERROR';
+  msg: string;
+  time: string;
+  timestamp: number;
+  type: 'system' | 'network' | 'storage';
+}
 
 const SystemLogs: React.FC = () => {
-  const [systemLogs, setSystemLogs] = useState<any[]>([]);
+  const [systemLogs, setSystemLogs] = useState<SystemLog[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -15,7 +25,7 @@ const SystemLogs: React.FC = () => {
           blockchainService.getNetworkLogs()
         ]);
         
-        const logs: any[] = [];
+        const logs: SystemLog[] = [];
         let idCounter = 1;
 
         // 1. Add Real Network & System Logs
@@ -60,7 +70,7 @@ const SystemLogs: React.FC = () => {
 
         // 2. Fallback: Add UI-generated health status if file is empty
         if (logs.length === 0 && healthRes.data && healthRes.data.nodes) {
-          healthRes.data.nodes.forEach((node: any) => {
+          healthRes.data.nodes.forEach((node: NetworkNode) => {
             if (node.status === 'online') {
               logs.push({
                 id: idCounter++,
@@ -76,7 +86,7 @@ const SystemLogs: React.FC = () => {
 
         // 3. Add Blockchain Storage Logs
         if (blocksRes.data && Array.isArray(blocksRes.data)) {
-          blocksRes.data.forEach((block: any) => {
+          blocksRes.data.forEach((block: Block) => {
             logs.push({
               id: idCounter++,
               level: 'INFO',

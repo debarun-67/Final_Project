@@ -27,7 +27,7 @@ const UploadRecord: React.FC = () => {
       setMessage('Record has been encrypted and added to the blockchain successfully.');
       setFile(null);
       setPatientId('');
-    } catch (err) {
+    } catch {
       setStatus('error');
       setMessage('Failed to upload record. Please check your credentials and try again.');
     }

@@ -1,9 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { History, Shield, FilePlus } from 'lucide-react';
 import { blockchainService } from '../services/api';
+import type { Block, Transaction } from '../types/blockchain';
+
+interface ActivityLog {
+  id: string;
+  action: 'BLOCK_SIGNED' | 'RECORD_UPLOAD';
+  target: string;
+  time: string;
+  timestamp: number;
+  status: 'SUCCESS';
+}
 
 const ActivityLogs: React.FC = () => {
-  const [logs, setLogs] = useState<any[]>([]);
+  const [logs, setLogs] = useState<ActivityLog[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -11,10 +21,10 @@ const ActivityLogs: React.FC = () => {
       try {
         const { data: blocks } = await blockchainService.getBlocks();
         
-        const allLogs: any[] = [];
+        const allLogs: ActivityLog[] = [];
         
         // Convert blocks and transactions to audit events
-        blocks.forEach((block: any) => {
+        blocks.forEach((block: Block) => {
           // Add block event
           allLogs.push({
             id: `block-${block.index}`,
@@ -27,7 +37,7 @@ const ActivityLogs: React.FC = () => {
 
           // Add transaction events
           if (block.transactions && Array.isArray(block.transactions)) {
-            block.transactions.forEach((tx: any, txIndex: number) => {
+            block.transactions.forEach((tx: Transaction, txIndex: number) => {
               allLogs.push({
                 id: `tx-${block.index}-${txIndex}`,
                 action: 'RECORD_UPLOAD',

@@ -1,5 +1,6 @@
 import React from 'react';
 import { User, Shield, Bell, Database } from 'lucide-react';
+import type { ReactNode } from 'react';
 
 const Settings: React.FC = () => {
   return (
@@ -45,7 +46,7 @@ const Settings: React.FC = () => {
   );
 };
 
-const SettingsTab = ({ icon, label, active = false }: { icon: any, label: string, active?: boolean }) => (
+const SettingsTab = ({ icon, label, active = false }: { icon: ReactNode, label: string, active?: boolean }) => (
   <button className={`w-full flex items-center gap-3 px-4 py-3 rounded-none font-medium  ${
     active ? 'bg-blue-600 text-white  -blue-200' : 'text-black hover:bg-white'
   }`}>

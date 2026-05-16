@@ -165,6 +165,12 @@ int main(int argc, char *argv[]) {
             strncpy(tx.data_pointer, final_path, sizeof(tx.data_pointer) - 1);
             
             if (hash_file_content(tx.data_pointer, tx.data_hash)) {
+                // PREVENT DUPLICATES
+                if (transaction_hash_exists(tx.data_hash)) {
+                    printf("[ERROR] Record already exists on blockchain (Duplicate Hash detected).\n");
+                    continue;
+                }
+                
                 tx.timestamp = time(NULL);
 
                 Block block;

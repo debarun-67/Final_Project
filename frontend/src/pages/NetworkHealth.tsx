@@ -1,21 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Server, Network, Globe, AlertCircle, Activity, Wifi } from 'lucide-react';
+import { Server, Network, Activity, Wifi } from 'lucide-react';
 import { blockchainService } from '../services/api';
+import type { NetworkNode } from '../types/blockchain';
 
 const NetworkHealth: React.FC = () => {
-  const [nodes, setNodes] = useState<any[]>([]);
-  const [height, setHeight] = useState(0);
+  const [nodes, setNodes] = useState<NetworkNode[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [healthRes, heightRes] = await Promise.all([
-          blockchainService.getNetworkHealth(),
-          blockchainService.getHeight()
-        ]);
+        const healthRes = await blockchainService.getNetworkHealth();
         setNodes(healthRes.data.nodes);
-        setHeight(heightRes.data.height);
       } catch (err) {
         console.error('Failed to fetch network data:', err);
       } finally {
@@ -28,7 +24,6 @@ const NetworkHealth: React.FC = () => {
   }, []);
 
   const onlineNodes = nodes.filter(n => n.status === 'online');
-  const healthScore = nodes.length > 0 ? (onlineNodes.length / nodes.length) * 100 : 0;
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
@@ -110,7 +105,7 @@ const NetworkHealth: React.FC = () => {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 glass-card p-8 space-y-6 bg-gradient-to-br from-white to-slate-50">
+        {/* <div className="lg:col-span-2 glass-card p-8 space-y-6 bg-gradient-to-br from-white to-slate-50">
           <div className="flex justify-between items-center">
             <h3 className="font-black text-black flex items-center gap-2 text-lg">
               <Globe size={22} className="text-blue-500" />
@@ -133,15 +128,15 @@ const NetworkHealth: React.FC = () => {
               <span>Propagating to {onlineNodes.length} Nodes</span>
             </div>
           </div>
-        </div>
+        </div> */}
 
-        <div className={`glass-card p-8 flex flex-col justify-center space-y-4 ${healthScore > 50 ? 'bg-emerald-50/30 border-emerald-100' : 'bg-red-50/30 border-red-100'}`}>
+        {/* <div className={`glass-card p-8 flex flex-col justify-center space-y-4 ${healthScore > 50 ? 'bg-emerald-50/30 border-emerald-100' : 'bg-red-50/30 border-red-100'}`}>
           <p className={`text-xs font-bold uppercase tracking-widest ${healthScore > 50 ? 'text-emerald-800' : 'text-red-800'}`}>Network Health Score</p>
           <div className={`text-5xl font-black ${healthScore > 50 ? 'text-emerald-600' : 'text-red-600'}`}>{healthScore.toFixed(1)}%</div>
           <p className={`text-xs font-medium ${healthScore > 50 ? 'text-emerald-700/60' : 'text-red-700/60'}`}>
             {onlineNodes.length} systems operational across distributed clusters.
           </p>
-        </div>
+        </div> */}
       </div>
     </div>
   );
