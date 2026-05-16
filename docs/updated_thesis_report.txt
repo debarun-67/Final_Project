@@ -17,7 +17,7 @@ The system follows a permissioned architecture suited to a healthcare consortium
 
 The unique contribution of the project lies in combining a lightweight C ledger engine with a modern hospital-facing web application. Many blockchain demonstrations are either only theoretical, only smart-contract based, or only command-line tools. This project attempts to cover the full vertical path: low-level block storage, peer networking, backend service bridge, and frontend operational dashboard. It also uses off-chain storage and on-chain hashes, which is important for healthcare privacy because raw patient data should not be replicated across every node in a blockchain network.
 
-At the same time, the current system has limitations. The signature layer is presently a mock demonstration signature rather than real RSA/ECDSA verification. The frontend currently uses a local mock-auth workflow, while some backend routes expect Supabase bearer authentication. The upload flow is not fully connected end to end, because the backend upload controller calls a generic core command path that currently uses the viewer binary. Transport security, production key management, database hardening, rate limiting, test coverage, and real healthcare compliance controls remain future work. These limitations do not invalidate the academic value of the project; rather, they define the boundary between the current prototype and a production-ready healthcare infrastructure system.
+At the same time, the current system has limitations. The signature layer is presently a mock demonstration signature rather than real RSA/ECDSA verification. The backend authentication middleware supports both mock user IDs (via the X-Mock-User-ID header) and Supabase bearer tokens, allowing the existing frontend login workflow to operate seamlessly with protected upload routes. The upload flow is now fully integrated end to end: the API receives the file, copies it into the demo node's off-chain storage, calls the C viewer binary ADD command with the correct arguments, and returns the committed block index, SHA-256 hash, and data pointer to the frontend. The verify flow is also integrated: the API passes the uploaded file to the C viewer VERIFY_FILE command, which scans the chain and returns MATCH or NOT_FOUND with full metadata. Transport security, production key management, database hardening, rate limiting, test coverage, and real healthcare compliance controls remain future work. These limitations do not invalidate the academic value of the project; rather, they define the boundary between the current prototype and a production-ready healthcare infrastructure system.
 
 
 TABLE OF CONTENTS
@@ -529,7 +529,7 @@ The upload page lets a doctor or admin enter:
 - encryption password
 - medical file
 
-It sends the file through FormData. The current UI is complete, but the backend upload flow requires more integration work before it is fully functional end to end.
+It sends the file through FormData to the /api/records/upload endpoint. The backend copies the file into the demo node's offchain/records directory and calls the C viewer ADD command with the file path, data pointer, patient_id, doctor_id, and validator port. On success, the frontend displays the committed block index, SHA-256 hash, data pointer, patient ID, and doctor ID returned by the core. Duplicate file submissions are detected and rejected with a 409 response.
 
 11.7 My Records
 
@@ -537,7 +537,7 @@ The records page reads blockchain blocks and extracts transactions. If the user 
 
 11.8 Verify Record
 
-The verify page currently simulates verification behavior on the frontend. If the filename contains "tampered", it shows failure; otherwise it shows success. A future version should upload the file or compute its hash in-browser and compare it against the blockchain through the backend.
+The verify page uploads the file to /api/records/verify. The backend passes the file to the C viewer VERIFY_FILE command, which recomputes the SHA-256 hash of the uploaded file and scans every block and transaction in the chain. If a matching data_hash is found, the response includes the block index, transaction index, hash, data pointer, patient ID, and doctor ID, all of which are displayed to the user. If no match is found, the computed hash is shown alongside a clear failure message.
 
 11.9 Activity Logs
 
@@ -623,8 +623,8 @@ Current implementation status:
 
 - Steps 3 through 15 exist in the C core/node flow for command-line record addition.
 - Dashboard display exists.
-- Upload from frontend to backend exists at UI/API structure level but needs final integration to the core command path.
-- Frontend verification is currently simulated and should be replaced with real hash comparison.
+- Upload from frontend to backend is now fully integrated: the API controller receives the file, copies it to offchain/records, calls the C viewer ADD command, and returns the committed block data to the frontend UI.
+- Frontend verification is now integrated: the file is uploaded to the backend, the C viewer VERIFY_FILE command recomputes the hash and searches the chain, and the result (MATCH or NOT_FOUND) is displayed with full block/transaction details.
 
 
 14. SECURITY MODEL
@@ -770,17 +770,17 @@ This gives the project product depth.
 
 The largest security weakness is that the signature system is not real cryptography. It demonstrates the shape of signing but does not protect against forgery.
 
-16.2 Frontend and Backend Auth Mismatch
+16.2 Auth Model Is Demo-Level
 
-The frontend uses local mock users. The backend protected upload route expects Supabase bearer authentication. This means some protected backend flows may fail unless authentication is unified.
+The backend authentication middleware now accepts both the X-Mock-User-ID header (used by the frontend mock login) and Supabase bearer tokens. This allows the existing frontend login workflow to work with protected routes without requiring a full Supabase deployment for the demo. A production system must unify on a single authentication provider with proper token validation, session management, and role enforcement backed by a real identity store.
 
-16.3 Upload Flow Is Not Fully Connected
+16.3 Upload Flow Is Integrated at Demo Level
 
-The upload controller accepts a file but currently calls runCoreCommand with ADD through the viewer path. The viewer binary does not implement ADD. Therefore, record upload from web UI to chain needs more work.
+The upload controller now copies the uploaded file into the demo node's offchain/records directory and calls the C viewer ADD command with the correct arguments. The C core hashes the file, rejects duplicates, creates a block, signs it with the demo validator key, and appends it to blockchain.dat. The committed block index, hash, and data pointer are returned to the frontend. The remaining limitation is that the encryption step is a file copy rather than real AES encryption, because the AES utility code exists in the C core but is not yet wired into the upload pipeline.
 
-16.4 Verification UI Is Simulated
+16.4 Verification UI Is Now Integrated
 
-The Verify Record page currently uses filename logic to simulate tampering detection. It should compute or upload a file hash and compare it against blockchain records.
+The Verify Record page no longer simulates verification. It uploads the file to /api/records/verify. The backend passes the file to the C viewer VERIFY_FILE command, which recomputes the SHA-256 hash and scans the chain. A MATCH response returns the block index, transaction index, hash, data pointer, patient ID, and doctor ID. A NOT_FOUND response returns the computed hash. The frontend displays all of this information clearly.
 
 16.5 Plain TCP Networking
 

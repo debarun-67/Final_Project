@@ -16,8 +16,7 @@ const runCoreCommand = (cmd, args = []) => {
         const fullPath = path.resolve(CORE_BIN_PATH, binary);
         const LIVE_NODE_PATH = path.resolve(__dirname, '../../../../demo_instances/node1');
         const CENTRAL_DATA_PATH = path.resolve(__dirname, '../../../core');
-        const cmdParts = String(cmd).trim().split(/\s+/).filter(Boolean);
-        const commandArgs = [...cmdParts, ...args.map(String)];
+        const commandArgs = [String(cmd).trim(), ...args.map(String)];
 
         execFile(fullPath, commandArgs, { cwd: LIVE_NODE_PATH }, (error, stdout) => {
             if (error) {

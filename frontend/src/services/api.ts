@@ -34,6 +34,9 @@ export const recordService = {
   upload: (formData: FormData) => api.post('/records/upload', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
+  verify: (formData: FormData) => api.post('/records/verify', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
 };
 
 export default api;

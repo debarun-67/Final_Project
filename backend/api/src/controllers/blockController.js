@@ -18,7 +18,7 @@ const getBlocks = async (req, res) => {
 const getBlockByIndex = async (req, res) => {
     const { index } = req.params;
     try {
-        const output = await runCoreCommand(`PRINT ${index}`);
+        const output = await runCoreCommand('PRINT', [index]);
         const blocks = parseBlockOutput(output);
         if (blocks.length === 0) {
             return res.status(404).json({ error: 'Block not found' });

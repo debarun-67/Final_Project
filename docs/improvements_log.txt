@@ -177,9 +177,10 @@ Current system:
 Improvement:
 - The architectural direction is correct: files off-chain, hashes on-chain.
 - AES-GCM utility is available as a foundation.
+- The web upload flow now copies the uploaded file into offchain/records and commits it to the chain via the C viewer ADD command. The committed hash and block data are returned to the frontend.
 
 Correction from older log:
-- AES-256-GCM is present as utility code, but not fully integrated into the current upload and blockchain commit flow.
+- AES-256-GCM is present as utility code, but the active upload pipeline uses a file copy (demo mode) rather than AES encryption. Full encryption integration is a future improvement.
 
 Future improvement:
 - Wire encryption into backend upload.
@@ -328,7 +329,9 @@ Improvement:
 
 Remaining gap:
 - child_process bridge should be replaced with a safer long-running service interface.
-- Upload endpoint needs full integration with encryption and block append.
+- Upload endpoint is now integrated: file is copied to offchain/records and committed via the C viewer ADD command. Duplicate detection works via the C core's hash index.
+- Verify endpoint is now integrated: file is passed to the C viewer VERIFY_FILE command which scans the chain and returns MATCH or NOT_FOUND with full metadata.
+- Real AES encryption is not yet wired into the upload pipeline (file copy is used in demo mode).
 - API lacks meaningful automated tests.
 
 
@@ -360,9 +363,9 @@ Improvement:
 - Patients can view records and verification pages.
 
 Remaining gap:
-- Verify Record is currently simulated on the frontend.
-- Upload UI is ahead of backend/core integration.
-- Frontend mock auth is not unified with backend Supabase auth.
+- Verify Record is now integrated: real SHA-256 hash comparison against blockchain records via the C viewer VERIFY_FILE command.
+- Upload UI is now integrated end to end with the backend/core: file is stored off-chain and block is committed with the C viewer ADD command.
+- Frontend mock auth now works with backend protected routes via X-Mock-User-ID header support in auth middleware. Full Supabase unification is a future improvement.
 
 
 15. AUTHENTICATION AND ROLES
@@ -483,8 +486,8 @@ Express API                                    Not central                     I
 React frontend dashboard                       Not central                     Implemented
 Role-based pages                               Not central                     Implemented in frontend
 Supabase authentication                        Not central                     Backend middleware exists; frontend mock auth
-Record upload from UI to chain                 Not present                     Partial; needs integration
-Record verification UI                         Not present                     Present but simulated
+Record upload from UI to chain                 Not present                     Implemented (file copy + C core ADD)
+Record verification UI                         Not present                     Implemented (C core VERIFY_FILE)
 Network health dashboard                       Not present                     Implemented
 System log dashboard                           Not present                     Implemented
 Automated backend tests                        Not described                   Missing
@@ -499,16 +502,11 @@ HIGH-PRIORITY NEXT IMPROVEMENTS
    - Verify blocks against registered validator public keys.
 
 2. Complete upload pipeline.
-   - Upload file through API.
-   - Encrypt file or accept encrypted file.
-   - Store in offchain/records.
-   - Hash encrypted file.
-   - Add transaction/block through the C core.
-   - Return committed block information to frontend.
+   - DONE: Upload file through API, store in offchain/records, add transaction/block through the C core, return committed block information to frontend.
+   - Remaining: Wire real AES-256-GCM encryption into the upload step instead of file copy.
 
 3. Replace simulated verification.
-   - Compute real file hash.
-   - Compare against blockchain transaction data_hash.
+   - DONE: File is uploaded to backend, C core VERIFY_FILE command recomputes hash and compares against chain, result displayed with full block/tx details.
 
 4. Unify authentication.
    - Either use Supabase end to end or keep a pure demo mode.
