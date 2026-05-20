@@ -15,6 +15,7 @@ int get_block_by_index(int index, Block *block);
 void set_blockchain_file(const char *filename);
 int block_exists_by_index(int index);
 int transaction_hash_exists(const char *data_hash);
+int find_transaction_location(const char *data_hash, int *block_index, int *tx_index);
 
 
 

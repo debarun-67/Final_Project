@@ -37,6 +37,9 @@ export const recordService = {
   verify: (formData: FormData) => api.post('/records/verify', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
+  decrypt: (data_pointer: string) => api.post('/records/decrypt', { data_pointer }, {
+    responseType: 'blob'
+  }),
 };
 
 export default api;

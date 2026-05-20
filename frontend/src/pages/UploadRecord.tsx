@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { recordService } from '../services/api';
-import { Upload, FileText, CheckCircle, AlertCircle, Key, Hash, Database, User } from 'lucide-react';
+import { Upload, FileText, CheckCircle, AlertCircle, Hash, Database, User, Lock } from 'lucide-react';
 
 interface UploadResult {
   block_index: number;
@@ -14,7 +14,6 @@ const UploadRecord: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
   const [patientId, setPatientId] = useState('');
   const [doctorId, setDoctorId] = useState('');
-  const [password, setPassword] = useState('');
   const [status, setStatus] = useState<'idle' | 'uploading' | 'success' | 'error' | 'duplicate'>('idle');
   const [message, setMessage] = useState('');
   const [result, setResult] = useState<UploadResult | null>(null);
@@ -23,7 +22,6 @@ const UploadRecord: React.FC = () => {
     setFile(null);
     setPatientId('');
     setDoctorId('');
-    setPassword('');
   };
 
   const handleUpload = async (e: React.FormEvent) => {
@@ -37,7 +35,6 @@ const UploadRecord: React.FC = () => {
     formData.append('record', file);
     formData.append('patient_id', patientId);
     formData.append('doctor_id', doctorId);
-    formData.append('password', password);
 
     try {
       const response = await recordService.upload(formData);
@@ -81,7 +78,7 @@ const UploadRecord: React.FC = () => {
                 value={patientId}
                 onChange={(e) => setPatientId(e.target.value)}
                 className="w-full px-4 py-2 bg-white border border-black rounded-none outline-none"
-                placeholder="PAT-2025-001"
+                placeholder="PAT_001"
                 required
               />
             </div>
@@ -92,25 +89,15 @@ const UploadRecord: React.FC = () => {
                 value={doctorId}
                 onChange={(e) => setDoctorId(e.target.value)}
                 className="w-full px-4 py-2 bg-white border border-black rounded-none outline-none"
-                placeholder="DOC-MED-45"
+                placeholder="DOC_001"
                 required
               />
             </div>
           </div>
 
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Encryption Password</label>
-            <div className="relative">
-              <Key className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-white border border-black rounded-none outline-none"
-                placeholder="Master key for this record"
-                required
-              />
-            </div>
+          <div className="flex items-center gap-2 p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs rounded-none">
+            <Lock size={14} className="shrink-0" />
+            <span><strong>Auto-Encrypted:</strong> This record will be locked using Envelope Encryption tied to the Patient ID and Doctor ID above. No password needed.</span>
           </div>
 
           <div className="space-y-1">

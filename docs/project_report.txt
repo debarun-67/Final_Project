@@ -382,8 +382,8 @@ Why RSA and not ECDSA?
 Why PoA and not PBFT?
 Why TCP and not gRPC?
 Why file-based storage and not LevelDB?
-Why no Merkle tree?
-Why 1 transaction per block?
+Why Merkle proof verification instead of full-block download?
+Why the current demo often uses small blocks or one transaction per block?
 
 This shows engineering maturity.
 

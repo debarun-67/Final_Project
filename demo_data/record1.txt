@@ -1,0 +1,10 @@
+PATIENT: John Doe (mock-pat-1)
+DOCTOR: Dr. Smith (mock-doc-1)
+DATE: 2026-05-20
+
+DIAGNOSIS:
+Patient presents with mild hypertension.
+Prescribed medication and recommended dietary changes.
+
+NOTES:
+Follow up in 3 months.

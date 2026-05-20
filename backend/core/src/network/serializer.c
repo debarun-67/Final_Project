@@ -10,12 +10,13 @@ void serialize_block(Block *block, char *buffer)
     buffer[0] = '\0';
     char line[4096];
 
-    // header format: index|time|prev|hash|port|sig|count
+    // header format: index|time|prev|merkle|hash|port|sig|count
     snprintf(line, sizeof(line),
-             "%d|%ld|%s|%s|%d|%s|%d~",
+             "%d|%ld|%s|%s|%s|%d|%s|%d~",
              block->index,
              block->timestamp,
              block->previous_hash,
+             block->merkle_root,
              block->block_hash,
              block->validator_port,          // included
              block->validator_signature,
@@ -55,17 +56,37 @@ int deserialize_block(const char *buffer, Block *block)
     if (!line)
         return 0;
 
-    // expected: index|timestamp|previous_hash|block_hash|validator_port|signature|tx_count
+    // expected: index|timestamp|previous_hash|merkle_root|block_hash|validator_port|signature|tx_count
     if (sscanf(line,
-               "%d|%ld|%64[^|]|%64[^|]|%d|%512[^|]|%d",
+               "%d|%ld|%512[^|]|%512[^|]|%512[^|]|%d|%512[^|]|%d",
                &block->index,
                &block->timestamp,
                block->previous_hash,
+               block->merkle_root,
                block->block_hash,
                &block->validator_port,        // parsed
                block->validator_signature,
-               &block->transaction_count) != 7)
-        return 0;
+               &block->transaction_count) != 8)
+    {
+        memset(block, 0, sizeof(Block));
+        strncpy(copy, buffer, sizeof(copy) - 1);
+        copy[sizeof(copy) - 1] = '\0';
+        line = strtok(copy, "~");
+        if (!line)
+            return 0;
+
+        // Legacy wire format without merkle_root.
+        if (sscanf(line,
+                   "%d|%ld|%512[^|]|%512[^|]|%d|%512[^|]|%d",
+                   &block->index,
+                   &block->timestamp,
+                   block->previous_hash,
+                   block->block_hash,
+                   &block->validator_port,
+                   block->validator_signature,
+                   &block->transaction_count) != 7)
+            return 0;
+    }
 
     if (block->transaction_count < 0 ||
         block->transaction_count > MAX_TRANSACTIONS)

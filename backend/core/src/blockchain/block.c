@@ -5,6 +5,28 @@
 #include "block.h"
 #include "../crypto/hash.h"
 
+static void hash_internal_node(const char *left_hash,
+                               const char *right_hash,
+                               char output[HASH_SIZE])
+{
+    char combined[HASH_SIZE * 2 + 16];
+    snprintf(combined, sizeof(combined), "NODE|%s|%s", left_hash, right_hash);
+    sha256(combined, output);
+}
+
+void calculate_transaction_leaf_hash(const Transaction *tx, char output[HASH_SIZE])
+{
+    char tx_data[1024];
+    snprintf(tx_data, sizeof(tx_data),
+             "LEAF|%lu|%s|%lu|%s|%lu|%s|%lu|%s|%ld",
+             (unsigned long)strlen(tx->patient_id), tx->patient_id,
+             (unsigned long)strlen(tx->doctor_id), tx->doctor_id,
+             (unsigned long)strlen(tx->data_hash), tx->data_hash,
+             (unsigned long)strlen(tx->data_pointer), tx->data_pointer,
+             tx->timestamp);
+    sha256(tx_data, output);
+}
+
 // initialize a new block
 void init_block(Block *block, int index, const char *prev_hash)
 {
@@ -43,14 +65,7 @@ void calculate_merkle_root(Block *block)
     // Step 1: Initial hashes of individual transactions
     for (int i = 0; i < count; i++)
     {
-        char tx_data[1024];
-        snprintf(tx_data, sizeof(tx_data), "%s%s%s%s%ld",
-                 block->transactions[i].patient_id,
-                 block->transactions[i].doctor_id,
-                 block->transactions[i].data_hash,
-                 block->transactions[i].data_pointer,
-                 block->transactions[i].timestamp);
-        sha256(tx_data, hashes[i]);
+        calculate_transaction_leaf_hash(&block->transactions[i], hashes[i]);
     }
 
     // Step 2: Iterative pairwise hashing until a single root is reached
@@ -59,17 +74,15 @@ void calculate_merkle_root(Block *block)
         int next_count = 0;
         for (int i = 0; i < count; i += 2)
         {
-            char combined[HASH_SIZE * 2 + 1];
             if (i + 1 < count)
             {
-                snprintf(combined, sizeof(combined), "%s%s", hashes[i], hashes[i + 1]);
+                hash_internal_node(hashes[i], hashes[i + 1], hashes[next_count++]);
             }
             else
             {
                 // handle odd number of nodes by duplicating the last one
-                snprintf(combined, sizeof(combined), "%s%s", hashes[i], hashes[i]);
+                hash_internal_node(hashes[i], hashes[i], hashes[next_count++]);
             }
-            sha256(combined, hashes[next_count++]);
         }
         count = next_count;
     }
@@ -86,7 +99,7 @@ void calculate_block_hash(Block *block)
 
     char buffer[2048];
     snprintf(buffer, sizeof(buffer),
-             "%d%ld%s%s",
+             "HEADER|%d|%ld|%s|%s",
              block->index,
              block->timestamp,
              block->previous_hash,
@@ -95,4 +108,90 @@ void calculate_block_hash(Block *block)
     sha256(buffer, block->block_hash);
 }
 
+int generate_merkle_proof(const Block *block, int tx_index, MerkleProof *proof)
+{
+    if (!block || !proof || tx_index < 0 || tx_index >= block->transaction_count)
+        return 0;
 
+    memset(proof, 0, sizeof(MerkleProof));
+
+    if (block->transaction_count <= 0 || block->transaction_count > MAX_TRANSACTIONS)
+        return 0;
+
+    char hashes[MAX_TRANSACTIONS][HASH_SIZE];
+    int count = block->transaction_count;
+    int current_index = tx_index;
+
+    for (int i = 0; i < count; i++)
+        calculate_transaction_leaf_hash(&block->transactions[i], hashes[i]);
+
+    strncpy(proof->leaf_hash, hashes[tx_index], HASH_SIZE - 1);
+    proof->leaf_hash[HASH_SIZE - 1] = '\0';
+
+    while (count > 1)
+    {
+        if (proof->proof_length >= MAX_MERKLE_PROOF_ITEMS)
+            return 0;
+
+        int sibling_index;
+        if (current_index % 2 == 0)
+            sibling_index = (current_index + 1 < count) ? current_index + 1 : current_index;
+        else
+            sibling_index = current_index - 1;
+
+        strncpy(proof->sibling_hashes[proof->proof_length],
+                hashes[sibling_index],
+                HASH_SIZE - 1);
+        proof->sibling_hashes[proof->proof_length][HASH_SIZE - 1] = '\0';
+        proof->sibling_is_left[proof->proof_length] = sibling_index < current_index;
+        proof->proof_length++;
+
+        int next_count = 0;
+        for (int i = 0; i < count; i += 2)
+        {
+            if (i + 1 < count)
+                hash_internal_node(hashes[i], hashes[i + 1], hashes[next_count++]);
+            else
+                hash_internal_node(hashes[i], hashes[i], hashes[next_count++]);
+        }
+
+        current_index /= 2;
+        count = next_count;
+    }
+
+    return 1;
+}
+
+int verify_merkle_proof(const char leaf_hash[HASH_SIZE],
+                        const MerkleProof *proof,
+                        const char expected_root[HASH_SIZE],
+                        char computed_root[HASH_SIZE])
+{
+    if (!leaf_hash || !proof || !expected_root || proof->proof_length < 0 ||
+        proof->proof_length > MAX_MERKLE_PROOF_ITEMS)
+        return 0;
+
+    char current[HASH_SIZE];
+    strncpy(current, leaf_hash, HASH_SIZE - 1);
+    current[HASH_SIZE - 1] = '\0';
+
+    for (int i = 0; i < proof->proof_length; i++)
+    {
+        char next[HASH_SIZE];
+        if (proof->sibling_is_left[i])
+            hash_internal_node(proof->sibling_hashes[i], current, next);
+        else
+            hash_internal_node(current, proof->sibling_hashes[i], next);
+
+        strncpy(current, next, HASH_SIZE - 1);
+        current[HASH_SIZE - 1] = '\0';
+    }
+
+    if (computed_root)
+    {
+        strncpy(computed_root, current, HASH_SIZE - 1);
+        computed_root[HASH_SIZE - 1] = '\0';
+    }
+
+    return strcmp(current, expected_root) == 0;
+}

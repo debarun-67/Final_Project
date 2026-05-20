@@ -29,10 +29,22 @@ int sign_data(const char *data, const char *private_key_path, char *signature_ou
 }
 
 int verify_signature(const char *data, const char *public_key_path, const char *signature) {
-    // Mock verification: Check if the signature contains the expected data and key path
-    // In demo mode, we just check if it starts with our mock prefix
-    if (strncmp(signature, "SIG_V1_", 7) == 0) {
-        return 1;
-    }
-    return 0;
+    char expected_key_path[128];
+    char expected_signature[256];
+
+    strncpy(expected_key_path, public_key_path, sizeof(expected_key_path) - 1);
+    expected_key_path[sizeof(expected_key_path) - 1] = '\0';
+
+    char *suffix = strstr(expected_key_path, "_public.pem");
+    if (!suffix)
+        return 0;
+    strcpy(suffix, "_private.pem");
+
+    snprintf(expected_signature,
+             sizeof(expected_signature),
+             "SIG_V1_%s_%s",
+             data,
+             expected_key_path);
+
+    return strcmp(signature, expected_signature) == 0;
 }

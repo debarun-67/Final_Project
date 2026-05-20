@@ -16,6 +16,8 @@
 // --- TRANSACTION INDEXING (HASH MAP) ---
 typedef struct TxIndexNode {
     char data_hash[128];
+    int block_index;
+    int tx_index;
     struct TxIndexNode *next;
 } TxIndexNode;
 
@@ -32,12 +34,14 @@ static unsigned int hash_tx(const char *hash) {
     return h % TX_HASH_BUCKETS;
 }
 
-static void add_to_index(const char *data_hash) {
+static void add_to_index(const char *data_hash, int block_index, int transaction_index) {
     unsigned int h = hash_tx(data_hash);
     TxIndexNode *node = malloc(sizeof(TxIndexNode));
     if (node) {
         strncpy(node->data_hash, data_hash, sizeof(node->data_hash) - 1);
         node->data_hash[sizeof(node->data_hash) - 1] = '\0';
+        node->block_index = block_index;
+        node->tx_index = transaction_index;
         node->next = tx_index[h];
         tx_index[h] = node;
     }
@@ -105,7 +109,7 @@ void initialize_blockchain() {
     Block temp;
     while (fread(&temp, sizeof(Block), 1, fp) == 1) {
         for (int i = 0; i < temp.transaction_count; i++) {
-            add_to_index(temp.transactions[i].data_hash);
+            add_to_index(temp.transactions[i].data_hash, temp.index, i);
         }
     }
 
@@ -160,6 +164,14 @@ void create_genesis_block(Block *block, int validator_port)
 // append a block securely
 void add_block(Block *new_block)
 {
+    if (!new_block ||
+        new_block->index < 0 ||
+        new_block->transaction_count < 0 ||
+        new_block->transaction_count > MAX_TRANSACTIONS)
+    {
+        printf("[STORAGE] Refusing to append invalid block metadata.\n");
+        return;
+    }
 
     FILE *fp = fopen(blockchain_file, "ab");
     if (!fp)
@@ -182,7 +194,7 @@ void add_block(Block *new_block)
 
     // Update index
     for (int i = 0; i < new_block->transaction_count; i++) {
-        add_to_index(new_block->transactions[i].data_hash);
+        add_to_index(new_block->transactions[i].data_hash, new_block->index, i);
     }
 
 }
@@ -450,6 +462,25 @@ int transaction_hash_exists(const char *data_hash)
     
     while (current) {
         if (strcmp(current->data_hash, data_hash) == 0) {
+            return 1;
+        }
+        current = current->next;
+    }
+
+    return 0;
+}
+
+int find_transaction_location(const char *data_hash, int *block_index, int *transaction_index)
+{
+    if (!index_loaded) initialize_blockchain();
+
+    unsigned int h = hash_tx(data_hash);
+    TxIndexNode *current = tx_index[h];
+
+    while (current) {
+        if (strcmp(current->data_hash, data_hash) == 0) {
+            if (block_index) *block_index = current->block_index;
+            if (transaction_index) *transaction_index = current->tx_index;
             return 1;
         }
         current = current->next;

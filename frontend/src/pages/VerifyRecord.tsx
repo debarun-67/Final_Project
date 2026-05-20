@@ -12,7 +12,85 @@ interface VerifyResult {
   data_pointer?: string;
   patient_id?: string;
   doctor_id?: string;
+  proof_verified?: boolean;
+  block_header?: {
+    index: number;
+    timestamp: number;
+    previous_hash: string;
+    merkle_root: string;
+    block_hash: string;
+    validator_port: number;
+    validator_signature: string;
+  };
+  transaction?: {
+    patient_id: string;
+    doctor_id: string;
+    data_hash: string;
+    data_pointer: string;
+    timestamp: number;
+  };
+  merkle_proof?: {
+    leaf_hash: string;
+    proof_length: number;
+    computed_root: string;
+    siblings: Array<{ position: 'left' | 'right'; hash: string }>;
+  };
 }
+
+const encoder = new TextEncoder();
+
+const toHex = (buffer: ArrayBuffer): string =>
+  Array.from(new Uint8Array(buffer))
+    .map((byte) => byte.toString(16).padStart(2, '0'))
+    .join('');
+
+const sha256Hex = async (value: string | ArrayBuffer): Promise<string> => {
+  const bytes = typeof value === 'string' ? encoder.encode(value) : value;
+  return toHex(await crypto.subtle.digest('SHA-256', bytes));
+};
+
+const byteLength = (value: string): number => encoder.encode(value).length;
+
+const transactionLeafHash = async (tx: NonNullable<VerifyResult['transaction']>): Promise<string> => {
+  const canonical = [
+    'LEAF',
+    byteLength(tx.patient_id), tx.patient_id,
+    byteLength(tx.doctor_id), tx.doctor_id,
+    byteLength(tx.data_hash), tx.data_hash,
+    byteLength(tx.data_pointer), tx.data_pointer,
+    tx.timestamp
+  ].join('|');
+  return sha256Hex(canonical);
+};
+
+const verifyLocalProof = async (file: File, result: VerifyResult): Promise<boolean> => {
+  if (!result.block_header || !result.transaction || !result.merkle_proof) return false;
+
+  const fileHash = await sha256Hex(await file.arrayBuffer());
+  if (fileHash !== result.data_hash || fileHash !== result.transaction.data_hash) return false;
+
+  const leafHash = await transactionLeafHash(result.transaction);
+  if (leafHash !== result.merkle_proof.leaf_hash) return false;
+
+  let computedRoot = leafHash;
+  for (const sibling of result.merkle_proof.siblings) {
+    computedRoot = sibling.position === 'left'
+      ? await sha256Hex(`NODE|${sibling.hash}|${computedRoot}`)
+      : await sha256Hex(`NODE|${computedRoot}|${sibling.hash}`);
+  }
+
+  const computedBlockHash = await sha256Hex([
+    'HEADER',
+    result.block_header.index,
+    result.block_header.timestamp,
+    result.block_header.previous_hash,
+    result.block_header.merkle_root
+  ].join('|'));
+
+  return computedBlockHash === result.block_header.block_hash &&
+    computedRoot === result.block_header.merkle_root &&
+    computedRoot === result.merkle_proof.computed_root;
+};
 
 const VerifyRecord: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -37,7 +115,20 @@ const VerifyRecord: React.FC = () => {
 
     try {
       const response = await recordService.verify(formData);
-      setResult(response.data as VerifyResult);
+      const verificationResult = response.data as VerifyResult;
+      if (verificationResult.valid) {
+        const proofVerified = await verifyLocalProof(file, verificationResult);
+        setResult({
+          ...verificationResult,
+          valid: proofVerified,
+          proof_verified: proofVerified,
+          message: proofVerified
+            ? 'File hash and Merkle proof verified locally against the block header.'
+            : 'Server returned a match, but local Merkle proof verification failed.'
+        });
+      } else {
+        setResult(verificationResult);
+      }
     } catch (err: unknown) {
       const httpErr = err as { response?: { data?: { error?: string } } };
       setError(httpErr?.response?.data?.error || 'Verification request failed. Check backend connection.');
@@ -95,13 +186,13 @@ const VerifyRecord: React.FC = () => {
         {/* Match — real blockchain data */}
         {result?.valid && (
           <div className="p-5 bg-emerald-50 border border-emerald-200 rounded-none space-y-3">
-            <div className="flex items-center gap-2 text-emerald-800 font-bold">
-              <ShieldCheck size={22} />
-              <span>Verified Successfully</span>
-            </div>
-            <p className="text-xs text-emerald-700 opacity-80">
-              This file matches the immutable record on the blockchain.
-            </p>
+              <div className="flex items-center gap-2 text-emerald-800 font-bold">
+                <ShieldCheck size={22} />
+                <span>Verified Successfully</span>
+              </div>
+              <p className="text-xs text-emerald-700 opacity-80">
+                {result.message}
+              </p>
             <div className="grid grid-cols-1 gap-2 text-sm pt-1 border-t border-emerald-200">
               <div className="flex items-center gap-2 text-slate-700">
                 <Database size={13} className="text-emerald-600 shrink-0" />
@@ -125,6 +216,13 @@ const VerifyRecord: React.FC = () => {
                   <User size={13} className="text-emerald-600 shrink-0" />
                   <span className="font-semibold w-24 shrink-0">Doctor:</span>
                   <span className="font-mono">{result.doctor_id}</span>
+                </div>
+              )}
+              {result.block_header && (
+                <div className="flex items-start gap-2 text-slate-700">
+                  <Hash size={13} className="text-emerald-600 shrink-0 mt-0.5" />
+                  <span className="font-semibold w-24 shrink-0">Root:</span>
+                  <span className="font-mono text-xs break-all">{result.block_header.merkle_root}</span>
                 </div>
               )}
             </div>
@@ -165,7 +263,7 @@ const VerifyRecord: React.FC = () => {
           {isVerifying ? (
             <>
               <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              Computing SHA-256...
+              Verifying proof...
             </>
           ) : 'Check Authenticity'}
         </button>
@@ -174,9 +272,8 @@ const VerifyRecord: React.FC = () => {
       <div className="flex gap-4 p-4 bg-blue-50/50 border border-black rounded-none text-blue-600">
         <AlertTriangle size={20} className="shrink-0" />
         <p className="text-xs leading-relaxed">
-          <strong>Note:</strong> We re-compute the SHA-256 fingerprint of your file on the server and compare it
-          against every transaction's <code>data_hash</code> stored in the blockchain ledger. Any single-bit
-          change results in a verification failure.
+          <strong>Note:</strong> The browser recomputes the file hash and verifies the returned Merkle proof
+          against the block header before accepting a match.
         </p>
       </div>
     </div>

@@ -1,0 +1,5 @@
+MOCK MEDICAL RECORD 2
+Patient ID: PAT-001
+Doctor ID: DOC-8001
+Diagnosis: Normal Routine Checkup
+Date: 2026-05-20

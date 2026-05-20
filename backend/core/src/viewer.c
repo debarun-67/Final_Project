@@ -6,6 +6,7 @@
 #include "blockchain/block.h"
 #include "crypto/hash.h"
 #include "crypto/signature.h"
+#include "crypto/encryption.h"
 
 void print_block_details(Block *block) {
     printf("INDEX|%d\n", block->index);
@@ -89,25 +90,59 @@ static int verify_file_against_chain(const char *file_path) {
         return 1;
     }
 
-    int height = get_blockchain_height();
-    for (int i = 0; i < height; i++) {
+    int block_index;
+    int tx_index;
+    if (find_transaction_location(file_hash, &block_index, &tx_index)) {
         Block block;
-        if (!get_block_by_index(i, &block)) {
-            continue;
+        if (!get_block_by_index(block_index, &block) ||
+            tx_index < 0 ||
+            tx_index >= block.transaction_count ||
+            strcmp(block.transactions[tx_index].data_hash, file_hash) != 0) {
+            printf("ERROR|Transaction index is stale or corrupted\n");
+            return 1;
         }
 
-        for (int j = 0; j < block.transaction_count; j++) {
-            if (strcmp(block.transactions[j].data_hash, file_hash) == 0) {
-                printf("MATCH|%d|%d|%s|%s|%s|%s\n",
-                       block.index,
-                       j,
-                       file_hash,
-                       block.transactions[j].data_pointer,
-                       block.transactions[j].patient_id,
-                       block.transactions[j].doctor_id);
-                return 0;
-            }
+        MerkleProof proof;
+        char computed_root[HASH_SIZE];
+
+        calculate_block_hash(&block);
+        if (!generate_merkle_proof(&block, tx_index, &proof) ||
+            !verify_merkle_proof(proof.leaf_hash, &proof, block.merkle_root, computed_root)) {
+            printf("ERROR|Merkle proof generation failed\n");
+            return 1;
         }
+
+        printf("MATCH|%d|%d|%s|%s|%s|%s\n",
+               block.index,
+               tx_index,
+               file_hash,
+               block.transactions[tx_index].data_pointer,
+               block.transactions[tx_index].patient_id,
+               block.transactions[tx_index].doctor_id);
+        printf("HEADER|%d|%ld|%s|%s|%s|%d|%s\n",
+               block.index,
+               block.timestamp,
+               block.previous_hash,
+               block.merkle_root,
+               block.block_hash,
+               block.validator_port,
+               block.validator_signature);
+        printf("TX_META|%s|%s|%s|%ld\n",
+               block.transactions[tx_index].patient_id,
+               block.transactions[tx_index].doctor_id,
+               block.transactions[tx_index].data_pointer,
+               block.transactions[tx_index].timestamp);
+        printf("PROOF|%s|%d|%s\n",
+               proof.leaf_hash,
+               proof.proof_length,
+               computed_root);
+        for (int k = 0; k < proof.proof_length; k++) {
+            printf("PROOF_STEP|%s|%s\n",
+                   proof.sibling_is_left[k] ? "left" : "right",
+                   proof.sibling_hashes[k]);
+        }
+        printf("END_PROOF\n");
+        return 0;
     }
 
     printf("NOT_FOUND|%s\n", file_hash);
@@ -172,6 +207,24 @@ int main(int argc, char *argv[]) {
     }
     else if (strcmp(cmd, "VERIFY_FILE") == 0 && argc > 2) {
         return verify_file_against_chain(argv[2]);
+    }
+    else if (strcmp(cmd, "ENCRYPT") == 0 && argc > 5) {
+        if (envelope_encrypt_record(argv[2], argv[3], argv[4], argv[5])) {
+            printf("ENCRYPT_SUCCESS\n");
+            return 0;
+        } else {
+            printf("ENCRYPT_FAILED\n");
+            return 1;
+        }
+    }
+    else if (strcmp(cmd, "DECRYPT") == 0 && argc > 4) {
+        if (envelope_decrypt_record(argv[2], argv[3], argv[4])) {
+            printf("DECRYPT_SUCCESS\n");
+            return 0;
+        } else {
+            printf("DECRYPT_FAILED\n");
+            return 1;
+        }
     }
     else {
         printf("Unknown command: %s\n", cmd);

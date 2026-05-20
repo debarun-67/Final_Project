@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FileText, Download, ShieldCheck, Clock, User } from 'lucide-react';
-import { blockchainService } from '../services/api';
+import { blockchainService, recordService } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
 import type { Block, Transaction } from '../types/blockchain';
 
@@ -46,7 +46,9 @@ const MyRecords: React.FC = () => {
         // If the user is a patient, only show their records
         // If the user is an admin, show all records
         if (user?.role === 'patient' && user?.patient_id) {
-          allTransactions = allTransactions.filter(tx => tx.patient_id === user.patient_id);
+          allTransactions = allTransactions.filter(tx => 
+            tx.patient_id.trim().toLowerCase() === user.patient_id.trim().toLowerCase()
+          );
         }
 
         setRecords(allTransactions);
@@ -62,6 +64,22 @@ const MyRecords: React.FC = () => {
     }
   }, [user]);
 
+  const handleDecrypt = async (dataPointer: string) => {
+    try {
+      const response = await recordService.decrypt(dataPointer);
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'decrypted_medical_record.txt');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err: any) {
+      alert('Failed to decrypt record. You may not be authorized.');
+      console.error(err);
+    }
+  };
+
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-6">
       <div className="flex justify-between items-end">
@@ -76,7 +94,7 @@ const MyRecords: React.FC = () => {
       </div>
 
       {loading ? (
-        <div className="text-center p-8 text-slate-500">Decrypting and loading records from blockchain...</div>
+        <div className="text-center p-8 text-slate-500">Loading records from blockchain...</div>
       ) : records.length === 0 ? (
         <div className="text-center p-8 text-slate-500 glass-card">No medical records found on the blockchain.</div>
       ) : (
@@ -113,7 +131,11 @@ const MyRecords: React.FC = () => {
                 </span>
                 
                 <div className="flex gap-2">
-                  <button className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-none" title="Download">
+                  <button 
+                    onClick={() => handleDecrypt(record.data_pointer)}
+                    className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-none" 
+                    title="Decrypt & Download"
+                  >
                     <Download size={20} />
                   </button>
                   <button className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-none" title="Verify Integrity">

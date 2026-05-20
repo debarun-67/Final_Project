@@ -8,10 +8,18 @@
 - docs: Documentation and Logs
 
 ## Tech Stack
-- C11 + OpenSSL
+- C11 core with standalone SHA-256 and demo signatures
 - Node.js + Express + JWT
 - React + Vite + TS + Tailwind
 
 ## Key Data Types
 - Transaction: patient_id, doctor_id, data_hash, data_pointer, timestamp
 - Block: index, timestamp, prev_hash, block_hash, merkle_root, signature, transactions
+- MerkleProof: leaf_hash, sibling hashes, sibling direction, proof length
+
+## Current Verification Flow
+- File content is hashed with SHA-256.
+- The C core uses an indexed lookup from data_hash to block_index and tx_index.
+- VERIFY_FILE returns transaction metadata, block header fields, and a Merkle proof.
+- The frontend recomputes the file hash, reconstructs the transaction leaf, applies the Merkle proof, and compares the computed root with the block header Merkle root.
+- Production still requires real validator signatures and light-client header chain validation.

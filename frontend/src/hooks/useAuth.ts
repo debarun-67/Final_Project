@@ -3,7 +3,10 @@ import type { AuthUser, LoginCredentials } from '../types/blockchain';
 
 const DEFAULT_MOCK_USERS: AuthUser[] = [
   { email: "doctor@hospital.org", password: "password123", role: "doctor", username: "Dr. Smith", id: "mock-doc-1", doctor_id: "DOC_001" },
+  { email: "doctor2@hospital.org", password: "password123", role: "doctor", username: "Dr. Jones", id: "mock-doc-2", doctor_id: "DOC_002" },
+  { email: "doctor3@hospital.org", password: "password123", role: "doctor", username: "Dr. Watson", id: "mock-doc-3", doctor_id: "DOC_003" },
   { email: "patient@test.com", password: "password123", role: "patient", username: "John Doe", id: "mock-pat-1", patient_id: "PAT_001" },
+  { email: "patient2@test.com", password: "password123", role: "patient", username: "Jane Doe", id: "mock-pat-2", patient_id: "PAT_002" },
   { email: "admin@chain.com", password: "password123", role: "admin", username: "Network Admin", id: "mock-adm-1" }
 ];
 

@@ -1,66 +1,92 @@
-# Medical Blockchain Multi-Node Demo Launcher
-$ProjectRoot = Resolve-Path "$PSScriptRoot/.."
-$NodeCount = 4
-$BaseDir = "$ProjectRoot/demo_instances"
-$CoreBinDir = "$ProjectRoot/backend/core/bin"
+# =============================================================
+#  Medical Blockchain - Full Demo Launcher
+#  Launches all 4 honest validator nodes from demo_instances/
+#  Run scripts\rogue_launcher.ps1 separately for attacker demo
+# =============================================================
 
-Write-Host "--- Medical Blockchain Multi-Node Setup ---" -ForegroundColor Cyan
+$ProjectRoot = Resolve-Path "$PSScriptRoot\.."
+$NodeCount   = 4
+$BaseDir     = "$ProjectRoot\demo_instances"
+$CoreBinDir  = "$ProjectRoot\backend\core\bin"
+$CoreKeys    = "$ProjectRoot\backend\core\keys"
+$CoreRecords = "$ProjectRoot\backend\core\offchain\records"
 
-# 1. Cleanup and Setup
-Write-Host "Performing total blockchain reset for testing..." -ForegroundColor Magenta
+Write-Host ""
+Write-Host "============================================"  -ForegroundColor Cyan
+Write-Host "   MEDICAL BLOCKCHAIN DEMO LAUNCHER"          -ForegroundColor Cyan
+Write-Host "   Nodes: $NodeCount  |  Ports: 8001-800$NodeCount"  -ForegroundColor Cyan
+Write-Host "============================================"  -ForegroundColor Cyan
+Write-Host ""
 
-# Clear demo instances
-if (Test-Path $BaseDir) {
-    Remove-Item -Recurse -Force $BaseDir
-}
-New-Item -ItemType Directory -Path $BaseDir | Out-Null
-
-# Clear central blockchain data (so website doesn't show old data)
-$CentralData = "$ProjectRoot/backend/core/data"
-if (Test-Path $CentralData) {
-    Write-Host "Clearing central ledger at $CentralData..." -ForegroundColor Gray
-    Remove-Item -Recurse -Force "$CentralData/*" -ErrorAction SilentlyContinue
-}
-
-Write-Host "Cleaning up stale network listeners (8001-8010)..." -ForegroundColor Gray
-for ($p = 8001; $p -le 8010; $p++) {
+# ------------------------------------------------------------------
+# STEP 1: Kill stale processes on ports 8001-8010 and 8099
+# ------------------------------------------------------------------
+Write-Host "[1/4] Cleaning stale processes on ports 8001-8010 & 8099..." -ForegroundColor Magenta
+foreach ($p in @(8001,8002,8003,8004,8005,8006,8007,8008,8009,8010,8099)) {
     Get-NetTCPConnection -LocalPort $p -ErrorAction SilentlyContinue | ForEach-Object {
         try { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue } catch {}
     }
 }
+Start-Sleep -Milliseconds 500
 
-# 2. Prepare each node
+# ------------------------------------------------------------------
+# STEP 2: Wipe and recreate node directories
+# ------------------------------------------------------------------
+Write-Host "[2/4] Resetting node directories..." -ForegroundColor Magenta
+
 for ($i = 1; $i -le $NodeCount; $i++) {
-    $NodePort = 8000 + $i
-    $NodeDir = "$BaseDir/node$i"
-    Write-Host "Preparing Node $i environment..."
-    New-Item -ItemType Directory -Path $NodeDir | Out-Null
-    New-Item -ItemType Directory -Path "$NodeDir/keys" | Out-Null
-    New-Item -ItemType Directory -Path "$NodeDir/data" | Out-Null
-    New-Item -ItemType Directory -Path "$NodeDir/offchain/records" -Force | Out-Null
-    
-    # Copy assets
-    if (Test-Path "$CoreBinDir/blockchain.exe") {
-        Copy-Item "$CoreBinDir/blockchain.exe" "$NodeDir/"
-    }
-    if (Test-Path "$CoreBinDir/node_app.exe") {
-        Copy-Item "$CoreBinDir/node_app.exe" "$NodeDir/"
-    }
-    Copy-Item "$ProjectRoot/backend/core/keys/*" "$NodeDir/keys/"
-    Copy-Item "$ProjectRoot/backend/core/offchain/records/*" "$NodeDir/offchain/records/"
+    $dir = "$BaseDir\node$i"
+    if (Test-Path $dir) { Remove-Item -Recurse -Force $dir }
 }
 
-Write-Host "Setup complete." -ForegroundColor Green
+$RogueDir = "$BaseDir\rogue_node"
+if (Test-Path $RogueDir) { Remove-Item -Recurse -Force $RogueDir }
 
-# 3. Launch Nodes
-# blockchain.exe now has its own built-in heartbeat listener on its port.
-# No separate background process needed.
+# Check binary exists before going further
+if (-not (Test-Path "$CoreBinDir\node_app.exe")) {
+    Write-Host "[ERROR] node_app.exe not found. Run 'mingw32-make all' in backend\core first." -ForegroundColor Red
+    exit 1
+}
+
 for ($i = 1; $i -le $NodeCount; $i++) {
     $NodePort = 8000 + $i
-    $NodeDir = "$BaseDir/node$i"
-    Write-Host "Launching Node $i (Port $NodePort)..." -ForegroundColor Yellow
+    $NodeDir  = "$BaseDir\node$i"
+    Write-Host "   Preparing Node $i (Port $NodePort)..." -ForegroundColor Gray
 
-    # Prepare peer list (all other ports)
+    New-Item -ItemType Directory -Path "$NodeDir\data"             -Force | Out-Null
+    New-Item -ItemType Directory -Path "$NodeDir\keys"             -Force | Out-Null
+    New-Item -ItemType Directory -Path "$NodeDir\offchain\records" -Force | Out-Null
+
+    Copy-Item "$CoreBinDir\node_app.exe" "$NodeDir\" -Force
+    if (Test-Path "$CoreBinDir\viewer.exe") {
+        Copy-Item "$CoreBinDir\viewer.exe" "$NodeDir\" -Force
+    }
+    Copy-Item "$CoreKeys\*"    "$NodeDir\keys\"             -ErrorAction SilentlyContinue
+    Copy-Item "$CoreRecords\*" "$NodeDir\offchain\records\" -ErrorAction SilentlyContinue
+}
+
+# Rogue node dir (no keys - it is not an authorized validator)
+Write-Host "   Preparing Rogue Node (Port 8099)..." -ForegroundColor Gray
+New-Item -ItemType Directory -Path "$RogueDir\data"             -Force | Out-Null
+New-Item -ItemType Directory -Path "$RogueDir\keys"             -Force | Out-Null
+New-Item -ItemType Directory -Path "$RogueDir\offchain\records" -Force | Out-Null
+if (Test-Path "$CoreBinDir\rogue_node.exe") {
+    Copy-Item "$CoreBinDir\rogue_node.exe" "$RogueDir\" -Force
+}
+Copy-Item "$CoreRecords\*.txt" "$RogueDir\offchain\records\" -ErrorAction SilentlyContinue
+
+Write-Host "[3/4] All environments ready." -ForegroundColor Green
+
+# ------------------------------------------------------------------
+# STEP 3: Write per-node runner scripts and launch each in its own window
+# ------------------------------------------------------------------
+Write-Host "[4/4] Launching validator nodes..." -ForegroundColor Magenta
+Write-Host ""
+
+for ($i = 1; $i -le $NodeCount; $i++) {
+    $NodePort = 8000 + $i
+    $NodeDir  = "$BaseDir\node$i"
+
     $PeerPorts = @()
     for ($j = 1; $j -le $NodeCount; $j++) {
         $P = 8000 + $j
@@ -68,19 +94,42 @@ for ($i = 1; $i -le $NodeCount; $i++) {
     }
     $PeerArgs = $PeerPorts -join " "
 
-    Start-Process powershell -ArgumentList "-NoExit", "-Command", "
-        `$host.UI.RawUI.WindowTitle = 'MedChain Node $i :: Port $NodePort';
-        Set-Location '$NodeDir';
-        Write-Host '============================================' -ForegroundColor Cyan;
-        Write-Host '  DISTRIBUTED BLOCKCHAIN NODE $i (PORT $NodePort)' -ForegroundColor Cyan;
-        Write-Host '============================================' -ForegroundColor Cyan;
-        Write-Host 'Connected to peers: $PeerArgs' -ForegroundColor Gray;
-        Write-Host 'Commands: add, status, peers, sync, verify, exit' -ForegroundColor Yellow;
-        .\node_app.exe $NodePort $PeerArgs
-    "
+    # Write a tiny runner script inside the node dir
+    $RunnerPath = "$NodeDir\_run.ps1"
+    $RunnerContent = @"
+`$host.UI.RawUI.WindowTitle = '[NODE $i] Port $NodePort - Validator'
+Write-Host '============================================' -ForegroundColor Cyan
+Write-Host '  MEDICAL BLOCKCHAIN VALIDATOR NODE $i'      -ForegroundColor Cyan
+Write-Host '  Port  : $NodePort'                         -ForegroundColor Green
+Write-Host '  Peers : $PeerArgs'                         -ForegroundColor Gray
+Write-Host '============================================' -ForegroundColor Cyan
+Write-Host 'Commands: add <file>, status, height, peers, sync, verify, exit' -ForegroundColor Yellow
+Write-Host ''
+Set-Location '$NodeDir'
+.\node_app.exe $NodePort $PeerArgs
+Write-Host ''
+Write-Host 'Node exited. Press any key to close.' -ForegroundColor Red
+`$null = `$host.UI.RawUI.ReadKey('NoEcho,IncludeKeyDown')
+"@
+    Set-Content -Path $RunnerPath -Value $RunnerContent -Encoding UTF8
+
+    Start-Process powershell -ArgumentList "-NoExit", "-ExecutionPolicy", "Bypass", "-File", $RunnerPath
+    Write-Host "   Node $i launched (Port $NodePort)." -ForegroundColor Green
+    Start-Sleep -Milliseconds 400
 }
 
+# ------------------------------------------------------------------
+# DONE
+# ------------------------------------------------------------------
 Write-Host ""
-Write-Host "All $NodeCount nodes launched!" -ForegroundColor Green
-Write-Host "Each terminal is an independent blockchain node." -ForegroundColor Gray
-Write-Host "The website dashboard will show them as ONLINE while their terminals are open." -ForegroundColor Gray
+Write-Host "============================================" -ForegroundColor Green
+Write-Host "  All $NodeCount validator nodes are LIVE!" -ForegroundColor Green
+Write-Host ""
+Write-Host "  HOW TO USE:"                                              -ForegroundColor Yellow
+Write-Host "  In any node terminal type: add record1.txt"              -ForegroundColor White
+Write-Host "  Watch 3-Phase Commit consensus across ALL windows."      -ForegroundColor White
+Write-Host ""
+Write-Host "  TO LAUNCH MALICIOUS ATTACKER NODE:"                      -ForegroundColor Red
+Write-Host "  Run: .\scripts\rogue_launcher.ps1"                       -ForegroundColor White
+Write-Host "============================================"               -ForegroundColor Green
+Write-Host ""

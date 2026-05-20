@@ -1,0 +1,10 @@
+PATIENT: Bob Smith (mock-pat-3)
+DOCTOR: Dr. House (mock-doc-3)
+DATE: 2026-05-22
+
+DIAGNOSIS:
+Acute Appendicitis. 
+Patient scheduled for laparoscopic appendectomy.
+
+NOTES:
+NPO after midnight. Consent form signed and verified.

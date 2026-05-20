@@ -1,0 +1,10 @@
+PATIENT: Jane Doe (mock-pat-2)
+DOCTOR: Dr. Watson (mock-doc-2)
+DATE: 2026-05-21
+
+DIAGNOSIS:
+Type 2 Diabetes. Patient advised to monitor blood glucose levels daily.
+Prescribed Metformin 500mg daily.
+
+NOTES:
+Review HbA1c levels in 6 weeks.

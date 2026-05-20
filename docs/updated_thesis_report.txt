@@ -11,13 +11,13 @@ ABSTRACT
 
 This project presents the design and implementation of a custom permissioned blockchain system for securing medical record integrity. The system is built around a hybrid storage model: sensitive medical files are stored off-chain, while cryptographic hashes, metadata, validator identity, timestamps, and block linkage information are stored on a blockchain ledger. The purpose is not to replace every part of a hospital Electronic Health Record system, but to provide a tamper-evident trust layer that can prove whether a medical record has remained unchanged after it was registered.
 
-The project has evolved beyond the earlier report. The original thesis focused mainly on a C-based blockchain core with Proof of Authority validation. The current implementation now includes three major layers: a C blockchain core, a Node.js/Express API bridge, and a Vite React/TypeScript dashboard. The C core manages blocks, transactions, hashing, local persistence, peer-to-peer networking, synchronization, duplicate record detection, and a demonstration signature mechanism. The Express API exposes blockchain data, network health, logs, and record upload endpoints to the web layer. The React frontend provides role-based pages for administrators, doctors, and patients, including dashboard statistics, block exploration, network monitoring, record viewing, record upload, activity logs, and integrity verification workflows.
+The project has evolved beyond the earlier report. The original thesis focused mainly on a C-based blockchain core with Proof of Authority validation. The current implementation now includes three major layers: a C blockchain core, a Node.js/Express API bridge, and a Vite React/TypeScript dashboard. The C core manages blocks, transactions, hashing, Merkle root computation, Merkle proof generation, local persistence, peer-to-peer networking, synchronization, duplicate record detection, and a demonstration signature mechanism. The Express API exposes blockchain data, network health, logs, record upload endpoints, and proof-backed record verification responses to the web layer. The React frontend provides role-based pages for administrators, doctors, and patients, including dashboard statistics, block exploration, network monitoring, record viewing, record upload, activity logs, and integrity verification workflows.
 
 The system follows a permissioned architecture suited to a healthcare consortium where participants are known entities such as hospitals, laboratories, clinics, insurance partners, or regulator-approved validator nodes. It uses a Proof of Authority style model instead of Proof of Work, because medical systems require low latency, predictable behavior, and identity-based accountability rather than energy-intensive mining. The implemented network flow also includes a three-phase-commit-inspired consensus sequence using CAN_COMMIT, VOTE_YES, PRE_COMMIT, ACK_PRE, and DO_COMMIT messages. This gives the project a stronger distributed-systems character than the earlier version, although the current implementation remains a prototype and not a production-grade Byzantine fault tolerant system.
 
 The unique contribution of the project lies in combining a lightweight C ledger engine with a modern hospital-facing web application. Many blockchain demonstrations are either only theoretical, only smart-contract based, or only command-line tools. This project attempts to cover the full vertical path: low-level block storage, peer networking, backend service bridge, and frontend operational dashboard. It also uses off-chain storage and on-chain hashes, which is important for healthcare privacy because raw patient data should not be replicated across every node in a blockchain network.
 
-At the same time, the current system has limitations. The signature layer is presently a mock demonstration signature rather than real RSA/ECDSA verification. The backend authentication middleware supports both mock user IDs (via the X-Mock-User-ID header) and Supabase bearer tokens, allowing the existing frontend login workflow to operate seamlessly with protected upload routes. The upload flow is now fully integrated end to end: the API receives the file, copies it into the demo node's off-chain storage, calls the C viewer binary ADD command with the correct arguments, and returns the committed block index, SHA-256 hash, and data pointer to the frontend. The verify flow is also integrated: the API passes the uploaded file to the C viewer VERIFY_FILE command, which scans the chain and returns MATCH or NOT_FOUND with full metadata. Transport security, production key management, database hardening, rate limiting, test coverage, and real healthcare compliance controls remain future work. These limitations do not invalidate the academic value of the project; rather, they define the boundary between the current prototype and a production-ready healthcare infrastructure system.
+At the same time, the current system has limitations. The signature layer is presently a mock demonstration signature rather than real RSA/ECDSA/Ed25519 verification. The backend authentication middleware exclusively supports mock user IDs (via the X-Mock-User-ID header) to provide a streamlined, zero-dependency demonstration mode, completely removing any reliance on external services like Supabase. The upload flow is now fully integrated end to end: the API receives the file, copies it into the demo node's off-chain storage, calls the C viewer binary ADD command with the correct arguments, and returns the committed block index, SHA-256 hash, and data pointer to the frontend. The verify flow is also integrated: the API passes the uploaded file to the C viewer VERIFY_FILE command, which recomputes the uploaded file hash, uses the transaction hash index to locate the matching block and transaction, and returns MATCH or NOT_FOUND. For a match, it returns transaction metadata, block header fields, and a Merkle proof; the frontend independently reconstructs the leaf and proof root before accepting the result. Transport security, production key management, real header-chain validation, database hardening, rate limiting, test coverage, and real healthcare compliance controls remain future work. These limitations do not invalidate the academic value of the project; rather, they define the boundary between the current prototype and a production-ready healthcare infrastructure system.
 
 
 TABLE OF CONTENTS
@@ -324,7 +324,7 @@ This is good because it reduces the risk of data remaining only in memory after 
 The core verifies:
 
 - block hash correctness
-- signature prefix validity in the current demo signature implementation
+- expected demo signature string validity in the current non-production signature implementation
 - previous-hash linkage
 - duplicate transaction hashes inside a block
 - duplicate transaction hashes against the existing chain
@@ -333,7 +333,7 @@ Full chain verification reads blocks sequentially and checks that each block poi
 
 8.6 Duplicate Detection
 
-The project includes a transaction hash index implemented as a hash map with chained linked lists. This improves duplicate lookup compared to scanning the whole chain every time. Recent corrections also clear the index when the blockchain file path changes, which matters because demo nodes may use different ledger files.
+The project includes a transaction hash index implemented as a hash map with chained linked lists. The index stores the transaction data_hash together with the block index and transaction index. This improves duplicate lookup compared to scanning the whole chain every time and also supports proof lookup for VERIFY_FILE. Recent corrections clear the index when the blockchain file path changes, which matters because demo nodes may use different ledger files. In production this index should be persistent and stored in a database, but clients must still verify returned proofs rather than trusting the index server blindly.
 
 8.7 Viewer Tool
 
@@ -343,6 +343,10 @@ The viewer binary provides commands such as:
 - LAST
 - ALL
 - VERIFY
+- VERIFY_FILE
+- ADD
+
+VERIFY_FILE now returns a proof-backed response for a matching file. It recomputes the uploaded file hash, looks up the transaction location through the in-memory hash index, loads the relevant block, generates a Merkle proof, verifies the proof against the block Merkle root inside the C core, and prints header, transaction, and proof fields for the API layer to parse.
 - PRINT <index>
 
 The Express API depends heavily on this viewer output. It parses the text format and converts it to JSON for the frontend.
@@ -480,7 +484,7 @@ It aggregates these logs for the frontend System Logs page.
 
 10.7 Authentication
 
-The backend includes Supabase-based authentication middleware for protected routes. It expects a Bearer token and reads user role information from a profiles table. The frontend, however, currently uses local mock users and stores session data in localStorage. This creates an integration gap. The frontend and backend authentication models need to be unified.
+The backend and frontend authentication models have been unified around a robust, zero-dependency local mock authentication system. The backend middleware validates the X-Mock-User-ID header against an internal mock user registry. This removes the integration gap that previously existed when mixing local frontend state with external Supabase dependencies, ensuring a fully self-contained local demonstration.
 
 
 11. FRONTEND DASHBOARD
@@ -537,7 +541,9 @@ The records page reads blockchain blocks and extracts transactions. If the user 
 
 11.8 Verify Record
 
-The verify page uploads the file to /api/records/verify. The backend passes the file to the C viewer VERIFY_FILE command, which recomputes the SHA-256 hash of the uploaded file and scans every block and transaction in the chain. If a matching data_hash is found, the response includes the block index, transaction index, hash, data pointer, patient ID, and doctor ID, all of which are displayed to the user. If no match is found, the computed hash is shown alongside a clear failure message.
+The verify page uploads the file to /api/records/verify. The backend passes the file to the C viewer VERIFY_FILE command. The C core recomputes the SHA-256 hash of the uploaded file, uses the transaction hash index to locate the block index and transaction index, and generates a Merkle proof for the matching transaction. If a matching data_hash is found, the response includes the block index, transaction index, record hash, data pointer, patient ID, doctor ID, transaction metadata, block header fields, Merkle proof leaf, proof length, computed root, and each sibling proof step with left/right direction.
+
+The frontend no longer treats the backend's MATCH response as sufficient by itself. It recomputes SHA-256 over the uploaded file in the browser, reconstructs the canonical transaction leaf from returned metadata, applies the Merkle proof step by step, compares the computed root with the block header Merkle root, and recomputes the block hash from the returned header fields. The page displays success only if the local proof check succeeds. If no match is found, the computed hash is shown alongside a clear failure message.
 
 11.9 Activity Logs
 
@@ -596,6 +602,12 @@ With hybrid storage:
 
 The Merkle root summarizes all transactions in a block. If a transaction changes, the Merkle root changes. Since the block hash includes the Merkle root, transaction tampering changes the block hash and breaks verification.
 
+12.5 Merkle Proof Verification
+
+The implementation now supports proof-backed record verification. A Merkle proof contains the transaction leaf hash, each sibling hash needed to climb from the leaf to the root, and the left/right position of every sibling. This allows a lightweight client to verify record inclusion using the uploaded file, transaction metadata, proof path, and block header instead of downloading the full block.
+
+The current frontend performs this proof reconstruction in the browser. This provides inclusion verification, but production SPV security also requires validation that the returned block header is part of the authorized chain.
+
 
 13. TRANSACTION LIFECYCLE
 
@@ -624,7 +636,7 @@ Current implementation status:
 - Steps 3 through 15 exist in the C core/node flow for command-line record addition.
 - Dashboard display exists.
 - Upload from frontend to backend is now fully integrated: the API controller receives the file, copies it to offchain/records, calls the C viewer ADD command, and returns the committed block data to the frontend UI.
-- Frontend verification is now integrated: the file is uploaded to the backend, the C viewer VERIFY_FILE command recomputes the hash and searches the chain, and the result (MATCH or NOT_FOUND) is displayed with full block/transaction details.
+- Frontend verification is now integrated: the file is uploaded to the backend, the C viewer VERIFY_FILE command recomputes the hash, locates the transaction through the hash index, returns a Merkle proof and block header, and the browser verifies the proof locally before displaying success.
 
 
 14. SECURITY MODEL
@@ -661,18 +673,25 @@ Each block stores validator_port and validator_signature. In a production system
 
 14.5 Current Signature Limitation
 
-The current signature implementation is not cryptographically secure. sign_data creates a string beginning with SIG_V1_ and verify_signature checks that prefix. This is acceptable only for demonstrating the block signing workflow. It is not sufficient for real security.
+The current signature implementation is not cryptographically secure. sign_data creates a string beginning with SIG_V1_ and includes the block hash and key path. verify_signature now reconstructs the expected demo signature for the supplied block hash and corresponding key path rather than accepting only a prefix, but this is still a demonstration mechanism rather than real public-key cryptography. It is acceptable only for demonstrating the block signing workflow. It is not sufficient for real security.
 
 A production version should use:
 
 - Ed25519, ECDSA, or RSA-PSS signatures
 - real public/private key verification
 - certificate management
+- signed block headers for light-client validation
 - key rotation
 - revocation list
 - hardware-backed private keys for validators
 
-14.6 Network Security
+14.6 Merkle Proof and Light-Client Trust Boundary
+
+The current verifier can prove that a returned transaction belongs to a returned block header. The browser recomputes the file hash, reconstructs the transaction leaf, applies the left/right sibling proof, and checks the computed root against the returned Merkle root. This reduces the need to download full blocks for record inclusion checks.
+
+However, Merkle proof verification alone does not prove that the block header belongs to the real authorized chain. A production light client must also validate the block header through trusted validator public keys, signed header chains, previous_hash linkage, validator-set rules, and/or trusted checkpoints. Without this additional header validation, a malicious server could return a fake header and a matching fake proof.
+
+14.7 Network Security
 
 Current node communication is plain TCP. It does not use TLS. This means traffic can be observed or modified by an attacker on the network. The block verification layer can detect some invalid data, but confidentiality and authenticity of transport are not guaranteed.
 
@@ -691,7 +710,7 @@ The API uses child_process execution to call C binaries. This is acceptable for 
 
 14.8 Frontend Security
 
-The frontend currently uses mock authentication. This is suitable for demonstration and local testing but not for real deployment. Production should integrate actual Supabase or another authentication provider consistently across frontend and backend.
+The system currently uses local mock authentication across both frontend and backend. This is suitable for demonstration and local testing but not for real deployment. Production must integrate a real Identity Provider (IdP) consistently across the stack.
 
 
 15. CURRENT GOOD QUALITIES
@@ -772,7 +791,7 @@ The largest security weakness is that the signature system is not real cryptogra
 
 16.2 Auth Model Is Demo-Level
 
-The backend authentication middleware now accepts both the X-Mock-User-ID header (used by the frontend mock login) and Supabase bearer tokens. This allows the existing frontend login workflow to work with protected routes without requiring a full Supabase deployment for the demo. A production system must unify on a single authentication provider with proper token validation, session management, and role enforcement backed by a real identity store.
+The backend and frontend authentication have been unified around a local mock registry via the X-Mock-User-ID header. This provides a clean, zero-dependency demonstration experience without requiring external services like Supabase. However, for a production system, this must be replaced with a single, secure Identity Provider (IdP) with proper token validation, session management, and role enforcement backed by a real identity store.
 
 16.3 Upload Flow Is Integrated at Demo Level
 
@@ -780,7 +799,7 @@ The upload controller now copies the uploaded file into the demo node's offchain
 
 16.4 Verification UI Is Now Integrated
 
-The Verify Record page no longer simulates verification. It uploads the file to /api/records/verify. The backend passes the file to the C viewer VERIFY_FILE command, which recomputes the SHA-256 hash and scans the chain. A MATCH response returns the block index, transaction index, hash, data pointer, patient ID, and doctor ID. A NOT_FOUND response returns the computed hash. The frontend displays all of this information clearly.
+The Verify Record page no longer simulates verification. It uploads the file to /api/records/verify. The backend passes the file to the C viewer VERIFY_FILE command, which recomputes the SHA-256 hash, uses the hash index to locate the transaction, and returns a proof-backed response. A MATCH response returns the block index, transaction index, hash, data pointer, patient ID, doctor ID, transaction metadata, block header fields, and Merkle proof steps. A NOT_FOUND response returns the computed hash. The frontend recomputes the file hash and verifies the returned Merkle proof locally before displaying success.
 
 16.5 Plain TCP Networking
 
@@ -812,7 +831,7 @@ A medical system should record patient consent, access grants, revocations, and 
 
 16.12 No Production Database Schema
 
-The Supabase profile idea exists, but the chain and frontend are not fully integrated with a stable database schema for users, permissions, records, and audit metadata.
+A robust identity and access management system must be implemented. The chain and frontend are not fully integrated with a stable database schema for users, permissions, records, and audit metadata.
 
 
 17. DIFFERENCES FROM THE PREVIOUS REPORT
@@ -952,17 +971,22 @@ The web upload should:
 
 20.4 Implement Real Verification
 
-The Verify Record page should:
+The Verify Record page now:
 
-- compute SHA-256 in the browser, or
-- upload the file to the backend for hashing, then
-- compare the hash with chain transactions.
+- uploads the file to the backend for lookup and proof generation,
+- computes SHA-256 in the browser,
+- reconstructs the canonical transaction leaf,
+- applies the returned Merkle proof step by step,
+- compares the computed root with the returned block header Merkle root,
+- recomputes the block hash from the returned header fields.
+
+Remaining production work is to validate the returned block header against real validator signatures, trusted public keys, previous_hash linkage, and a checkpoint/header-chain policy.
 
 20.5 Unify Authentication
 
 Choose one auth model:
 
-- Supabase auth end to end, or
+- Production Identity Provider (IdP) integration end to end, or
 - local mock auth only for demo, or
 - JWT issued by backend
 
@@ -995,7 +1019,7 @@ Options:
 
 20.9 Add Database Support
 
-The API could store user profiles, record metadata, access policies, and audit summaries in Postgres/Supabase while keeping integrity proofs on-chain.
+The API could store user profiles, record metadata, access policies, and audit summaries in a robust database like PostgreSQL while keeping integrity proofs on-chain.
 
 20.10 Add Automated Tests
 
@@ -1061,8 +1085,8 @@ The thesis should eventually include:
 
 Phase 1: Stabilize Prototype
 
-- fix upload integration
-- replace simulated verification with real hash comparison
+- maintain the integrated upload flow
+- maintain proof-backed record verification and expand automated coverage
 - unify authentication
 - add basic automated tests
 - clean generated files from repository
@@ -1109,7 +1133,7 @@ This project is a strong academic and engineering prototype of a permissioned bl
 
 The current repository demonstrates more than a theoretical blockchain. It includes a C ledger engine, a peer networking layer, a synchronization mechanism, a Node.js API bridge, and a React dashboard. This makes the project suitable for demonstration, explanation, and further development.
 
-The project also honestly reveals the gap between prototype and production. It still needs real cryptographic signatures, real authentication integration, secure transport, a complete upload and verification pipeline, automated tests, formal validator governance, and stronger consensus rules. These are not minor details; they are essential for real healthcare deployment. However, the current implementation provides a meaningful foundation on which those improvements can be built.
+The project also honestly reveals the gap between prototype and production. It still needs real cryptographic signatures, trusted light-client header validation, real authentication integration, secure transport, persistent indexing, automated tests, formal validator governance, and stronger consensus rules. These are not minor details; they are essential for real healthcare deployment. However, the current implementation provides a meaningful foundation on which those improvements can be built.
 
 The uniqueness of the work lies in its full-stack nature and its healthcare-specific architecture. It does not merely use blockchain as a buzzword. It uses blockchain for a specific property: tamper evidence. It does not place private data on-chain. It recognizes that permissioned identity is more suitable than public mining for hospitals. It uses a dashboard to make the system understandable to users and examiners.
 
@@ -1269,19 +1293,25 @@ The file_content should ideally be encrypted medical file content. The blockchai
 
 For each transaction Ti, define:
 
-tx_hash_i = SHA256(patient_id || doctor_id || data_hash || data_pointer || timestamp)
+tx_hash_i = SHA256("LEAF" || len(patient_id) || patient_id || len(doctor_id) || doctor_id || len(data_hash) || data_hash || len(data_pointer) || data_pointer || timestamp)
 
 The Merkle root is computed by repeatedly hashing pairs:
 
 M = Merkle(tx_hash_1, tx_hash_2, ..., tx_hash_k)
 
-If there is only one transaction, the Merkle root is the transaction hash. If there are multiple transactions, the root summarizes the set. If any transaction field changes, the root changes.
+Internal nodes are computed with an explicit node domain:
+
+parent = SHA256("NODE" || left_hash || right_hash)
+
+If there is only one transaction, the Merkle root is the transaction hash. If there are multiple transactions, the root summarizes the set. If a level has an odd number of nodes, the final node is duplicated for that level. If any transaction field changes, the root changes.
+
+The implementation can also generate a Merkle proof for a transaction index. The proof contains each sibling hash and whether that sibling is on the left or right side. Verification starts from the transaction leaf and applies each proof step until it reconstructs the root. A reordered proof, wrong sibling hash, or wrong left/right direction should fail.
 
 26.4 Block Hash
 
 The block hash is:
 
-block_hash = SHA256(index || timestamp || previous_hash || merkle_root)
+block_hash = SHA256("HEADER" || index || timestamp || previous_hash || merkle_root)
 
 This means block integrity depends on:
 

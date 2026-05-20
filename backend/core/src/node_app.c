@@ -15,6 +15,7 @@
 #include "blockchain/block.h"
 #include "crypto/hash.h"
 #include "crypto/signature.h"
+#include "crypto/encryption.h"
 #include "network/node.h"
 #include "network/sync.h"
 #include "network/serializer.h"
@@ -149,7 +150,7 @@ int main(int argc, char *argv[]) {
             sprintf(tx.doctor_id, "DOC-%d", port);
             
             // Use the argument if provided, otherwise default
-            const char *arg_file = (arg != NULL) ? arg : "record1.enc";
+            const char *arg_file = (arg != NULL) ? arg : "record1.txt";
             char final_path[256];
             
             // Try as-is first
@@ -162,9 +163,35 @@ int main(int argc, char *argv[]) {
                 snprintf(final_path, sizeof(final_path), "offchain/records/%s", arg_file);
             }
             
-            strncpy(tx.data_pointer, final_path, sizeof(tx.data_pointer) - 1);
+            // Parse patient and doctor IDs from the file if available
+            FILE *parse_f = fopen(final_path, "r");
+            if (parse_f) {
+                char file_line[256];
+                while(fgets(file_line, sizeof(file_line), parse_f)) {
+                    if (strncmp(file_line, "Patient ID: ", 12) == 0) {
+                        sscanf(file_line, "Patient ID: %31s", tx.patient_id);
+                    } else if (strncmp(file_line, "Doctor ID: ", 11) == 0) {
+                        sscanf(file_line, "Doctor ID: %31s", tx.doctor_id);
+                    }
+                }
+                fclose(parse_f);
+            }
             
-            if (hash_file_content(tx.data_pointer, tx.data_hash)) {
+            char enc_path[256];
+            snprintf(enc_path, sizeof(enc_path), "%s.enc", final_path);
+            
+            // Perform Envelope Encryption (matching website behavior)
+            if (!envelope_encrypt_record(final_path, enc_path, tx.patient_id, tx.doctor_id)) {
+                printf("[ERROR] Failed to encrypt record via Envelope Encryption!\n");
+                continue;
+            }
+            printf("[CRYPTO] Record securely encrypted to %s\n", enc_path);
+
+            // Blockchain tracks the location of the ENCRYPTED file...
+            strncpy(tx.data_pointer, enc_path, sizeof(tx.data_pointer) - 1);
+            
+            // ...but hashes the ORIGINAL PLAINTEXT file for integrity checks.
+            if (hash_file_content(final_path, tx.data_hash)) {
                 // PREVENT DUPLICATES
                 if (transaction_hash_exists(tx.data_hash)) {
                     printf("[ERROR] Record already exists on blockchain (Duplicate Hash detected).\n");
@@ -209,7 +236,7 @@ int main(int argc, char *argv[]) {
                 Transaction tx;
                 sprintf(tx.patient_id, "BENCH-%d", i);
                 sprintf(tx.doctor_id, "STRESS-TEST");
-                strncpy(tx.data_pointer, "offchain/records/record1.enc", sizeof(tx.data_pointer) - 1);
+                strncpy(tx.data_pointer, "offchain/records/record1.txt", sizeof(tx.data_pointer) - 1);
                 
                 if (hash_file_content(tx.data_pointer, tx.data_hash)) {
                     tx.timestamp = time(NULL);

@@ -6,10 +6,11 @@ LIBS =
 SRCS_COMMON = src/blockchain/block.c \
               src/blockchain/blockchain.c \
               src/crypto/hash.c \
-              src/crypto/signature.c
+              src/crypto/signature.c \
+              src/crypto/encryption.c
  
 # Targets
-all: setup blockchain cli viewer validate keygen node
+all: setup blockchain cli viewer validate keygen node rogue
 
 setup:
 	if not exist bin mkdir bin
@@ -31,6 +32,9 @@ keygen: src/generate_keys.c
 
 node: src/node_app.c $(SRCS_COMMON) src/network/node.c src/network/protocol.c src/network/proposal.c src/network/serializer.c src/network/sync.c
 	$(CC) src/node_app.c $(SRCS_COMMON) src/network/node.c src/network/protocol.c src/network/proposal.c src/network/serializer.c src/network/sync.c -o bin/node_app.exe $(CFLAGS) -lws2_32
+
+rogue: src/rogue_node.c $(SRCS_COMMON) src/network/node.c src/network/protocol.c src/network/proposal.c src/network/serializer.c src/network/sync.c
+	$(CC) src/rogue_node.c $(SRCS_COMMON) src/network/node.c src/network/protocol.c src/network/proposal.c src/network/serializer.c src/network/sync.c -o bin/rogue_node.exe $(CFLAGS) -lws2_32
 
 benchmark: src/benchmark_node.c $(SRCS_COMMON)
 	$(CC) src/benchmark_node.c $(SRCS_COMMON) -o bin/benchmark_node.exe $(CFLAGS)

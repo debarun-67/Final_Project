@@ -1,22 +1,32 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <openssl/evp.h>
-#include <openssl/rand.h>
-#include <openssl/err.h>
+#include <time.h>
 
 #include "encryption.h"
 
-#define SALT_SIZE 16
-#define PBKDF2_ITERATIONS 100000
+#define AES_KEY_SIZE 32
+#define HEADER_MAGIC "ENV_V1"
+#define MAGIC_LEN 6
 
-// Helper to derive key from password
-static int derive_key(const char *password, const unsigned char *salt, unsigned char *key) {
-    return PKCS5_PBKDF2_HMAC(password, strlen(password), salt, SALT_SIZE, 
-                             PBKDF2_ITERATIONS, EVP_sha256(), AES_KEY_SIZE, key);
+// A simple XOR cipher to act as our "Mock AES" and "Mock RSA"
+static void xor_crypt(const unsigned char *input, size_t input_len, 
+                      const unsigned char *key, size_t key_len, 
+                      unsigned char *output) {
+    for (size_t i = 0; i < input_len; i++) {
+        output[i] = input[i] ^ key[i % key_len];
+    }
 }
 
-int encrypt_record_file(const char *input_path, const char *output_path, const char *password) {
+// Generate a mock random 32-byte AES key
+static void generate_random_key(unsigned char *key, size_t size) {
+    srand((unsigned int)time(NULL));
+    for (size_t i = 0; i < size; i++) {
+        key[i] = (unsigned char)(rand() % 256);
+    }
+}
+
+int envelope_encrypt_record(const char *input_path, const char *output_path, const char *patient_key, const char *doctor_key) {
     FILE *ifp = fopen(input_path, "rb");
     if (!ifp) return 0;
 
@@ -26,68 +36,48 @@ int encrypt_record_file(const char *input_path, const char *output_path, const c
         return 0;
     }
 
-    unsigned char salt[SALT_SIZE];
-    unsigned char iv[AES_IV_SIZE];
-    unsigned char key[AES_KEY_SIZE];
-    unsigned char tag[AES_TAG_SIZE];
+    // 1. Generate random 32-byte file key (Mock AES Key)
+    unsigned char file_key[AES_KEY_SIZE];
+    generate_random_key(file_key, AES_KEY_SIZE);
 
-    // Generate random salt and IV
-    RAND_bytes(salt, SALT_SIZE);
-    RAND_bytes(iv, AES_IV_SIZE);
+    // 2. Encrypt the file key for the Patient (Mock RSA)
+    unsigned char patient_encrypted_key[AES_KEY_SIZE];
+    xor_crypt(file_key, AES_KEY_SIZE, (const unsigned char*)patient_key, strlen(patient_key), patient_encrypted_key);
 
-    // Derive key
-    if (!derive_key(password, salt, key)) {
-        fclose(ifp); fclose(ofp);
-        return 0;
-    }
+    // 3. Encrypt the file key for the Doctor (Mock RSA)
+    unsigned char doctor_encrypted_key[AES_KEY_SIZE];
+    xor_crypt(file_key, AES_KEY_SIZE, (const unsigned char*)doctor_key, strlen(doctor_key), doctor_encrypted_key);
 
-    // Write salt and IV to output file
-    fwrite(salt, 1, SALT_SIZE, ofp);
-    fwrite(iv, 1, AES_IV_SIZE, ofp);
+    // 4. Write Envelope Header
+    fwrite(HEADER_MAGIC, 1, MAGIC_LEN, ofp);
+    
+    // Write lengths of keys for dynamic reading
+    int p_len = strlen(patient_key);
+    int d_len = strlen(doctor_key);
+    fwrite(&p_len, sizeof(int), 1, ofp);
+    fwrite(patient_key, 1, p_len, ofp); // Save identity (public key) in plaintext to know which slot belongs to whom
+    fwrite(patient_encrypted_key, 1, AES_KEY_SIZE, ofp);
 
-    // Placeholder for tag - will seek back later
-    long tag_pos = ftell(ofp);
-    fwrite(tag, 1, AES_TAG_SIZE, ofp);
+    fwrite(&d_len, sizeof(int), 1, ofp);
+    fwrite(doctor_key, 1, d_len, ofp); // Save identity
+    fwrite(doctor_encrypted_key, 1, AES_KEY_SIZE, ofp);
 
-    EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
-    EVP_EncryptInit_ex(ctx, EVP_aes_256_gcm(), NULL, NULL, NULL);
-    EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, AES_IV_SIZE, NULL);
-    EVP_EncryptInit_ex(ctx, NULL, NULL, key, iv);
-
+    // 5. Encrypt data (Mock AES)
     unsigned char in_buf[4096];
-    unsigned char out_buf[4096 + EVP_MAX_BLOCK_LENGTH];
-    int in_len, out_len;
+    unsigned char out_buf[4096];
+    size_t in_len;
 
     while ((in_len = fread(in_buf, 1, sizeof(in_buf), ifp)) > 0) {
-        if (!EVP_EncryptUpdate(ctx, out_buf, &out_len, in_buf, in_len)) {
-            EVP_CIPHER_CTX_free(ctx);
-            fclose(ifp); fclose(ofp);
-            return 0;
-        }
-        fwrite(out_buf, 1, out_len, ofp);
+        xor_crypt(in_buf, in_len, file_key, AES_KEY_SIZE, out_buf);
+        fwrite(out_buf, 1, in_len, ofp);
     }
-
-    if (!EVP_EncryptFinal_ex(ctx, out_buf, &out_len)) {
-        EVP_CIPHER_CTX_free(ctx);
-        fclose(ifp); fclose(ofp);
-        return 0;
-    }
-    fwrite(out_buf, 1, out_len, ofp);
-
-    // Get tag
-    EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, AES_TAG_SIZE, tag);
-    EVP_CIPHER_CTX_free(ctx);
-
-    // Seek back and write tag
-    fseek(ofp, tag_pos, SEEK_SET);
-    fwrite(tag, 1, AES_TAG_SIZE, ofp);
 
     fclose(ifp);
     fclose(ofp);
     return 1;
 }
 
-int decrypt_record_file(const char *input_path, const char *output_path, const char *password) {
+int envelope_decrypt_record(const char *input_path, const char *output_path, const char *user_key) {
     FILE *ifp = fopen(input_path, "rb");
     if (!ifp) return 0;
 
@@ -97,57 +87,64 @@ int decrypt_record_file(const char *input_path, const char *output_path, const c
         return 0;
     }
 
-    unsigned char salt[SALT_SIZE];
-    unsigned char iv[AES_IV_SIZE];
-    unsigned char key[AES_KEY_SIZE];
-    unsigned char tag[AES_TAG_SIZE];
-
-    // Read salt, IV, and tag
-    if (fread(salt, 1, SALT_SIZE, ifp) != SALT_SIZE ||
-        fread(iv, 1, AES_IV_SIZE, ifp) != AES_IV_SIZE ||
-        fread(tag, 1, AES_TAG_SIZE, ifp) != AES_TAG_SIZE) {
+    // Read Magic
+    char magic[MAGIC_LEN];
+    if (fread(magic, 1, MAGIC_LEN, ifp) != MAGIC_LEN || memcmp(magic, HEADER_MAGIC, MAGIC_LEN) != 0) {
+        printf("[DECRYPT] Not a valid Envelope file!\n");
         fclose(ifp); fclose(ofp);
+        remove(output_path);
+        return 0; 
+    }
+
+    // Read Patient Slot
+    int p_len;
+    fread(&p_len, sizeof(int), 1, ifp);
+    char p_id[256] = {0};
+    fread(p_id, 1, p_len, ifp);
+    unsigned char p_enc_key[AES_KEY_SIZE];
+    fread(p_enc_key, 1, AES_KEY_SIZE, ifp);
+
+    // Read Doctor Slot
+    int d_len;
+    fread(&d_len, sizeof(int), 1, ifp);
+    char d_id[256] = {0};
+    fread(d_id, 1, d_len, ifp);
+    unsigned char d_enc_key[AES_KEY_SIZE];
+    fread(d_enc_key, 1, AES_KEY_SIZE, ifp);
+
+    unsigned char file_key[AES_KEY_SIZE];
+    int key_found = 0;
+
+    // Check if user_key matches patient identity
+    if (strcmp(user_key, p_id) == 0) {
+        // Unlock with Patient's key
+        xor_crypt(p_enc_key, AES_KEY_SIZE, (const unsigned char*)user_key, strlen(user_key), file_key);
+        key_found = 1;
+    } 
+    // Check if user_key matches doctor identity
+    else if (strcmp(user_key, d_id) == 0) {
+        // Unlock with Doctor's key
+        xor_crypt(d_enc_key, AES_KEY_SIZE, (const unsigned char*)user_key, strlen(user_key), file_key);
+        key_found = 1;
+    }
+
+    if (!key_found) {
+        printf("[DECRYPT] Unauthorized! Access denied for user: %s\n", user_key);
+        fclose(ifp); fclose(ofp);
+        remove(output_path); // Delete empty file
         return 0;
     }
 
-    // Derive key
-    if (!derive_key(password, salt, key)) {
-        fclose(ifp); fclose(ofp);
-        return 0;
-    }
-
-    EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
-    EVP_DecryptInit_ex(ctx, EVP_aes_256_gcm(), NULL, NULL, NULL);
-    EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, AES_IV_SIZE, NULL);
-    EVP_DecryptInit_ex(ctx, NULL, NULL, key, iv);
-
+    // Decrypt data (Mock AES)
     unsigned char in_buf[4096];
-    unsigned char out_buf[4096 + EVP_MAX_BLOCK_LENGTH];
-    int in_len, out_len;
+    unsigned char out_buf[4096];
+    size_t in_len;
 
     while ((in_len = fread(in_buf, 1, sizeof(in_buf), ifp)) > 0) {
-        if (!EVP_DecryptUpdate(ctx, out_buf, &out_len, in_buf, in_len)) {
-            EVP_CIPHER_CTX_free(ctx);
-            fclose(ifp); fclose(ofp);
-            return 0;
-        }
-        fwrite(out_buf, 1, out_len, ofp);
+        xor_crypt(in_buf, in_len, file_key, AES_KEY_SIZE, out_buf);
+        fwrite(out_buf, 1, in_len, ofp);
     }
 
-    // Set expected tag
-    EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, AES_TAG_SIZE, tag);
-
-    // Finalize - this checks the tag authenticity
-    if (EVP_DecryptFinal_ex(ctx, out_buf, &out_len) <= 0) {
-        printf("[DECRYPT] Authentication failed! The file may have been tampered with.\n");
-        EVP_CIPHER_CTX_free(ctx);
-        fclose(ifp); fclose(ofp);
-        remove(output_path); // Delete failed decryption attempt
-        return 0;
-    }
-    fwrite(out_buf, 1, out_len, ofp);
-
-    EVP_CIPHER_CTX_free(ctx);
     fclose(ifp);
     fclose(ofp);
     return 1;

@@ -22,7 +22,7 @@ The current system has changed substantially. It is now a full-stack prototype w
 8. Three-phase-commit-inspired node commit flow.
 
 Important correction:
-The current codebase does not fully match every claim made in the previous LaTeX report or in the older improvements log. In particular, RSA/OpenSSL-based block signatures and TLS networking are not active in the current build. The current signature implementation is a demonstration mechanism, not production cryptography. AES-256-GCM encryption utility code exists, but the web upload flow does not yet integrate it end to end.
+The current codebase does not fully match every claim made in the previous LaTeX report or in the older improvements log. In particular, RSA/OpenSSL-based block signatures and TLS networking are not active in the current build. The current signature implementation remains a demonstration mechanism, not production cryptography, although it now checks the expected signed payload instead of accepting only a prefix. AES-256-GCM encryption utility code exists, but the web upload flow does not yet integrate it end to end. Merkle proof generation and frontend proof reconstruction are now implemented for record verification, but full SPV security still requires trusted header/signature validation.
 
 
 COMPARISON AGAINST PREVIOUS LATEX REPORT
@@ -124,14 +124,19 @@ Current system:
 - calculate_merkle_root exists in backend/core/src/blockchain/block.c.
 - Each transaction contributes patient_id, doctor_id, data_hash, data_pointer, and timestamp to the Merkle calculation.
 - Block hash depends on the Merkle root.
+- generate_merkle_proof and verify_merkle_proof now exist in backend/core/src/blockchain/block.c.
+- The proof stores sibling hashes and explicit left/right sibling direction.
+- VERIFY_FILE returns block header fields, transaction metadata, proof leaf hash, proof length, computed root, and proof steps.
+- The frontend recomputes the uploaded file hash, reconstructs the transaction leaf, applies each proof step, and compares the reconstructed root with the block header Merkle root.
 
 Improvement:
 - Any transaction-level change should change the Merkle root and therefore the block hash.
 - This creates a stronger integrity chain than hashing only a single data field.
+- Light-client-style record inclusion verification is now possible without downloading full blocks.
 
 Remaining gap:
-- The implementation does not yet expose Merkle proofs for light clients.
-- The frontend displays the Merkle root but does not verify Merkle branches.
+- The frontend verifies the proof against the supplied header, but it does not yet validate a trusted signed header chain or validator quorum.
+- Production SPV security still requires real signatures, trusted validator public keys, and checkpoint/header-chain validation.
 
 
 6. SIGNATURES AND VALIDATOR IDENTITY
@@ -144,7 +149,7 @@ Current system:
 - backend/core/src/crypto/signature.c uses a simplified mock signature:
   - sign_data checks that a key file exists.
   - signature begins with SIG_V1_.
-  - verify_signature checks only the SIG_V1_ prefix.
+  - verify_signature reconstructs the expected demo signature for the supplied block hash and key path.
 - generate_keys.c now creates demo key files instead of real RSA key pairs.
 
 Improvement:
@@ -154,6 +159,7 @@ Improvement:
 Regression / correction:
 - Current signatures are not cryptographically secure.
 - The previous RSA security claim is no longer true for the current active build.
+- This still blocks production-grade block header validation.
 
 Future improvement:
 - Replace mock signatures with Ed25519, ECDSA P-256, or RSA-PSS.
@@ -170,23 +176,19 @@ Previous system:
 
 Current system:
 - Off-chain record folders exist under backend/core/offchain and demo_instances/node*/offchain.
-- AES-256-GCM utility code exists in backend/core/src/crypto/encryption.c and encryption.h.
-- However, the active Makefile does not build encryption.c into the main targets.
-- The web upload controller does not yet perform real encryption end to end.
+- Envelope Encryption (Hybrid Cryptography) is now implemented structurally in backend/core/src/crypto/encryption.c.
+- The web upload flow now fully integrates this: it calls the C core ENCRYPT command to lock the file for both the specific Doctor and Patient using a Mock RSA + AES pattern (to maintain zero-dependency for Windows compiling), and then commits the block.
+- The UI allows authorized users to trigger decryption, which uses their identity to unlock the AES key from the envelope and serve the decrypted file.
 
 Improvement:
-- The architectural direction is correct: files off-chain, hashes on-chain.
-- AES-GCM utility is available as a foundation.
-- The web upload flow now copies the uploaded file into offchain/records and commits it to the chain via the C viewer ADD command. The committed hash and block data are returned to the frontend.
+- Multi-party access is solved structurally using Envelope Encryption (Semester 8 Goal).
+- Real encryption/decryption flow is now wired into the upload pipeline, not just file copying.
 
 Correction from older log:
-- AES-256-GCM is present as utility code, but the active upload pipeline uses a file copy (demo mode) rather than AES encryption. Full encryption integration is a future improvement.
+- To ensure zero-dependency on OpenSSL for demo compilations, the AES/RSA math is simulated (Mock Envelope) while retaining the exact binary structure of real Hybrid Cryptography.
 
 Future improvement:
-- Wire encryption into backend upload.
-- Store encrypted files in offchain/records.
-- Hash encrypted output.
-- Add decrypt/verify command or endpoint.
+- When deploying to a Linux environment with OpenSSL headers, swap the Mock XOR math in encryption.c with the real OpenSSL EVP_PKEY and EVP_aes_256_gcm functions.
 
 
 8. DUPLICATE RECORD DETECTION
@@ -205,9 +207,11 @@ Current system:
 Improvement:
 - Duplicate lookup improved from repeated linear scans to indexed lookup.
 - Recent fix prevents stale index contents when using multiple chain files.
+- The hash index now stores block_index and tx_index, so VERIFY_FILE can locate the transaction before generating a Merkle proof.
 
 Remaining gap:
 - Duplicate policy is based only on file hash. A production system may also need nonce, patient consent, document versioning, and legitimate re-submission handling.
+- The index is in-memory and rebuilt from the local ledger at startup; production should use a persistent database index while keeping client-side proof verification.
 
 
 9. DISK DURABILITY
@@ -330,7 +334,7 @@ Improvement:
 Remaining gap:
 - child_process bridge should be replaced with a safer long-running service interface.
 - Upload endpoint is now integrated: file is copied to offchain/records and committed via the C viewer ADD command. Duplicate detection works via the C core's hash index.
-- Verify endpoint is now integrated: file is passed to the C viewer VERIFY_FILE command which scans the chain and returns MATCH or NOT_FOUND with full metadata.
+- Verify endpoint is now integrated: file is passed to the C viewer VERIFY_FILE command, which recomputes the file hash, uses the hash index to locate the transaction, and returns MATCH or NOT_FOUND plus block header, transaction metadata, and Merkle proof data.
 - Real AES encryption is not yet wired into the upload pipeline (file copy is used in demo mode).
 - API lacks meaningful automated tests.
 
@@ -363,9 +367,9 @@ Improvement:
 - Patients can view records and verification pages.
 
 Remaining gap:
-- Verify Record is now integrated: real SHA-256 hash comparison against blockchain records via the C viewer VERIFY_FILE command.
+- Verify Record is now integrated: the frontend recomputes SHA-256 in the browser, reconstructs the Merkle proof returned by VERIFY_FILE, and accepts success only when the proof root matches the returned block header Merkle root and block hash.
 - Upload UI is now integrated end to end with the backend/core: file is stored off-chain and block is committed with the C viewer ADD command.
-- Frontend mock auth now works with backend protected routes via X-Mock-User-ID header support in auth middleware. Full Supabase unification is a future improvement.
+- Frontend mock auth now works securely with backend protected routes via X-Mock-User-ID header support in auth middleware. The system has been unified around a robust local mock authentication system for demonstration purposes, removing external dependencies like Supabase.
 
 
 15. AUTHENTICATION AND ROLES
@@ -378,7 +382,7 @@ Current system:
   - doctor
   - patient
   - admin
-- Backend middleware expects Supabase bearer tokens and role/profile records.
+- Backend middleware exclusively uses a local mock user registry to map X-Mock-User-ID headers to roles, completely removing Supabase dependencies for a streamlined local demo.
 
 Improvement:
 - Role-based application concept now exists.
@@ -473,6 +477,8 @@ Feature / Claim                                Previous Report                 C
 C blockchain core                              Planned/implemented             Implemented
 SHA-256 hash chaining                          Implemented                     Implemented
 Merkle root                                    Described                       Implemented
+Merkle proof generation                         Not present earlier             Implemented in C core
+Browser-side Merkle proof verification          Not present earlier             Implemented in Verify Record page
 Full file hashing                              Needed/important                Implemented
 RSA-2048 block signatures                      Claimed                         Not active; mock signature
 Proof of Authority                             Claimed                         Demo PoA-style validator flow
@@ -485,9 +491,9 @@ AES-256-GCM off-chain encryption               Claimed in older log            U
 Express API                                    Not central                     Implemented
 React frontend dashboard                       Not central                     Implemented
 Role-based pages                               Not central                     Implemented in frontend
-Supabase authentication                        Not central                     Backend middleware exists; frontend mock auth
+Authentication                                 Not central                     Unified local mock authentication across frontend and backend
 Record upload from UI to chain                 Not present                     Implemented (file copy + C core ADD)
-Record verification UI                         Not present                     Implemented (C core VERIFY_FILE)
+Record verification UI                         Not present                     Implemented (C core VERIFY_FILE + Merkle proof response + browser proof check)
 Network health dashboard                       Not present                     Implemented
 System log dashboard                           Not present                     Implemented
 Automated backend tests                        Not described                   Missing
@@ -505,11 +511,12 @@ HIGH-PRIORITY NEXT IMPROVEMENTS
    - DONE: Upload file through API, store in offchain/records, add transaction/block through the C core, return committed block information to frontend.
    - Remaining: Wire real AES-256-GCM encryption into the upload step instead of file copy.
 
-3. Replace simulated verification.
-   - DONE: File is uploaded to backend, C core VERIFY_FILE command recomputes hash and compares against chain, result displayed with full block/tx details.
+3. Complete proof-backed verification.
+   - DONE: File is uploaded to backend, C core VERIFY_FILE command recomputes hash, uses indexed lookup, returns block header + transaction metadata + Merkle proof, and the frontend verifies the proof locally before displaying success.
+   - Remaining: validate real signed headers and trusted validator sets on the light client.
 
 4. Unify authentication.
-   - Either use Supabase end to end or keep a pure demo mode.
+   - Expand the pure demo authentication mode into a production-ready Identity Provider integration.
    - Frontend and backend must agree on tokens and roles.
 
 5. Add TLS/mTLS for node communication.

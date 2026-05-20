@@ -40,14 +40,23 @@ void log_network_event(const char *event) {
 Peer peers[MAX_PEERS];
 int peer_count = 0;
 
-// Mutex-less design for demo simplicity on Windows
+#ifdef _WIN32
+    CRITICAL_SECTION protocol_mutex;
+#else
+    pthread_mutex_t protocol_mutex;
+#endif
+
+// Mutex-less design for demo simplicity on Windows -> NOPE, added mutex to fix race condition!
 void initialize_network(int port) {
 #ifdef _WIN32
+    InitializeCriticalSection(&protocol_mutex);
     WSADATA wsa;
     if (WSAStartup(MAKEWORD(2,2), &wsa) != 0) {
         printf("[NETWORK] Winsock initialization failed.\n");
         exit(EXIT_FAILURE);
     }
+#else
+    pthread_mutex_init(&protocol_mutex, NULL);
 #endif
     memset(peers, 0, sizeof(peers));
     
@@ -89,8 +98,20 @@ void remove_peer(int socket) {
 }
 
 void handle_message(int client_socket, const char *message) {
+#ifdef _WIN32
+    EnterCriticalSection(&protocol_mutex);
+#else
+    pthread_mutex_lock(&protocol_mutex);
+#endif
+
     // For demo, we just dispatch to protocol
     protocol_dispatch(client_socket, message);
+
+#ifdef _WIN32
+    LeaveCriticalSection(&protocol_mutex);
+#else
+    pthread_mutex_unlock(&protocol_mutex);
+#endif
 }
 
 #ifdef _WIN32

@@ -1,0 +1,10 @@
+PATIENT: Bob Smith (mock-pat-3)
+DOCTOR: Dr. House (mock-doc-3)
+DATE: 2026-05-22
+
+DIAGNOSIS:
+Gastritis (TAMPERED). 
+Patient sent home with antacids (TAMPERED).
+
+NOTES:
+No surgery required (TAMPERED).
