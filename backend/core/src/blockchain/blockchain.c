@@ -26,15 +26,104 @@ static TxIndexNode *tx_index[TX_HASH_BUCKETS] = {NULL};
 static int index_loaded = 0;
 static char blockchain_file[128] = "data/blockchain.dat";
 
-static unsigned int hash_tx(const char *hash) {
+// --- SECONDARY INDEX: patient_id -> list of (block_index, tx_index) ---
+typedef struct PatientIndexEntry {
+    int block_index;
+    int tx_index;
+    struct PatientIndexEntry *next;
+} PatientIndexEntry;
+
+typedef struct PatientIndexNode {
+    char patient_id[32];
+    PatientIndexEntry *records;
+    struct PatientIndexNode *next;
+} PatientIndexNode;
+
+#define PATIENT_BUCKETS 10007
+static PatientIndexNode *patient_index[PATIENT_BUCKETS] = {NULL};
+
+// --- SECONDARY INDEX: doctor_id -> list of (block_index, tx_index) ---
+typedef struct DoctorIndexNode {
+    char doctor_id[32];
+    PatientIndexEntry *records; // reuse same entry struct
+    struct DoctorIndexNode *next;
+} DoctorIndexNode;
+
+#define DOCTOR_BUCKETS 10007
+static DoctorIndexNode *doctor_index[DOCTOR_BUCKETS] = {NULL};
+
+// =============================================================
+// BLOOM FILTER — O(1) RAM-efficient duplicate detection
+// =============================================================
+#define BLOOM_BITS     (10000000UL * 10)   // 10 bits per expected entry
+#define BLOOM_BYTES    (BLOOM_BITS / 8)    // byte array size
+
+static unsigned char bloom_filter[BLOOM_BYTES];
+static int bloom_initialized = 0;
+
+static unsigned long bloom_hash1(const char *s) {
+    unsigned long h = 5381;
+    int c;
+    while ((c = (unsigned char)*s++))
+        h = ((h << 5) + h) + c;
+    return h % BLOOM_BITS;
+}
+
+static unsigned long bloom_hash2(const char *s) {
+    unsigned long h = 31337;
+    int c;
+    while ((c = (unsigned char)*s++))
+        h = ((h << 5) + h) ^ c;
+    return h % BLOOM_BITS;
+}
+
+static unsigned long bloom_hash3(const char *s) {
+    unsigned long h = 1000003;
+    int c;
+    while ((c = (unsigned char)*s++))
+        h = (h ^ (h >> 4)) + c;
+    return h % BLOOM_BITS;
+}
+
+static void bloom_add(const char *data_hash) {
+    if (!bloom_initialized) {
+        memset(bloom_filter, 0, BLOOM_BYTES);
+        bloom_initialized = 1;
+    }
+    unsigned long b1 = bloom_hash1(data_hash);
+    unsigned long b2 = bloom_hash2(data_hash);
+    unsigned long b3 = bloom_hash3(data_hash);
+    bloom_filter[b1 / 8] |= (1 << (b1 % 8));
+    bloom_filter[b2 / 8] |= (1 << (b2 % 8));
+    bloom_filter[b3 / 8] |= (1 << (b3 % 8));
+}
+
+static int bloom_check(const char *data_hash) {
+    if (!bloom_initialized) return 0;
+    unsigned long b1 = bloom_hash1(data_hash);
+    unsigned long b2 = bloom_hash2(data_hash);
+    unsigned long b3 = bloom_hash3(data_hash);
+    return (bloom_filter[b1 / 8] & (1 << (b1 % 8))) &&
+           (bloom_filter[b2 / 8] & (1 << (b2 % 8))) &&
+           (bloom_filter[b3 / 8] & (1 << (b3 % 8)));
+}
+
+static unsigned int hash_str(const char *s, unsigned int buckets) {
     unsigned int h = 5381;
     int c;
-    while ((c = *hash++))
+    while ((c = *s++))
         h = ((h << 5) + h) + c;
-    return h % TX_HASH_BUCKETS;
+    return h % buckets;
+}
+
+static unsigned int hash_tx(const char *hash) {
+    return hash_str(hash, TX_HASH_BUCKETS);
 }
 
 static void add_to_index(const char *data_hash, int block_index, int transaction_index) {
+    // Add to Bloom filter first
+    bloom_add(data_hash);
+
     unsigned int h = hash_tx(data_hash);
     TxIndexNode *node = malloc(sizeof(TxIndexNode));
     if (node) {
@@ -47,6 +136,54 @@ static void add_to_index(const char *data_hash, int block_index, int transaction
     }
 }
 
+static void add_to_patient_index(const char *patient_id, int block_index, int tx_index_val) {
+    unsigned int h = hash_str(patient_id, PATIENT_BUCKETS);
+    PatientIndexNode *pnode = patient_index[h];
+    while (pnode) {
+        if (strcmp(pnode->patient_id, patient_id) == 0) break;
+        pnode = pnode->next;
+    }
+    if (!pnode) {
+        pnode = malloc(sizeof(PatientIndexNode));
+        if (!pnode) return;
+        strncpy(pnode->patient_id, patient_id, sizeof(pnode->patient_id) - 1);
+        pnode->patient_id[sizeof(pnode->patient_id) - 1] = '\0';
+        pnode->records = NULL;
+        pnode->next = patient_index[h];
+        patient_index[h] = pnode;
+    }
+    PatientIndexEntry *entry = malloc(sizeof(PatientIndexEntry));
+    if (!entry) return;
+    entry->block_index = block_index;
+    entry->tx_index    = tx_index_val;
+    entry->next        = pnode->records;
+    pnode->records     = entry;
+}
+
+static void add_to_doctor_index(const char *doctor_id, int block_index, int tx_index_val) {
+    unsigned int h = hash_str(doctor_id, DOCTOR_BUCKETS);
+    DoctorIndexNode *dnode = doctor_index[h];
+    while (dnode) {
+        if (strcmp(dnode->doctor_id, doctor_id) == 0) break;
+        dnode = dnode->next;
+    }
+    if (!dnode) {
+        dnode = malloc(sizeof(DoctorIndexNode));
+        if (!dnode) return;
+        strncpy(dnode->doctor_id, doctor_id, sizeof(dnode->doctor_id) - 1);
+        dnode->doctor_id[sizeof(dnode->doctor_id) - 1] = '\0';
+        dnode->records = NULL;
+        dnode->next = doctor_index[h];
+        doctor_index[h] = dnode;
+    }
+    PatientIndexEntry *entry = malloc(sizeof(PatientIndexEntry));
+    if (!entry) return;
+    entry->block_index = block_index;
+    entry->tx_index    = tx_index_val;
+    entry->next        = dnode->records;
+    dnode->records     = entry;
+}
+
 static void clear_tx_index(void) {
     for (int i = 0; i < TX_HASH_BUCKETS; i++) {
         TxIndexNode *current = tx_index[i];
@@ -57,29 +194,50 @@ static void clear_tx_index(void) {
         }
         tx_index[i] = NULL;
     }
+    // Clear patient index
+    for (int i = 0; i < PATIENT_BUCKETS; i++) {
+        PatientIndexNode *pn = patient_index[i];
+        while (pn) {
+            PatientIndexEntry *e = pn->records;
+            while (e) { PatientIndexEntry *ne = e->next; free(e); e = ne; }
+            PatientIndexNode *npn = pn->next;
+            free(pn);
+            pn = npn;
+        }
+        patient_index[i] = NULL;
+    }
+    // Clear doctor index
+    for (int i = 0; i < DOCTOR_BUCKETS; i++) {
+        DoctorIndexNode *dn = doctor_index[i];
+        while (dn) {
+            PatientIndexEntry *e = dn->records;
+            while (e) { PatientIndexEntry *ne = e->next; free(e); e = ne; }
+            DoctorIndexNode *ndn = dn->next;
+            free(dn);
+            dn = ndn;
+        }
+        doctor_index[i] = NULL;
+    }
+    // Reset Bloom filter
+    if (bloom_initialized) {
+        memset(bloom_filter, 0, BLOOM_BYTES);
+    }
 }
 
 static int transaction_hash_exists_outside_block(const char *data_hash, int block_index) {
-    FILE *fp = fopen(blockchain_file, "rb");
-    if (!fp) {
-        return 0;
-    }
+    if (!index_loaded) initialize_blockchain();
+    if (!bloom_check(data_hash)) return 0; // Bloom filter fast-path!
 
-    Block temp;
-    while (fread(&temp, sizeof(Block), 1, fp) == 1) {
-        if (temp.index == block_index) {
-            continue;
-        }
-
-        for (int i = 0; i < temp.transaction_count; i++) {
-            if (strcmp(temp.transactions[i].data_hash, data_hash) == 0) {
-                fclose(fp);
+    unsigned int h = hash_tx(data_hash);
+    TxIndexNode *current = tx_index[h];
+    while (current) {
+        if (strcmp(current->data_hash, data_hash) == 0) {
+            if (current->block_index != block_index) {
                 return 1;
             }
         }
+        current = current->next;
     }
-
-    fclose(fp);
     return 0;
 }
 // ---------------------------------------
@@ -110,6 +268,8 @@ void initialize_blockchain() {
     while (fread(&temp, sizeof(Block), 1, fp) == 1) {
         for (int i = 0; i < temp.transaction_count; i++) {
             add_to_index(temp.transactions[i].data_hash, temp.index, i);
+            add_to_patient_index(temp.transactions[i].patient_id, temp.index, i);
+            add_to_doctor_index(temp.transactions[i].doctor_id, temp.index, i);
         }
     }
 
@@ -195,6 +355,8 @@ void add_block(Block *new_block)
     // Update index
     for (int i = 0; i < new_block->transaction_count; i++) {
         add_to_index(new_block->transactions[i].data_hash, new_block->index, i);
+        add_to_patient_index(new_block->transactions[i].patient_id, new_block->index, i);
+        add_to_doctor_index(new_block->transactions[i].doctor_id, new_block->index, i);
     }
 
 }
@@ -456,6 +618,7 @@ int block_exists_by_index(int index)
 int transaction_hash_exists(const char *data_hash)
 {
     if (!index_loaded) initialize_blockchain();
+    if (!bloom_check(data_hash)) return 0; // Bloom filter fast-path!
 
     unsigned int h = hash_tx(data_hash);
     TxIndexNode *current = tx_index[h];
@@ -473,6 +636,7 @@ int transaction_hash_exists(const char *data_hash)
 int find_transaction_location(const char *data_hash, int *block_index, int *transaction_index)
 {
     if (!index_loaded) initialize_blockchain();
+    if (!bloom_check(data_hash)) return 0; // Bloom filter fast-path!
 
     unsigned int h = hash_tx(data_hash);
     TxIndexNode *current = tx_index[h];
@@ -487,4 +651,58 @@ int find_transaction_location(const char *data_hash, int *block_index, int *tran
     }
 
     return 0;
+}
+
+void get_records_by_patient(const char *patient_id) {
+    if (!index_loaded) initialize_blockchain();
+    unsigned int h = hash_str(patient_id, PATIENT_BUCKETS);
+    PatientIndexNode *pnode = patient_index[h];
+    while (pnode) {
+        if (strcmp(pnode->patient_id, patient_id) == 0) {
+            printf("[QUERY] Records for Patient '%s':\n", patient_id);
+            PatientIndexEntry *e = pnode->records;
+            int count = 0;
+            while (e) {
+                Block blk;
+                if (get_block_by_index(e->block_index, &blk)) {
+                    Transaction *tx = &blk.transactions[e->tx_index];
+                    printf("  [%d] Block %-3d | Doctor: %-12s | Hash: %.24s... | File: %s\n",
+                           ++count, e->block_index, tx->doctor_id, tx->data_hash, tx->data_pointer);
+                }
+                e = e->next;
+            }
+            if (count == 0) printf("  (no records found)\n");
+            printf("[QUERY] Total: %d record(s) found.\n", count);
+            return;
+        }
+        pnode = pnode->next;
+    }
+    printf("[QUERY] No records found for Patient '%s'.\n", patient_id);
+}
+
+void get_records_by_doctor(const char *doctor_id) {
+    if (!index_loaded) initialize_blockchain();
+    unsigned int h = hash_str(doctor_id, DOCTOR_BUCKETS);
+    DoctorIndexNode *dnode = doctor_index[h];
+    while (dnode) {
+        if (strcmp(dnode->doctor_id, doctor_id) == 0) {
+            printf("[QUERY] Records for Doctor '%s':\n", doctor_id);
+            PatientIndexEntry *e = dnode->records;
+            int count = 0;
+            while (e) {
+                Block blk;
+                if (get_block_by_index(e->block_index, &blk)) {
+                    Transaction *tx = &blk.transactions[e->tx_index];
+                    printf("  [%d] Block %-3d | Patient: %-12s | Hash: %.24s... | File: %s\n",
+                           ++count, e->block_index, tx->patient_id, tx->data_hash, tx->data_pointer);
+                }
+                e = e->next;
+            }
+            if (count == 0) printf("  (no records found)\n");
+            printf("[QUERY] Total: %d record(s) found.\n", count);
+            return;
+        }
+        dnode = dnode->next;
+    }
+    printf("[QUERY] No records found for Doctor '%s'.\n", doctor_id);
 }

@@ -41,15 +41,17 @@ void *server_runner(void *arg) {
 
 void print_help() {
     printf("\n--- Advanced Distributed Node Commands ---\n");
-    printf("  help      - Show this help\n");
-    printf("  status    - Show node identity and last block hash\n");
-    printf("  height    - Show the current chain height\n");
-    printf("  peers     - List all connected network nodes\n");
-    printf("  sync      - Manually trigger chain synchronization\n");
-    printf("  verify    - Run full cryptographic chain validation\n");
-    printf("  add       - Create and broadcast a new medical record\n");
-    printf("  bench <n> - Stress test the network by adding N blocks fast\n");
-    printf("  exit      - Safely shut down the node\n");
+    printf("  help              - Show this help\n");
+    printf("  status            - Show node identity and last block hash\n");
+    printf("  height            - Show the current chain height\n");
+    printf("  peers             - List all connected network nodes\n");
+    printf("  sync              - Manually trigger chain synchronization\n");
+    printf("  verify            - Run full cryptographic chain validation\n");
+    printf("  add <file>        - Create and broadcast a new medical record\n");
+    printf("  query p <id>      - [S8] Fetch all records for a patient ID\n");
+    printf("  query d <id>      - [S8] Fetch all records by a doctor ID\n");
+    printf("  bench <n>         - Stress test the network by adding N blocks fast\n");
+    printf("  exit              - Safely shut down the node\n");
     printf("> ");
 }
 
@@ -143,6 +145,19 @@ int main(int argc, char *argv[]) {
         } else if (strcmp(command, "sync") == 0) {
             printf("[NETWORK] Requesting chain sync from peers...\n");
             broadcast_message("SYNC_REQUEST");
+        } else if (strcmp(command, "query") == 0) {
+            // query p <patient_id>  OR  query d <doctor_id>
+            char *type = arg;
+            char *qid  = strtok(NULL, " ");
+            if (!type || !qid) {
+                printf("Usage: query p <patient_id>  OR  query d <doctor_id>\n");
+            } else if (strcmp(type, "p") == 0) {
+                get_records_by_patient(qid);
+            } else if (strcmp(type, "d") == 0) {
+                get_records_by_doctor(qid);
+            } else {
+                printf("Unknown query type '%s'. Use 'p' for patient or 'd' for doctor.\n", type);
+            }
         } else if (strcmp(command, "add") == 0) {
             get_last_block(&last_block);
             Transaction tx;

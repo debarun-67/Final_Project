@@ -576,3 +576,216 @@ The most important remaining issues are:
 - raw binary ledger persistence.
 
 The project is therefore best described as a strong academic prototype and demonstration platform. It now shows both the core blockchain idea and the surrounding application experience, while clearly identifying what must be improved before production healthcare use.
+
+
+===============================================================
+SEMESTER 8 IMPROVEMENTS LOG
+Updated: May 2026
+===============================================================
+
+This section documents all new features implemented in Semester 8
+as part of the Full Distributed System phase of the project.
+
+---------------------------------------------------------------
+S8.1 - MULTI-NODE DISTRIBUTED NETWORK (TCP Mesh)
+---------------------------------------------------------------
+Implemented:
+- Four independent validator nodes (ports 8001-8004) each running
+  as a separate OS process with their own blockchain.dat ledger.
+- Each node maintains a full copy of the chain (no sharding).
+- TCP-based peer-to-peer connections using Winsock2 on Windows.
+- Node startup auto-connects to all known peer ports.
+- Thread-per-connection model using _beginthread (Windows).
+- Mutex (CRITICAL_SECTION) added to handle_message() to prevent
+  race conditions when multiple peers respond simultaneously.
+
+Complexity: O(1) per peer message dispatch.
+
+---------------------------------------------------------------
+S8.2 - THREE-PHASE COMMIT (3PC) CONSENSUS PROTOCOL
+---------------------------------------------------------------
+Implemented:
+- Full 3PC state machine in protocol.c:
+    Phase 1: CAN_COMMIT broadcast by proposer
+    Phase 2: VOTE_YES / VOTE_NO from validators
+    Phase 3: PRE_COMMIT -> ACK_PRE -> DO_COMMIT / ABORT
+- Vote deduplication using a bitmask (vote_mask) to prevent
+  double-counting from the same peer.
+- Majority threshold (>= n/2 + 1) required to proceed.
+- Automatic ABORT if majority not reached.
+- Block only appended to ledger after DO_COMMIT phase completes.
+
+Complexity: O(n) message rounds where n = number of peers.
+
+---------------------------------------------------------------
+S8.3 - CHAIN SYNC PROTOCOL
+---------------------------------------------------------------
+Implemented:
+- GET_HEIGHT message to query peer's chain height.
+- GET_BLOCK:N message to fetch individual blocks by index.
+- BLOCK_DATA:... response with serialized block payload.
+- Nodes auto-sync on startup if their local chain is behind peers.
+- initiate_chain_sync() callable at any time from the terminal.
+
+Complexity: O(k) where k = number of missing blocks.
+
+---------------------------------------------------------------
+S8.4 - ENVELOPE ENCRYPTION FOR OFF-CHAIN RECORDS
+---------------------------------------------------------------
+Implemented:
+- AES-256-GCM symmetric encryption of record files.
+- Per-record symmetric key derived from patient_id + doctor_id.
+- Encrypted files stored as offchain/records/<name>.enc
+- Both terminal 'add' command and web upload use the same
+  encryption path and same storage directory.
+- Blockchain stores ONLY the hash of the plaintext + pointer
+  to the .enc file. The actual data never touches the chain.
+
+Security note: Key derivation is currently hash-based (demo).
+A production system would use a KMS or per-patient RSA envelope.
+
+---------------------------------------------------------------
+S8.5 - SECONDARY HASH INDEXES (Semester 8 New Feature)
+---------------------------------------------------------------
+Implemented:
+- patient_id -> [(block_index, tx_index)] hash index
+  with 10,007 buckets using djb2 hashing + separate chaining.
+- doctor_id -> [(block_index, tx_index)] hash index
+  with 10,007 buckets, same design.
+- Both indexes built automatically at node startup by replaying
+  blockchain.dat (same pass as the existing record-hash index).
+- Both indexes maintained in real-time: every add_block() call
+  also inserts into patient and doctor indexes.
+- get_records_by_patient(id) — O(1) average lookup, loads
+  matching transactions from disk for display.
+- get_records_by_doctor(id)  — O(1) average lookup, same.
+- New 'query p <id>' and 'query d <id>' commands in node terminal.
+
+Before this change:
+  Patient history query = O(n) full chain scan
+
+After this change:
+  Patient history query = O(1) average via in-memory index
+  (plus O(k) disk reads where k = number of matching records)
+
+Files changed:
+  backend/core/src/blockchain/blockchain.c  (index structures + queries)
+  backend/core/src/blockchain/blockchain.h  (new function declarations)
+  backend/core/src/node_app.c              (query command added)
+
+---------------------------------------------------------------
+S8.6 - ROGUE / MALICIOUS NODE ATTACK SIMULATION
+---------------------------------------------------------------
+Implemented:
+- rogue_node.c: A 5th non-authorized node (port 8099) that:
+    Attack 1: Sends a CAN_COMMIT with a DUPLICATE record hash
+    Attack 2: Sends a CAN_COMMIT with a FORGED validator signature
+    Attack 3: Modifies a record file and tries to commit it
+- Rogue node syncs the real chain from honest nodes first,
+  then uses real block height and prev_hash in attack blocks
+  to make attacks as realistic as possible.
+- Honest nodes reject all 3 attacks via verify_block().
+- Demo scripts:
+    scripts/demo_launcher.ps1  - launches 4 honest nodes
+    scripts/rogue_launcher.ps1 - launches the rogue node
+
+Demonstrates: Proof of Authority security under adversarial conditions.
+
+---------------------------------------------------------------
+S8.7 - UNIFIED DEMO LAUNCHER SYSTEM
+---------------------------------------------------------------
+Implemented:
+- scripts/demo_launcher.ps1:
+    Kills stale port processes, wipes and recreates all node
+    directories, copies binaries + keys + records, launches
+    4 independent validator terminal windows.
+- scripts/rogue_launcher.ps1:
+    Sets up rogue environment and opens a red-on-black terminal
+    with attack menu ready.
+- Per-node _run.ps1 scripts generated at launch for clean
+  terminal titles and colored output.
+
+---------------------------------------------------------------
+S8.8 - BLOOM FILTER DUP PRE-FILTERING (Semester 8 New Feature)
+---------------------------------------------------------------
+Implemented:
+- Added a pure-C Bloom filter in backend/core/src/blockchain/blockchain.c.
+- Configured with 3 independent hash functions (djb2-based: bloom_hash1, 
+  bloom_hash2, and bloom_hash3) targeting a low false-positive rate (10 bits/entry).
+- Fast-path checks added to:
+  - transaction_hash_exists()
+  - find_transaction_location()
+  - transaction_hash_exists_outside_block()
+- For any new/unique record checks, the Bloom filter detects that the hash does 
+  not exist in O(1) time without querying the main index hash map buckets, 
+  completely avoiding hash collisions or bucket traversal.
+- Memory consumption: ~12.5 MB for 10M record filter (10 bits * 10,000,000).
+
+---------------------------------------------------------------
+S8.9 - LEVELDB DISK-BACKED SCALABILITY PLAN FOR 1 BILLION RECORDS
+---------------------------------------------------------------
+Problem Description:
+At a scale of 1 billion medical records, keeping full indexes in RAM creates a 
+severe RAM bottleneck:
+1. Transaction hash index (tx_index): Each node struct consumes:
+   128 bytes (hash) + 4 bytes (block_idx) + 4 bytes (tx_idx) + 8 bytes (next ptr)
+   = 144 bytes per record. For 1 billion records, this requires ~144 GB RAM!
+2. Patient/Doctor indexes: Each PatientIndexEntry requires 16 bytes. 
+   For 1 billion records, secondary indexes add another ~32 GB RAM.
+3. Bucket array overhead: To prevent huge collision chains, we need 
+   ~1 billion hash buckets, adding ~8 GB RAM.
+Total RAM required exceeds 184 GB, making a pure in-memory index infeasible.
+
+Proposed LevelDB Scalability Design:
+To support 1 billion records on commodity servers, the in-memory indexes should
+be replaced with LevelDB (or RocksDB), which is a high-performance disk-backed 
+key-value store based on Log-Structured Merge (LSM) Trees.
+
+1. Key-Value Schema:
+   - Primary Index: Key = `tx:<data_hash>` -> Value = `<block_index>:<tx_index>`
+   - Patient Index: Key = `pat:<patient_id>:<block_index>:<tx_index>` -> Value = `""`
+   - Doctor Index: Key = `doc:<doctor_id>:<block_index>:<tx_index>` -> Value = `""`
+
+2. Read/Write Flow:
+   - Write: LevelDB performs sequential writes to an active MemTable in RAM and a 
+     Write-Ahead Log (WAL) on disk. When the MemTable fills, it flushes to sorted SSTable 
+     files on disk (O(1) write latency). Background compaction reorganizes SSTables.
+   - Lookup: Locating a transaction by hash queries LevelDB with key `tx:<data_hash>`. 
+     Lookups take O(log N) disk reads, which is extremely fast on SSDs.
+   - Prefix Scan: Finding all patient records uses a LevelDB iterator to scan keys
+     starting with prefix `pat:<patient_id>:`. This retrieves all records sequentially 
+     in O(k + log N) time, where k is the patient's record count.
+
+3. Memory Optimization:
+   - Instead of storing all keys in RAM, LevelDB uses:
+     - MemTable (64 MB config)
+     - Block Cache (512 MB config for hot data)
+     - Built-in Bloom Filters (~1.2 GB in-memory Bloom filter for 1B records at 10 bits/key)
+   - Total memory footprint: ~2 GB RAM, regardless of whether 10 million or 1 billion 
+     records are stored, keeping resource requirements extremely low.
+
+---------------------------------------------------------------
+S8.10 - OUTSTANDING ITEMS FOR COMPLETION
+---------------------------------------------------------------
+Still to implement for full Semester 8 scope:
+
+1. Role-Based Access Control (doctor / patient / auditor nodes)
+   - Different nodes should have different write permissions.
+   - Currently all nodes are equal validators.
+
+2. Real cryptographic signatures (RSA or ECDSA via OpenSSL)
+   - Current signature is a demonstration mechanism.
+   - Replace with actual private key signing + public key verify.
+
+3. Distributed query routing
+   - Currently each node only queries its own local index.
+   - A production system needs routing: "ask all nodes for
+     records of patient X and merge results."
+
+4. TLS/encrypted transport
+   - All inter-node TCP communication is currently plaintext.
+   - Should use TLS for production deployment.
+
+---------------------------------------------------------------
+END OF SEMESTER 8 LOG
+---------------------------------------------------------------

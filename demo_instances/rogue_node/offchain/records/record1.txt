@@ -3,5 +3,3 @@ Patient ID: PAT-9991
 Doctor ID: DOC-8001
 Diagnosis: Normal Routine Checkup
 Date: 2026-05-20
-
-[MALICIOUS DATA INJECTED BY ATTACKER]
