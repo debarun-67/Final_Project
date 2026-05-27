@@ -17,7 +17,7 @@ The system follows a permissioned architecture suited to a healthcare consortium
 
 The unique contribution of the project lies in combining a lightweight C ledger engine with a modern hospital-facing web application. Many blockchain demonstrations are either only theoretical, only smart-contract based, or only command-line tools. This project attempts to cover the full vertical path: low-level block storage, peer networking, backend service bridge, and frontend operational dashboard. It also uses off-chain storage and on-chain hashes, which is important for healthcare privacy because raw patient data should not be replicated across every node in a blockchain network.
 
-At the same time, the current system has limitations. The signature layer is presently a mock demonstration signature rather than real RSA/ECDSA/Ed25519 verification. The backend authentication middleware exclusively supports mock user IDs (via the X-Mock-User-ID header) to provide a streamlined, zero-dependency demonstration mode, completely removing any reliance on external services like Supabase. The upload flow is now fully integrated end to end: the API receives the file, copies it into the demo node's off-chain storage, calls the C viewer binary ADD command with the correct arguments, and returns the committed block index, SHA-256 hash, and data pointer to the frontend. The verify flow is also integrated: the API passes the uploaded file to the C viewer VERIFY_FILE command, which recomputes the uploaded file hash, uses the transaction hash index to locate the matching block and transaction, and returns MATCH or NOT_FOUND. For a match, it returns transaction metadata, block header fields, and a Merkle proof; the frontend independently reconstructs the leaf and proof root before accepting the result. Transport security, production key management, real header-chain validation, database hardening, rate limiting, test coverage, and real healthcare compliance controls remain future work. These limitations do not invalidate the academic value of the project; rather, they define the boundary between the current prototype and a production-ready healthcare infrastructure system.
+At the same time, the current system has limitations. The signature layer is presently a mock demonstration signature rather than real RSA/ECDSA/Ed25519 verification. The backend authentication middleware exclusively supports mock user IDs (via the X-Mock-User-ID header) to provide a streamlined, zero-dependency demonstration mode, completely removing any reliance on external services like Supabase. The upload flow is now fully integrated end to end: the API receives the file, calls the C core ENCRYPT command to securely encrypt the record under doctor and patient envelopes in the node's off-chain storage, and then calls the C viewer ADD command to commit the transaction to the ledger, returning the block index, SHA-256 hash, and data pointer to the frontend. The verify flow is also integrated: the API passes the uploaded file to the C viewer VERIFY_FILE command, which recomputes the uploaded file hash, uses the transaction hash index to locate the matching block and transaction, and returns MATCH or NOT_FOUND. For a match, it returns transaction metadata, block header fields, and a Merkle proof; the frontend independently reconstructs the leaf and proof root before accepting the result. Transport security, production key management, real header-chain validation, database hardening, rate limiting, test coverage, and real healthcare compliance controls remain future work. These limitations do not invalidate the academic value of the project; rather, they define the boundary between the current prototype and a production-ready healthcare infrastructure system.
 
 
 TABLE OF CONTENTS
@@ -533,7 +533,7 @@ The upload page lets a doctor or admin enter:
 - encryption password
 - medical file
 
-It sends the file through FormData to the /api/records/upload endpoint. The backend copies the file into the demo node's offchain/records directory and calls the C viewer ADD command with the file path, data pointer, patient_id, doctor_id, and validator port. On success, the frontend displays the committed block index, SHA-256 hash, data pointer, patient ID, and doctor ID returned by the core. Duplicate file submissions are detected and rejected with a 409 response.
+It sends the file through FormData to the /api/records/upload endpoint. The backend calls the C core ENCRYPT command to securely encrypt the record under the doctor's and patient's key envelopes, saving the resulting .enc file in the demo node's offchain/records directory. It then calls the C core's ADD command with the file path, data pointer, patient_id, doctor_id, and validator port. On success, the frontend displays the committed block index, SHA-256 hash, data pointer, patient ID, and doctor ID returned by the core. Duplicate file submissions are detected and rejected with a 409 response.
 
 11.7 My Records
 
@@ -635,7 +635,7 @@ Current implementation status:
 
 - Steps 3 through 15 exist in the C core/node flow for command-line record addition.
 - Dashboard display exists.
-- Upload from frontend to backend is now fully integrated: the API controller receives the file, copies it to offchain/records, calls the C viewer ADD command, and returns the committed block data to the frontend UI.
+- Upload from frontend to backend is now fully integrated: the API controller receives the file, calls the C core ENCRYPT command to securely encrypt the record under patient and doctor envelopes in the offchain/records directory, and then calls the ADD command to commit the transaction to the blockchain. The committed block data is then returned to the frontend UI.
 - Frontend verification is now integrated: the file is uploaded to the backend, the C viewer VERIFY_FILE command recomputes the hash, locates the transaction through the hash index, returns a Merkle proof and block header, and the browser verifies the proof locally before displaying success.
 
 
@@ -795,7 +795,7 @@ The backend and frontend authentication have been unified around a local mock re
 
 16.3 Upload Flow Is Integrated at Demo Level
 
-The upload controller now copies the uploaded file into the demo node's offchain/records directory and calls the C viewer ADD command with the correct arguments. The C core hashes the file, rejects duplicates, creates a block, signs it with the demo validator key, and appends it to blockchain.dat. The committed block index, hash, and data pointer are returned to the frontend. The remaining limitation is that the encryption step is a file copy rather than real AES encryption, because the AES utility code exists in the C core but is not yet wired into the upload pipeline.
+The upload controller is now fully integrated with the C core encryption commands. When a record is uploaded, the Express API calls the C core's ENCRYPT command (which implements Mock Envelope Encryption). This derives a temporary file key, encrypts it under both the patient's ID and doctor's ID, encrypts the file payload, and stores it in the demo node's offchain/records directory as a secure .enc file. The API then calls the ADD command to commit the transaction to blockchain.dat. The remaining limitation is that the cryptographic operations use a mock XOR cipher (for zero-dependency compilation on Windows) rather than standard production-grade AES-256-GCM and RSA-4096.
 
 16.4 Verification UI Is Now Integrated
 
@@ -821,9 +821,9 @@ The repository contains test sources, but the frontend and backend do not have m
 
 Demo blockchain files, node logs, and binaries appear in the repository. For production-quality repository hygiene, generated artifacts should usually be excluded or separated from source.
 
-16.10 No Real Encryption Pipeline Yet
+16.10 Mock Hashing and Cipher Limitations
 
-The architecture assumes encrypted records, and the UI asks for an encryption password, but the full encryption pipeline is not implemented end to end in the web upload flow.
+While the end-to-end encryption pipeline is now fully integrated into both web uploads and downloads via the C core's ENCRYPT/DECRYPT commands, it uses simulated cryptography (XOR-based mock ciphers) rather than standard OpenSSL cryptosystems. This is suitable for demonstrating the structural envelope flow, but does not provide cryptographically secure data protection.
 
 16.11 No Real Patient Consent Model
 
@@ -869,6 +869,18 @@ The frontend has patient, doctor, and admin routes.
 17.8 Updated Build Reality
 
 The current C core builds through MinGW make on Windows. The README has been updated to reflect the real repository structure.
+
+17.9 Added Bloom Filter Pre-Filtering
+
+To support O(1) duplicate transaction detection, a pure-C Bloom filter using three independent DJB2-based hash functions has been integrated. This acts as a fast-path cache to prevent duplicate record submissions without scanning the ledger or in-memory indexes.
+
+17.10 Added Secondary Patient and Doctor Indexes
+
+To support rapid retrieval of medical histories, secondary in-memory indexes (using separate chaining hash tables) have been implemented. This enables immediate lookup of patient and doctor records in average-case O(1) time.
+
+17.11 LevelDB Scalability Design
+
+To support scaling the database to 1 billion records on standard server hardware without exhausting physical RAM (which would otherwise require over 184 GB), a detailed Log-Structured Merge (LSM) tree architecture using LevelDB has been designed.
 
 
 18. TESTING AND VERIFICATION STATUS
@@ -957,17 +969,13 @@ Instead of writing C structs directly to disk, use a stable format:
 
 This would improve cross-platform compatibility.
 
-20.3 Complete Upload Pipeline
+20.3 Transition to Standard Production Cryptography
 
-The web upload should:
+While the C core and Express API now implement a fully integrated upload and download flow featuring Mock Envelope Encryption, a production system must transition from simulated (XOR-based) cryptography to standard production algorithms:
 
-1. receive file
-2. encrypt file or confirm encrypted file
-3. store file in offchain/records
-4. compute file hash
-5. call a real core add command or service
-6. return block/transaction result
-7. update frontend state
+1. Replace mock XOR with real AES-256-GCM symmetric encryption for off-chain record payloads.
+2. Replace mock RSA with real RSA-4096 or ECIES (Elliptic Curve Integrated Encryption Scheme) for envelope key wrapping.
+3. Integrate a standard Key Management Service (KMS) or HSM (Hardware Security Module) to handle patient and doctor keys securely, rather than relying on key files in local directories.
 
 20.4 Implement Real Verification
 
@@ -1017,9 +1025,14 @@ Options:
 - timeout and recovery from failed proposals
 - protection against double proposals
 
-20.9 Add Database Support
+20.9 Implement LSM-Tree Disk-Backed Indexing (LevelDB Integration)
 
-The API could store user profiles, record metadata, access policies, and audit summaries in a robust database like PostgreSQL while keeping integrity proofs on-chain.
+To scale the ledger to 1 billion records without exhausting physical RAM (which would otherwise require over 184 GB of memory for pure in-memory indexes), the current in-memory separate chaining hash maps should be migrated to LevelDB or RocksDB. The proposed Log-Structured Merge (LSM) tree key-value database schema would support:
+1. Transaction Hash Index: Key 'tx:<data_hash>' -> Value '<block_index>:<tx_index>'
+2. Patient History Index: Key 'pat:<patient_id>:<block_index>:<tx_index>' -> Value ''
+3. Doctor Audit Index: Key 'doc:<doctor_id>:<block_index>:<tx_index>' -> Value ''
+
+LevelDB's MemTable write buffering, sorted SSTables, and built-in Bloom filter capabilities would cap the memory footprint to ~2 GB RAM regardless of ledger size, maintaining O(log N) SSD lookup speeds.
 
 20.10 Add Automated Tests
 
