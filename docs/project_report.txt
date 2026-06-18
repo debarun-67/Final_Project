@@ -260,13 +260,18 @@ This confirms the "Avalanche Effect" of SHA-256 secures the off-chain data.
 This thesis successfully demonstrates a functional, secure, and performant blockchain for medical records. By stripping away the inefficiencies of Proof of Work and utilizing C's raw power, we achieved a system capable of handling hospital-scale loads while ensuring cryptographic integrity.
 
 ### 9.2 Limitations
-*   **Key Management**: Secure storage of private keys is currently on-disk. Integration with Hardware Security Modules (HSM) is required for production.
+*   **Validator Key Management**: Secure storage of private keys is currently on-disk. Integration with Hardware Security Modules (HSM) is required for production.
+*   **User Keys & Storing Security**: In the current demo prototype, patient and doctor cryptographic keys are derived directly from their system identifiers (e.g., `'PAT_001'`, `'DOC_001'`) via backend session mapping. Storing user keys on centralized servers is unsafe, and memorizing raw cryptographic keys is impossible for patients.
 *   **Encryption**: The current system relies on users providing pre-encrypted files.
 
 ### 9.3 Future Work
 1.  **Smart Contracts**: Integration of a WASM runtime for automated insurance payouts.
 2.  **Zero-Knowledge Proofs**: Allowing verification of a diagnosis without revealing the specific condition.
 3.  **Cross-Chain Interoperability**: Bridging with public insurance blockchains (Ethereum).
+4.  **Non-Custodial Key Management**: Transition patient and doctor key management from custodial session-based lookups to client-side non-custodial storage. This includes:
+    *   **BIP-39 Mnemonic Seed Phrases**: Allowing patients to derive keys from 12 or 24 words, eliminating the need to memorize raw hexadecimal keys.
+    *   **Device Hardware Enclaves**: Locking private keys within device-level Secure Enclaves or TPMs, unlocking them via local biometrics (Face ID/Touch ID) so the keys never leave the patient's device.
+    *   **Social Recovery Schemes**: Implementing Shamir's Secret Sharing to split the private key into shares, letting the patient recover their keys through trusted guardians without central database storage.
 
 ---
 *End of Report*

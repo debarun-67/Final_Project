@@ -807,7 +807,7 @@ Persistent storage writes occur sequentially. Future improvements may include ex
 
 \subsection*{4.8 Key Management Architecture}
 \begin{description}
-\item[Key Generation]
+\item[Validator Key Generation]
 Each validator generates its RSA key pair locally. The private key never leaves the node. The public key is submitted to the consortium authority for approval.
 
 \item[Validator Registration]
@@ -821,6 +821,9 @@ If a validator key becomes compromised, the consortium removes the public key fr
 
 \item[Optional Key Rotation]
 Validators may generate a new key pair. The consortium updates the validator list after approval. Nodes synchronize the updated list before accepting new signatures.
+
+\item[User Key Derivation (Patients and Doctors)]
+In the current implementation, user identities (e.g., patient and doctor IDs) act directly as the public key identifiers. The backend application server manages user authentication and maps the active session to the user's secure identifier. The key derivation is simulated via a mock envelope encryption framework using XOR-based cryptography where the user's ID is used to unlock the symmetric file keys.
 \end{description}
 \subsection*{4.9 Trust Boundary Definition}
 \begin{description}
@@ -1218,7 +1221,7 @@ Performance evaluation demonstrated low block creation latency and sustained thr
 
 Security analysis examined common attack vectors including tampering, replay attempts, Sybil amplification, key compromise, and off chain file manipulation. The system mitigates these risks through signature verification, hash linkage validation, transaction filtering, and validator governance controls. Under defined trust assumptions, the architecture maintains safety and forward progress.
 
-This project establishes a structured and practical foundation for distributed medical ledger systems. Future improvements include hardware based key protection, secure transport layer integration, automated validator onboarding procedures, and enhanced monitoring mechanisms. Advanced privacy techniques such as selective disclosure and cryptographic proofs may further strengthen regulatory compliance. Scalability enhancements such as parallel validation and optimized storage indexing may improve performance under higher transaction volume.
+This project establishes a structured and practical foundation for distributed medical ledger systems. Future improvements include hardware based key protection, secure transport layer integration, automated validator onboarding procedures, and enhanced monitoring mechanisms. To transition user key management from the current custodial session-based model to a fully decentralized, non-custodial architecture, future research will explore the integration of client-side key generation via mnemonic seed phrases (BIP-39), allowing on-the-fly private key derivation. Additionally, storing private keys securely using hardware-backed enclaves (such as device-level Secure Enclaves or TPMs) integrated with local biometric authentication (Touch ID/Face ID) will eliminate the risk of storing plaintext private keys on centralized servers. Decentralized backup and social recovery mechanisms (e.g., Shamir's Secret Sharing) will also be investigated to resolve key loss without compromising safety or trust. Advanced privacy techniques such as selective disclosure and cryptographic proofs may further strengthen regulatory compliance. Scalability enhancements such as parallel validation and optimized storage indexing may improve performance under higher transaction volume.
 
 The implemented system demonstrates that a focused, lightweight, permissioned blockchain can provide strong integrity guarantees without introducing unnecessary architectural complexity.
 

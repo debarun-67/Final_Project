@@ -351,9 +351,12 @@ VERIFY_FILE now returns a proof-backed response for a matching file. It recomput
 
 The Express API depends heavily on this viewer output. It parses the text format and converts it to JSON for the frontend.
 
-8.8 Key Generator
+8.8 Key Generator and Key Management Architecture
 
-The current key generator creates demonstration key files. Earlier reports described OpenSSL RSA generation. The current source has moved toward a zero-dependency demonstration mode. This means the system currently demonstrates the workflow of key files and validator identity, but it does not provide production cryptographic signing.
+The current implementation splits key creation and management into two paths:
+
+1. Validator Keys: Created via the dedicated helper utility generate_keys.c. Running this program generates mock public and private key files on disk (e.g., keys/{port}_private.pem and keys/{port}_public.pem). In a production blockchain network, validators would generate real RSA-4096 or ECDSA private keys locally, submitting the corresponding public keys to the consortium authority for inclusion in the authorized validator set.
+2. Patient and Doctor Keys: In this prototype version, no standalone cryptographic key files are generated for end-users. Instead, their unique database identifiers (such as PAT_001 or DOC_001) act directly as their public keys. The backend API maps the user's authenticated session to these identifiers, which are then used as parameters for the C core's XOR-based mock envelope encryption. In a production environment, this is replaced by client-side keypairs stored in device hardware enclaves.
 
 
 9. NETWORK AND CONSENSUS LAYER
@@ -969,13 +972,17 @@ Instead of writing C structs directly to disk, use a stable format:
 
 This would improve cross-platform compatibility.
 
-20.3 Transition to Standard Production Cryptography
+20.3 Transition to Standard Production Cryptography and Secure Key Management
 
 While the C core and Express API now implement a fully integrated upload and download flow featuring Mock Envelope Encryption, a production system must transition from simulated (XOR-based) cryptography to standard production algorithms:
 
 1. Replace mock XOR with real AES-256-GCM symmetric encryption for off-chain record payloads.
 2. Replace mock RSA with real RSA-4096 or ECIES (Elliptic Curve Integrated Encryption Scheme) for envelope key wrapping.
-3. Integrate a standard Key Management Service (KMS) or HSM (Hardware Security Module) to handle patient and doctor keys securely, rather than relying on key files in local directories.
+3. Integrate a standard Key Management Service (KMS) or HSM (Hardware Security Module) to handle validator and administrative keys securely, rather than relying on key files in local directories.
+4. Establish Non-Custodial Key Management for Patients and Doctors: Storing patient/doctor private keys in a centralized server database is unsafe, and expecting patients to memorize raw 256-bit hexadecimal keys is impractical. Future production systems must employ:
+   - BIP-39 Mnemonic Seed Phrases: Patients are given 12 or 24 words from which their private key is derived on-the-fly client-side, removing any need to memorize raw keys.
+   - Hardware enclaves: Private keys are locked inside device-level Secure Enclaves (e.g., Apple Secure Enclave, Android Keystore, or TPMs), accessible only via biometric Touch ID/Face ID verification, ensuring keys never leave the device.
+   - Threshold social recovery: Utilizing Shamir's Secret Sharing to split keys into parts across the cloud, local device, and trusted consortium guardians so key recovery is resilient and decentralized.
 
 20.4 Implement Real Verification
 
