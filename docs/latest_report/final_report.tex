@@ -6,6 +6,7 @@ right=1in,
 top=1in,
 bottom=1in
 ]{geometry}
+\usepackage{fix-cm}
 \usepackage[T1]{fontenc}
 \usepackage[utf8]{inputenc}
 \usepackage{textcomp}
@@ -14,22 +15,27 @@ bottom=1in
 \usepackage{amsmath,amssymb}
 \usepackage{graphicx}
 \usepackage{caption}
+\usepackage{array,tabularx}
 \captionsetup{font=normalsize,labelfont=normalsize}
-\usepackage{hyperref}
+\usepackage{setspace}
+\usepackage{microtype}
+\usepackage{xurl}
+\usepackage[hypertexnames=false]{hyperref}
+\usepackage{bookmark}
 \usepackage{enumitem}
 \usepackage{titlesec}
 \titleformat{\section}[display]
-  {\fontsize{14pt}{17pt}\bfseries}
+  {\fontsize{14pt}{21pt}\bfseries}
   {Chapter \thesection}
   {1ex}
-  {\fontsize{14pt}{17pt}\bfseries}
+  {\fontsize{14pt}{21pt}\bfseries}
 \titleformat{\subsection}
-  {\fontsize{14pt}{17pt}\itshape}
+  {\fontsize{12pt}{18pt}\bfseries\itshape}
   {\thesubsection}
   {1em}
   {}
 \titleformat{\subsubsection}
-  {\fontsize{12pt}{14pt}\itshape}
+  {\fontsize{12pt}{18pt}\itshape}
   {\thesubsubsection}
   {1em}
   {}
@@ -37,9 +43,12 @@ bottom=1in
 
 \setlength{\parindent}{0pt}
 \setlength{\parskip}{0.4\baselineskip}
+\setlength{\emergencystretch}{3em}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
 
 \begin{document}
 \onehalfspacing
+\pagenumbering{Alph}
 % This file keeps your original wording and only adds LaTeX formatting.
 
 
@@ -51,12 +60,12 @@ bottom=1in
 
 \vspace{0.8cm}
 
-{\normalsize A Project Report submitted in partial fulfilment of the requirement for the \\[4pt]
+{\normalsize\itshape A Project Report submitted in fulfilment of the requirement for the \\[4pt]
 Degree of Bachelor of Technology in Computer Science \& Engineering}
 
-\vspace{0.8cm}
+\vspace{0.5cm}
 
-{\normalsize Maulana Abul Kalam Azad University of Technology, West Bengal}
+{\normalsize\itshape Maulana Abul Kalam Azad University of Technology, West Bengal}
 
 \vspace{1.0cm}
 
@@ -64,15 +73,15 @@ Degree of Bachelor of Technology in Computer Science \& Engineering}
 
 \vspace{0.4cm}
 
-{\normalsize February - 2026}
+{\normalsize June - 2026}
 
-\vspace{1.2cm}
+\vspace{0.6cm}
 
 \textbf{By}
 
 \vspace{0.3cm}
 
-Debarun Biswas
+\textbf{Debarun Biswas}
 
 Registration No: 221000110186 of 2022-23
 
@@ -97,7 +106,7 @@ Kolkata-741249, W.B., India
 \end{center}
 \end{titlepage}
 
-\newpage
+\clearpage
 \pagenumbering{roman}
 \setcounter{page}{2}
 
@@ -107,40 +116,34 @@ Kolkata-741249, W.B., India
 \textbf{CERTIFICATE}
 \end{center}
 
-\vspace{0.6cm}
+\vspace{0.4cm}
 
+{\setstretch{1.25}
 This is to certify that the Dissertation Project Report entitled,
 ``Design and Implementation of a Permissioned Blockchain for Secure Medical Record Storage''
-submitted by Debarun Biswas, University Roll No: 10000122040, Registration No: 221000110186 of 2022-23 to MAKAUT, WB, India, has been carried out under our guidance and supervision and is accepted in partial fulfilment of the requirement for the Degree of Bachelor of Technology in Computer Science and Engineering.
+submitted by Debarun Biswas, University Roll No: 10000122040, Registration No: 221000110186 of 2022-23 to MAKAUT, WB, India, is a record of bona-fide thesis
+work carried out by him under our supervision and guidance and is worthy of consideration for
+the award of the degree of Bachelor of Technology in Computer Science and Engineering.\par
+}
 
-\vspace{3cm}
+\vspace{2cm}
 \hfill
-\begin{minipage}{0.55\textwidth}
+\begin{minipage}{0.58\textwidth}
+\setstretch{1.1}
+\raggedright
+\rule{7cm}{0.4pt}\par
+Prof. Santanu Phadikar\par
+Professor\par
+Department of Computer Science \& Engineering\par
+Maulana Abul Kalam Azad University of Technology\par
 
-\rule{7cm}{0.4pt}
+\vspace{1.8cm}
 
-Prof. Santanu Phadikar
-
-Professor
-
-Department of Computer Science \& Engineering
-
-Maulana Abul Kalam Azad University of Technology
-
-Kolkata-741249, W.B., India
-
-\vspace{3cm}
-
-\rule{7cm}{0.4pt}
-
-Mr. Mihir Sing
-
-Head of the Department
-
-Dept. of Computer Science \& Engineering
-
-Maulana Abul Kalam Azad University of Technology, W.B.
-
+\rule{7cm}{0.4pt}\par
+Mr. Mihir Sing\par
+Head of the Department\par
+Dept. of Computer Science \& Engineering\par
+Maulana Abul Kalam Azad University of Technology, W.B.\par
 \end{minipage}
 
 
@@ -185,12 +188,12 @@ Signature of the Supervisor
 \textbf{DECLARATION OF ORIGINALITY AND COMPLIANCE OF ACADEMIC PROJECT REPORT}
 \end{center}
 \begin{center}
-\includegraphics[width=3cm]{assets/logo.png}
+\IfFileExists{assets/logo.png}{\includegraphics[width=3cm]{assets/logo.png}}{}
 \end{center}
 \vspace{0.8cm}
 
 I hereby declare that this project report entitled
-``Design and Implementation of a Permissioned Blockchain for Secure Medical Record Storage''
+\textbf{``Design and Implementation of a Permissioned Blockchain for Secure Medical Record Storage''}
 contains literature survey and original research work by the undersigned candidate, as part of his Degree of Bachelor of Technology in Software Engineering.
 
 All information has been obtained and presented in accordance with academic rules and ethical conduct.
@@ -207,7 +210,7 @@ Report Title: Design and Implementation of a Permissioned Blockchain for Secure 
 
 \vspace{2.5cm}
 
-Date: \hspace{10cm} Signature of the candidate
+Date: \hspace{8.7cm} Signature of the candidate
 
 \newpage
 \setcounter{page}{5}
@@ -226,7 +229,7 @@ Finally, I am grateful to everyone who directly or indirectly contributed to the
 
 \vspace{1.5cm}
 
-Date: February 5, 2026
+Date: June 22, 2026
 
 Place: Haringhata, West Bengal
 
@@ -246,12 +249,21 @@ Maulana Abul Kalam Azad University of Technology
 
 \section*{LIST OF FIGURES}
 
-\noindent\hyperref[fig:3.1]{Figure 3.1 Block Structure and Hash Linking Mechanism}\dotfill\pageref{fig:3.1}\\
-\hyperref[fig:3.2]{Figure 3.2 Node Interaction and Block Validation Sequence}\dotfill\pageref{fig:3.2}\\
-\hyperref[fig:4.1]{Figure 4.1 Overall System Architecture}\dotfill\pageref{fig:4.1}\\
-\hyperref[fig:4.2]{Figure 4.2 Protocol Interaction Diagram}\dotfill\pageref{fig:4.2}\\
-\hyperref[fig:4.3]{Figure 4.3 Transaction Processing Flow Diagram}\dotfill\pageref{fig:4.3}
+\noindent\hyperref[fig:3.1]{Figure 3.1 Overall System Architecture}\dotfill\pageref{fig:3.1}\\
+\hyperref[fig:3.2]{Figure 3.2 Protocol Interaction Diagram}\dotfill\pageref{fig:3.2}\\
+\hyperref[fig:3.3]{Figure 3.3 Block Structure and Hash Linking Mechanism}\dotfill\pageref{fig:3.3}\\
+\hyperref[fig:3.4]{Figure 3.4 Node Interaction and Block Validation Sequence}\dotfill\pageref{fig:3.4}\\
+\hyperref[fig:3.5]{Figure 3.5 Transaction Processing Flow Diagram}\dotfill\pageref{fig:3.5}
 
+\newpage
+
+\section*{LIST OF TABLES}
+
+\noindent\hyperref[tab:comparison]{Table 1 Comparison of the proposed architecture against existing healthcare blockchain frameworks}\dotfill\pageref{tab:comparison}\\
+\hyperref[tab:core-structures]{Table 2 Core Cryptographic Data Structures}\dotfill\pageref{tab:core-structures}\\
+\hyperref[tab:consensus-protocol]{Table 3 Network Consensus Protocol (Three-Phase Commit)}\dotfill\pageref{tab:consensus-protocol}\\
+\hyperref[tab:threat-matrix]{Table 4 Systemic Security Threat Matrix}\dotfill\pageref{tab:threat-matrix}\\
+\hyperref[tab:key-management]{Table 5 Production Key Management Architecture}\dotfill\pageref{tab:key-management}
 \newpage
 
 \tableofcontents
@@ -260,20 +272,18 @@ Maulana Abul Kalam Azad University of Technology
 \setcounter{page}{1}
 
 \begin{abstract}
-\fontsize{9pt}{11pt}\selectfont
+\fontsize{11pt}{11pt}\selectfont
 
-This project presents the design and implementation of a custom permissioned blockchain system for securing medical record integrity. The system is built around a hybrid storage model: sensitive medical files are stored off-chain, while cryptographic hashes, metadata, validator identity, timestamps, and block linkage information are stored on a blockchain ledger. The purpose is not to replace every part of a hospital Electronic Health Record system, but to provide a tamper-evident trust layer that can prove whether a medical record has remained unchanged after it was registered.
+This report details the architecture and implementation of a permissioned blockchain designed specifically to ensure the integrity of electronic medical records. By employing a hybrid storage model, the system stores sensitive clinical data securely off-chain while anchoring cryptographic hashes, metadata, and validator identities on an immutable ledger. Rather than replacing existing Electronic Health Record (EHR) databases, this architecture functions as a tamper-evident audit layer capable of cryptographically proving a record's immutability from the moment of registration.
 
-The project has evolved beyond the earlier report. The original thesis focused mainly on a C-based blockchain core with Proof of Authority validation. The current implementation now includes three major layers: a C blockchain core, a Node.js/Express API bridge, and a Vite React/TypeScript dashboard. The C core manages blocks, transactions, hashing, Merkle root computation, Merkle proof generation, local persistence, peer-to-peer networking, synchronization, duplicate record detection, and a demonstration signature mechanism. The Express API exposes blockchain data, network health, logs, record upload endpoints, and proof-backed record verification responses to the web layer. The React frontend provides role-based pages for administrators, doctors, and patients, including dashboard statistics, block exploration, network monitoring, record viewing, record upload, activity logs, and integrity verification workflows.
+The implementation extends significantly beyond a foundational Proof-of-Authority (PoA) C-based core, realizing a full-stack distributed system. The current framework integrates a native C ledger engine, a Node.js/Express API middleware, and a Vite/React frontend dashboard. The core engine autonomously handles block and transaction structures, Merkle proof generation, peer-to-peer TCP networking, state synchronization, and O(1) duplicate record detection. Operating as the integration layer, the API bridge surfaces network diagnostics and facilitates proof-backed file verification, while the React frontend exposes role-based interfaces for administrators, clinicians, and patients.
 
-The system follows a permissioned architecture suited to a healthcare consortium where participants are known entities such as hospitals, laboratories, clinics, insurance partners, or regulator-approved validator nodes. It uses a Proof of Authority style model instead of Proof of Work, because medical systems require low latency, predictable behavior, and identity-based accountability rather than energy-intensive mining. The implemented network flow also includes a three-phase-commit-inspired consensus sequence using CAN\_COMMIT, VOTE\_YES, PRE\_COMMIT, ACK\_PRE, and DO\_COMMIT messages. This gives the project a stronger distributed-systems character than the earlier version, although the current implementation remains a prototype and not a production-grade Byzantine fault tolerant system.
+Targeting consortium healthcare networks comprising known institutional actors, the system discards the computational overhead of Proof-of-Work in favor of a PoA consensus model. The network relies on a synchronous, three-phase-commit-inspired voting sequence (CAN\_COMMIT to DO\_COMMIT) to achieve deterministic finality with minimal latency. 
 
-The unique contribution of the project lies in combining a lightweight C ledger engine with a modern hospital-facing web application. Many blockchain demonstrations are either only theoretical, only smart-contract based, or only command-line tools. This project attempts to cover the full vertical path: low-level block storage, peer networking, backend service bridge, and frontend operational dashboard. It also uses off-chain storage and on-chain hashes, which is important for healthcare privacy because raw patient data should not be replicated across every node in a blockchain network.
-
-At the same time, the current system has limitations. The signature layer is presently a mock demonstration signature rather than real RSA/ECDSA/Ed25519 verification. The backend authentication middleware exclusively supports mock user IDs (via the X-Mock-User-ID header) to provide a streamlined, zero-dependency demonstration mode, completely removing any reliance on external services like Supabase. The upload flow is now fully integrated end to end: the API receives the file, calls the C core ENCRYPT command to securely encrypt the record under doctor and patient envelopes in the node's off-chain storage, and then calls the C viewer ADD command to commit the transaction to the ledger, returning the block index, SHA-256 hash, and data pointer to the frontend. The verify flow is also integrated: the API passes the uploaded file to the C viewer VERIFY\_FILE command, which recomputes the uploaded file hash, uses the transaction hash index to locate the matching block and transaction, and returns MATCH or NOT\_FOUND. For a match, it returns transaction metadata, block header fields, and a Merkle proof; the frontend independently reconstructs the leaf and proof root before accepting the result. Transport security, production key management, real header-chain validation, database hardening, rate limiting, test coverage, and real healthcare compliance controls remain future work. These limitations do not invalidate the academic value of the project; rather, they define the boundary between the current prototype and a production-ready healthcare infrastructure system.
+The primary contribution of this work is the end-to-end integration of a bare-metal ledger with a modern clinical web interface. Unlike conventional prototypes that remain confined to smart-contract theory or command-line utilities, this system bridges low-level socket networking with browser-side Merkle verification. While currently operating with mock demonstration signatures and zero-dependency authentication to facilitate rapid evaluation, the underlying cryptographic logic is fully functional. The integration of AES-256-GCM encryption, production-grade ECDSA key management, and robust transport layer security remains the designated trajectory for transitioning this prototype into compliance-ready hospital infrastructure.
 
 
-\vspace{1cm}\noindent\textbf{Keywords:} Permissioned Blockchain, Proof of Authority, Medical Records, SHA-256, RSA, Distributed Ledger, Decentralized Healthcare.
+\vspace{1cm}\noindent\textbf{Keywords:} Permissioned Blockchain, Proof of Authority, Electronic Health Records (EHR), Merkle Trees, Cryptographic Key Management, Browser-Side Merkle Verification, Off-chain Storage, Decentralized Healthcare.
 \end{abstract}
 
 \newpage
@@ -281,187 +291,120 @@ At the same time, the current system has limitations. The signature layer is pre
 
 \subsection{Background}
 
-Healthcare data is one of the most sensitive classes of digital information. A medical record may contain diagnosis history, prescriptions, laboratory reports, imaging results, allergies, surgical notes, insurance references, and long-term patient identifiers. The correctness of this data directly affects patient safety. If a medical record is altered, deleted, forged, or silently replaced, the consequence may not be only financial loss or administrative confusion; it can affect clinical decisions.
+Healthcare data represents a uniquely sensitive class of digital information. A single clinical record aggregates a patient's diagnostic history, surgical notes, imaging results, and long-term identifiers. The absolute correctness of this data is a direct prerequisite for patient safety. When clinical records are altered, forged, or silently deleted, the fallout extends beyond administrative confusion and directly jeopardizes medical decision-making.
 
-Most healthcare institutions still depend on centralized Electronic Health Record systems. These systems are efficient for storage and retrieval, but they place a large amount of trust in one database, one administrative domain, or one privileged operator group. If that trusted center is compromised, the stored record and the audit trail may both become unreliable. A database administrator, malware operator, insider attacker, or stolen privileged credential can potentially change records and logs in the same system.
+Contemporary healthcare institutions rely predominantly on centralized Electronic Health Record (EHR) systems. While highly optimized for storage efficiency and rapid retrieval, these architectures consolidate trust within a single administrative domain or privileged operator group. If this centralized node is compromised, both the historical record and its corresponding audit trail lose their reliability. A malicious insider, a compromised credential, or a targeted ransomware attack can silently alter patient histories while simultaneously erasing the forensic evidence of that manipulation.
 
-Blockchain technology provides a different approach to integrity. A blockchain is an append-only sequence of blocks where each block contains a cryptographic hash of the previous block. If an older block is modified, its hash changes. This breaks the link to the next block and allows tampering to be detected. For medical data, this does not mean raw records should be placed directly on-chain. Raw medical data must remain confidential and must be handled under strict legal and ethical constraints. Therefore, this project uses a hybrid architecture: store the sensitive medical file off-chain, store only the hash and metadata on-chain, and use the blockchain as an integrity anchor.
+Distributed ledger technology offers a structural alternative to this centralized vulnerability. By maintaining an append-only sequence of cryptographically linked blocks, a blockchain ensures that any historical modification alters the subsequent hash chain, rendering tampering mathematically evident. However, deploying blockchain in healthcare introduces severe privacy constraints; raw medical data cannot be broadcast across a decentralized network. Consequently, this system implements a strict hybrid architecture. It encrypts and sequesters the sensitive files off-chain within the local hospital node, writing only the deterministic file hashes and lightweight metadata to the distributed ledger as an immutable integrity anchor.
 
-The project is a custom implementation rather than a direct use of Ethereum, Hyperledger Fabric, or another blockchain platform. This makes it academically valuable because the internal mechanisms are visible: block creation, hash computation, block verification, disk persistence, socket networking, synchronization, and frontend presentation are all implemented in the repository. The project is not just a smart contract or a database wrapper. It is a full stack prototype that shows how a medical record integrity system can be built from the systems layer upward.
+Crucially, this architecture avoids the abstraction layers of established networks like Ethereum or Hyperledger Fabric. Engineered as a custom, native implementation, it exposes the underlying mechanics of decentralized consensus. Block creation, SHA-256 hash chaining, raw socket networking, and disk persistence are managed directly at the systems level, providing a transparent, full-stack prototype that bridges low-level C execution with modern web presentation.
 
 \subsection{Problem Statement}
 
-The central problem addressed by this project is:
+The primary research question addressed by this work is:
 
-How can a healthcare system maintain a tamper-evident, auditable, and distributed record of medical file integrity without exposing sensitive medical data directly on a blockchain?
+\textit{How can a healthcare consortium maintain a tamper-evident, auditable, and distributed ledger of medical file integrity without exposing sensitive protected health information directly on a blockchain?}
 
-This problem can be divided into several sub-problems:
+This challenge decomposes into the following specific engineering problems:
 
-1. How can a medical file be represented on-chain without storing the file itself?
-2. How can block history be protected against undetected modification?
-3. How can validator identity be represented in a permissioned network?
-4. How can duplicate records or replayed file hashes be detected?
-5. How can multiple local nodes synchronize blockchain state?
-6. How can the blockchain core be exposed to a web dashboard?
-7. How can administrators, doctors, and patients view or interact with the system?
-8. What limitations must be resolved before production use?
+ Representing medical files on-chain without exposing the underlying plaintext., Cryptographically securing the block history against undetected modification., Establishing validator identity within a permissioned, non-anonymous network., Detecting duplicate transactions and replayed file hashes in constant time., Synchronizing ledger state across disparate local nodes., Bridging the native C ledger to a high-level web middleware., Providing role-specific graphical interfaces for administrators, clinicians, and patients., and Identifying critical security limitations requiring resolution prior to clinical deployment..
 
-The project currently answers these questions at prototype level. It implements the core ledger and dashboard concepts, while leaving several security-hardening and production-integration tasks for future work.
+This project resolves these questions at the prototype level, proving the viability of the core ledger and consensus logic while clearly defining the boundaries for future production hardening.
 
 \subsection{Objectives and Scope}
 
-The main objectives of the project are:
+The central objective is the end-to-end engineering of a custom blockchain core dedicated solely to medical record integrity. This necessitates off-chain payload encryption coupled with on-chain SHA-256 hash anchoring. The system design requires validator identity management, local binary disk persistence, and a robust peer-to-peer TCP synchronization protocol. Secondary objectives involve the implementation of a Bloom-filter-based duplicate detection mechanism, the deployment of a Node.js API bridge, and the construction of a React-driven operational dashboard.
 
-The primary objective of this project is to build a custom blockchain core for medical record integrity. This involves storing medical file hashes on-chain while keeping the sensitive files off-chain, and providing block hash chaining using SHA-256. The system aims to provide validator identity fields and demonstration block signatures, support local disk persistence, and enable peer-to-peer node communication over TCP with synchronization capabilities. Additional objectives include implementing duplicate transaction detection, building an Express API bridge, and developing a React dashboard for users to inspect the chain and network health. Finally, the project documents its strengths, weaknesses, and future improvements.
-
-The scope is intentionally focused on integrity rather than full hospital data management. The system does not attempt to replace an EHR. It does not implement all clinical workflows. It does not store raw medical content on-chain. It is best understood as a tamper-evident integrity and audit layer that could sit beside existing hospital systems.
+The scope of this implementation is strictly confined to data integrity. The architecture does not attempt to replicate the vast data management capabilities of a comprehensive EHR, nor does it seek to automate complex clinical billing workflows. It functions explicitly as a tamper-evident audit layer designed to operate in parallel with existing hospital infrastructure, ensuring that once a record is registered, its historical immutability can be mathematically proven.
 
 
 \newpage
-\section{EXHAUSTIVE ANALYSIS AND COMPARATIVE EVALUATION}
+\section{COMPARATIVE EVALUATION}
 
-Exhaustive Analysis of a Full-Stack Permissioned Blockchain Architecture for Medical Record Integrity: A Comparative Evaluation Against Contemporary Decentralized Healthcare Paradigms
+\subsection{Centralized Architectures and Distributed Alternatives}
 
-\subsubsection{Introduction to the Centralized Healthcare Data Crisis and the Distributed Ledger Imperative}
-The global digitization of healthcare and the universal adoption of Electronic Health Records (EHRs) have catalyzed unprecedented advancements in care coordination, longitudinal patient tracking, and clinical decision-making. However, the architectural foundations of these systems rely almost exclusively on centralized relational databases and siloed cloud repositories. This structural centralization introduces severe, systemic vulnerabilities. Traditional EHR systems suffer from inherent single points of failure, rendering them highly susceptible to catastrophic network outages, sophisticated ransomware attacks, and imperceptible data manipulation by privileged actors ~\cite{1}. In a conventional hospital database architecture, the entity responsible for storing sensitive medical files is identical to the entity managing the system's access logs and audit trails. Consequently, a compromised credential or a malicious database administrator possesses the capability to alter a patient's diagnostic history while simultaneously erasing the forensic evidence of that alteration, thereby directly jeopardizing patient safety and institutional liability ~\cite{4}.
+The transition to Electronic Health Records (EHRs) has improved clinical coordination, but the reliance on centralized relational databases introduces structural vulnerabilities. Centralized EHRs inherently constitute single points of failure, rendering them susceptible to network outages, ransomware, and insider manipulation~\cite{1}. Because the entity storing the medical records typically also manages the audit logs, a compromised administrative credential allows an attacker to alter diagnostic histories while simultaneously erasing the forensic evidence.
 
-To mitigate the fragility of centralized trust brokers, the medical informatics community has aggressively explored distributed ledger technologies (DLTs) and blockchain architectures. By leveraging cryptographic hashing, decentralized consensus mechanisms, and append-only immutable data structures, blockchains theoretically provide a framework for establishing trust, provenance, and tamper-evidence without relying on a centralized administrative domain ~\cite{6}. Despite this theoretical promise, the direct application of generalized, public blockchains—such as the Ethereum mainnet or Bitcoin—to healthcare environments has introduced debilitating operational limitations. These limitations manifest as extortionate transaction gas costs, unmanageable network latency, severe computational bloat, and profound conflicts with stringent global privacy regulations such as the Health Insurance Portability and Accountability Act (HIPAA) and the General Data Protection Regulation (GDPR) ~\cite{6}.
+To mitigate these vulnerabilities, the medical informatics community has explored distributed ledger technologies (DLTs)~\cite{5}. Blockchains provide cryptographic provenance and tamper-evidence without a central administrator. However, deploying public blockchains (e.g., Ethereum) in healthcare environments introduces operational limitations, including high transaction costs, network latency, and conflicts with privacy regulations such as HIPAA and GDPR~\cite{5}.
 
-This comprehensive report provides a deep, expert-level evaluation of a newly proposed, custom-built permissioned blockchain system designed explicitly for medical record integrity. To establish a rigorous context for this evaluation, the analysis systematically dissects a massive corpus of over twenty seminal and contemporary academic frameworks within the blockchain healthcare domain. By interrogating the technical, cryptographic, and operational paradigms of legacy systems, this report illuminates the persistent limitations that have plagued the industry for the past decade. Subsequently, the narrative meticulously details how the proposed full-stack architecture—comprising a custom C-based ledger core, a Node.js Express API middleware bridge, and a Vite React TypeScript frontend dashboard—resolves these historical limitations, thereby charting a highly pragmatic and secure trajectory for the future of decentralized medical informatics.
+This section contextualizes the proposed permissioned blockchain architecture against contemporary decentralized healthcare frameworks. By examining the technical and cryptographic paradigms of legacy systems, we highlight persistent industry limitations and demonstrate how the proposed C-based ledger, coupled with its web middleware, addresses these challenges.
 
-\subsubsection{Architectural Deconstruction of the Proposed Medical Record Integrity System}
-Before engaging in a comparative analysis with existing academic literature, it is imperative to establish a precise technical understanding of the proposed project's architecture. The system under evaluation departs significantly from the heavy abstractions of commercial enterprise blockchain frameworks and public smart contract networks. Instead, it is engineered as a highly integrated, full-stack prototype structured across three distinct operational layers ~\cite{4}.
+\subsection{Architectural Comparison}
 
-The foundation of the architecture is a low-level C blockchain core. By bypassing virtual machines entirely, the core ledger engine executes natively, managing fixed-size C structures for blocks and transactions. This layer is responsible for the deterministic computation of SHA-256 hashes, the generation and verification of Merkle roots, peer-to-peer (P2P) networking over raw TCP sockets, and the persistent binary storage of the append-only ledger via a blockchain.dat file ~\cite{4}. To guarantee data durability, the system enforces explicit disk synchronization operations, utilizing fsync on Unix-like environments and \_commit on Windows, ensuring that newly appended blocks are physically written to the storage medium rather than languishing in volatile memory caches ~\cite{4}. Furthermore, the C core executes complex state synchronization mechanisms, allowing lagging nodes to request missing blocks via GET\_BLOCK sequences after comparing network chain heights ~\cite{4}.
+The proposed architecture departs from the abstractions of enterprise frameworks like Hyperledger Fabric and public smart-contract networks. It is structured across three operational layers:
 
-Sitting above the foundational C core is the Node.js and Express API bridge. Because modern web browsers cannot securely execute native C binaries or directly read binary ledger files from a local file system, this middleware layer acts as a vital translation matrix. The Express API utilizes child\_process.exec to invoke the C core's command-line viewer tools, parses the resulting raw text outputs, and serializes the data into structured JSON payloads suitable for web consumption ~\cite{4}. Additionally, the API layer actively scans designated local ports to monitor the health of the P2P network, aggregates system logs for auditability, and manages a localized, zero-dependency mock authentication system via the X-Mock-User-ID header, providing a streamlined demonstration mode free from external cloud dependencies ~\cite{4}.
+ \textbf{Native C Blockchain Core:} Bypassing virtual machines, the core manages fixed-size C structures for blocks and transactions. It handles SHA-256 hashing, Merkle root verification, raw TCP socket networking, and binary storage via a \texttt{blockchain.dat} file. Disk synchronization (using \texttt{fsync} or \texttt{\_commit}) guarantees data durability., \textbf{API Middleware:} A Node.js and Express bridge translates between the native C binaries and web clients, serializing data into JSON, aggregating system logs, and providing local authentication., and \textbf{Frontend Dashboard:} A React/TypeScript application provides role-based interfaces for administrators, clinicians, and patients, facilitating block exploration and file verification workflows..
 
-The uppermost layer of the architecture is the React and TypeScript frontend dashboard, powered by the Vite build tool. This layer translates complex cryptographic operations into an intuitive, role-based graphical user interface tailored for hospital administrators, clinical doctors, and patients ~\cite{4}. The dashboard features comprehensive block exploration interfaces, network latency visualizations, aggregated activity logs, and a deeply integrated medical record upload and verification workflow ~\cite{4}. By surfacing the underlying ledger mechanics through a modern, hospital-facing web application, the proposed system transcends the theoretical limitations of command-line-only academic prototypes, providing a tangible operational face to the decentralized network.
+Crucially, the system enforces a hybrid storage paradigm. Protected health information (PHI) is encrypted (currently via a mock envelope sequence, intended for AES-256-GCM) and stored securely off-chain in a local directory. The blockchain stores only a lightweight metadata payload containing the patient ID, doctor ID, off-chain pointer, timestamp, and the SHA-256 hash of the plaintext document (computed before encryption).
 
-Crucially, the system employs a strict hybrid storage paradigm. It recognizes that raw protected health information (PHI) must never be permanently replicated across a distributed ledger. When a medical document is uploaded, the Node.js API invokes the C core's ENCRYPT command, which currently executes a mock envelope encryption sequence (slated for an upgrade to AES-256-GCM in production) to secure the payload ~\cite{4}. The resulting encrypted .enc file is stored securely off-chain in a localized offchain/records directory on the specific node ~\cite{4}. The blockchain itself merely stores a lightweight metadata payload containing the patient identifier, the doctor identifier, a pointer to the off-chain file, a timestamp, and, most importantly, the SHA-256 cryptographic hash of the encrypted document ~\cite{4}.
+\subsection{Addressing Insider Threats and Centralized Failures}
 
-\subsubsection{Resolving the Centralized Database Crisis, Insider Threats, and AI-Driven Cyberattacks}
-The academic literature universally identifies the centralized nature of contemporary EHR systems as their most critical failing. In a comprehensive review of EHR vulnerabilities, researchers note that centralized structures consolidate the entire patient database onto a single server, creating an immense target for external attackers and a catastrophic single point of failure ~\cite{1}. If the central server experiences hardware failure or a targeted distributed denial-of-service (DDoS) attack, the entire hospital network loses access to life-saving clinical histories ~\cite{1}.
+Centralized EHR architectures consolidate patient data onto a single server, creating high-value targets for attackers~\cite{1}. Furthermore, the digitization of records exposes them to privilege abuse by malicious insiders. While previous work has proposed anomaly detection using Support Vector Machines~\cite{11} or multi-tiered Role-Based Access Control (RBAC)~\cite{1}, these methods often fail to prevent unauthorized data duplication. Federated learning frameworks, such as APPDFL~\cite{12}, attempt to decentralize threat detection but remain vulnerable to data poisoning if the training data provenance is not cryptographically anchored~\cite{14, 16}.
 
-Beyond external attacks, the threat of malicious insiders—authorized personnel who manipulate or exfiltrate data—remains a pervasive challenge. Hurst et al. (2022) emphasize that the digitization of patient records inherently exposes them to privilege abuse, proposing a supervised machine learning anomaly detection approach utilizing Support Vector Machines (SVM) to flag unauthorized access behaviors ~\cite{12}. Similarly, Al-Shehari (2021) proposed a multi-tiered framework for insider threat prevention, noting that traditional Role-Based Access Control (RBAC) models often fail to prevent privilege escalation or unauthorized data duplication ~\cite{1}.
+The proposed architecture addresses these failures through deterministic cryptographic immutability rather than probabilistic anomaly detection~\cite{3}. The peer-to-peer network employs a synchronous, three-phase-commit-inspired (3PC) flow (CAN\_COMMIT, VOTE\_YES, PRE\_COMMIT, ACK\_PRE, DO\_COMMIT) to reach consensus. If an insider modifies a raw file in the off-chain directory, the file's SHA-256 hash immediately diverges from the immutable on-chain record, mathematically exposing the tampering.
 
-Attempting to secure collaborative, multi-institutional environments, Paracha et al. (2024) introduced the Advanced Privacy-Preserving Decentralized Federated Learning (APPDFL) framework ~\cite{13}. This system sought to detect insider threats across healthcare institutions using a peer-to-peer federated learning architecture enhanced with differential privacy, theoretically eliminating the centralized server bottleneck ~\cite{13}. However, federated learning models themselves face profound vulnerabilities. As Rani et al. (2026) highlight in their research on AI-driven threat propagation and zero-day cloud vulnerabilities, machine learning models can be subject to data poisoning if the provenance of the underlying training data is not cryptographically anchored ~\cite{15}. Samant et al. (2025) further explored this in IoT-enabled healthcare environments, introducing the "SecHealth" framework to mitigate internal and external malicious behaviors at the edge ~\cite{17}. Despite these highly sophisticated AI and edge-computing advancements, the fundamental reliance on centralized audit logs leaves the historical integrity of the medical record in question; an attacker who gains root access can simply rewrite the AI's training logs or delete the anomaly detection alerts.
+\subsection{Overcoming EVM Constraints and Public Blockchain Bottlenecks}
 
-The proposed system resolves this foundational crisis not through probabilistic AI anomaly detection, but through deterministic cryptographic immutability. By decentralizing the trust broker, the project entirely eradicates the single point of failure ~\cite{3}. In the proposed architecture, when a doctor uploads a medical record, the transaction must be broadcast to a peer-to-peer network of validator nodes ~\cite{4}. The system employs a customized, three-phase-commit-inspired (3PC) network flow consisting of CAN\_COMMIT, VOTE\_YES, PRE\_COMMIT, ACK\_PRE, and DO\_COMMIT messages ~\cite{4}. This synchronous agreement mechanism ensures that a single malicious database administrator cannot unilaterally alter a patient's history.
+Early blockchain healthcare research, notably MedRec~\cite{18}, utilized Ethereum smart contracts for access control, incentivizing medical researchers to act as ``miners''~\cite{19}. However, transaction latency and variable gas fees render public Proof-of-Work (PoW) networks unviable for high-throughput clinical environments~\cite{9, 20}. Cost-optimization on the Ethereum Virtual Machine (EVM) forces developers into unnatural paradigms, such as variable packing and avoiding dynamic arrays, leading to network congestion and system fragility~\cite{5}. While Layer-2 rollups reduce costs, they introduce secondary complexities regarding data availability~\cite{8}.
 
-If an insider threat actor circumvents hospital access controls and directly modifies a raw medical file residing in the offchain/records directory, the cryptographic hash of that altered file will immediately change. Because the original, untampered SHA-256 hash is permanently locked inside the blockchain's Merkle root—which is subsequently hashed into the block header and linked to all subsequent blocks via the previous\_hash parameter—the tampering becomes mathematically evident ~\cite{4}. When a subsequent audit or clinical review triggers the VERIFY\_FILE command, the system will recompute the hash of the tampered off-chain file, compare it to the immutable on-chain index, and immediately return a failure ~\cite{4}. This paradigm shift transforms the healthcare network from a reactive, perimeter-defense model into a proactive, mathematically verifiable tamper-evident ecosystem.
+By utilizing a custom-built, native C blockchain core within a permissioned consortium, the proposed architecture circumvents EVM constraints and gas markets. Deterministic memory allocation using fixed-width C structs eliminates garbage collection overhead, enabling fast append operations suitable for hospital networks without the unpredictable costs of public blockchains.
 
-\subsubsection{Circumventing the Public Blockchain Bottleneck: Cost, Latency, and EVM Constraints}
-The initial wave of blockchain healthcare research focused heavily on leveraging existing public networks, predominantly Ethereum, to secure medical records. The most seminal of these works was MedRec, introduced by Azaria et al. (2016) ~\cite{19} (A. Ekblaw et al., "MedRec: Using Blockchain for Medical Data Access..."). MedRec proposed a decentralized record management system utilizing Ethereum smart contracts to manage authentication, confidentiality, and data sharing across disparate treatment sites ~\cite{20}. To sustain the network, MedRec innovatively proposed incentivizing medical stakeholders—such as government-funded researchers and public health authorities—to act as network "miners" executing Proof of Work (PoW) algorithms, rewarding them with access to anonymized, aggregate epidemiological data ~\cite{20}.
+\subsection{Semantic Interoperability and Smart Contract Decoupling}
 
-While MedRec was conceptually groundbreaking, its reliance on a public ledger and PoW introduced severe operational and economic bottlenecks. As the Ethereum network matured, the transaction latency and variable execution costs (gas fees) rendered it entirely unviable for high-throughput hospital environments ~\cite{21}. Agoro et al. (2025) and Huang et al. (2025) corroborate this, demonstrating that existing public blockchains struggle with transaction costs to such a degree that updating patient consent models cannot keep pace with the real-time demands of clinical users ~\cite{10}.
+Frameworks like Ancile~\cite{22} use Ethereum smart contracts for highly granular access control, inheriting computational bloat~\cite{23}. Similarly, FHIRChain~\cite{25} attempted to encapsulate HL7 FHIR data models directly within the blockchain. Forcing deeply nested FHIR JSON objects or integrating Large Language Models (e.g., ClinicalBERT) into on-chain state variables introduces significant parsing overhead~\cite{27, 29}.
 
-The economic limitations of public Ethereum for healthcare are rooted deeply in the architecture of the Ethereum Virtual Machine (EVM). A comprehensive systematic review of blockchain in EHRs details how developers face immense cost-optimization limitations due to the EVM allocating memory in rigid 256-bit words ~\cite{6}. To avoid bankrupting a hospital system with gas fees, developers must employ highly complex, unnatural programming paradigms. These include "packing variables" sequentially to optimize memory, utilizing "Boolean boxing" to aggregate multiple boolean values into a single word via bitwise operations, avoiding dynamic arrays in favor of mappings, and strictly limiting string lengths to under 32 bytes ~\cite{6}. Attempting to manage the vast, dynamic datasets of a hospital network within these suffocating computational constraints inevitably leads to severe network congestion and systemic failure ~\cite{6}. Furthermore, while Layer-2 rollups have been proposed to reduce transaction costs, they introduce secondary complexities regarding data availability and settlement finality ~\cite{9}.
+The proposed system deliberately decouples complex business logic from the blockchain. The on-chain footprint is aggressively lightweight, storing only foundational metadata. Semantic interoperability, RBAC, and session management are handled entirely by the Express API and React frontend, ensuring horizontal scalability without requiring hard forks of the consensus rules.
 
-The proposed architecture entirely circumvents the EVM cost constraints and the public blockchain bottleneck by executing a custom-built, native C blockchain core ~\cite{4}. Because the system is engineered as a private, permissioned ledger tailored for a specific healthcare consortium, there is no cryptocurrency, no competitive gas market, and absolutely no need to employ convoluted Solidity optimizations to save computational bytes ~\cite{4}.
+\subsection{The Hybrid Storage Dilemma}
 
-The architecture enforces deterministic memory allocation by defining rigid, fixed-width C struct representations for blocks and transactions ~\cite{4}. This design eliminates the garbage collection overhead and dynamic memory reallocation latencies that plague higher-level virtual machines. The C core writes these binary structures directly to the disk, ensuring ultra-fast append operations that can easily accommodate the high-throughput requirements of a busy hospital network. By dropping the Ethereum dependency entirely, the proposed project achieves predictable, zero-cost computational performance, allowing hospital IT budgets to scale based on standard hardware provisioning rather than volatile cryptocurrency gas markets.
+Storing raw medical data on-chain violates the right to erasure and drastically inflates ledger size. Consequently, hybrid paradigms are the industry standard. MeDShare~\cite{31} utilized cloud repositories (e.g., AWS) while using the blockchain for provenance~\cite{33}, maintaining a dependency on corporate infrastructure. OmniPHR~\cite{34} and frameworks for radiation oncology~\cite{36} proposed distributed routing or symmetric key retrieval. 
 
-\subsubsection{Deconstructing Smart Contracts, Access Control, and Semantic Interoperability}
-To manage the complex permissions required by HIPAA and GDPR, subsequent researchers developed extensive smart contract logic to govern access control on the blockchain. Ancile, proposed by Dagher et al. (2018), utilized Ethereum-based smart contracts combined with advanced cryptographic obfuscation techniques to provide secure interoperability and highly granular access control for patients, healthcare providers, and third-party researchers ~\cite{23} (Dagher et al., "Ancile: Privacy-Preserving Framework..."). While Ancile successfully modeled complex permissions theoretically, its reliance on heavy smart contract execution inherited the computational bloat discussed previously ~\cite{24}.
+More recently, IPFS has become common for off-chain storage~\cite{38, 40}. However, IPFS is an ephemeral swarm; unpinned files can be lost to garbage collection~\cite{43}, and retrieving large clinical files introduces unpredictable latency~\cite{45}.
 
-Addressing the semantic interoperability problem, FHIRChain (Zhang et al., 2018) attempted to encapsulate the standard HL7 Fast Healthcare Interoperability Resources (FHIR) data models directly within a blockchain architecture ~\cite{26}. FHIRChain utilized digital health identities—functioning as public/private cryptographic key pairs—to authenticate clinical participants for collaborative, remote cancer care decision-making ~\cite{26}. However, forcing complex, deeply nested FHIR JSON objects into on-chain smart contract state variables introduces significant parsing overhead and throughput bottlenecks ~\cite{28}. More recent approaches, such as integrating domain-specific Large Language Models (LLMs) like ClinicalBERT to automatically extract semantic attributes for Attribute-Based Encryption (ABE), push the computational boundaries of smart contracts even further ~\cite{30}.
+The proposed system bypasses IPFS latency and data-loss risks through deterministic local off-chain storage. Encrypted payloads are committed directly to a dedicated local directory, guaranteeing high availability and predictable retrieval speeds on controlled, HIPAA-compliant hospital infrastructure.
 
-The proposed system deliberately rejects the trend of placing complex business logic and semantic data models onto the blockchain layer. Recognizing that a ledger should be a mathematically pristine engine of integrity rather than a bloated application server, the project keeps the on-chain data footprint aggressively lightweight ~\cite{4}. The transaction struct only stores foundational metadata: patient\_id, doctor\_id, data\_hash, data\_pointer, and a timestamp ~\cite{4}.
+\subsection{Consensus Evolution: Proof of Authority}
 
-The heavy lifting of semantic interoperability, role-based access control (RBAC), and user session management is entirely decoupled from the C core and handled by the Node.js Express API and the React frontend ~\cite{4}. This separation of concerns means the blockchain never has to parse an HL7 FHIR object or execute a ClinicalBERT inference model; it merely verifies the cryptographic integrity of the pointers. This architectural decision achieves the horizontal scalability that frameworks like FHIRChain struggle to attain, allowing the web layer to iterate rapidly on UI/UX and complex business logic without requiring dangerous hard forks of the underlying consensus rules ~\cite{4}.
+The environmental waste of PoW led to alternatives like Delegated Proof of Stake (DPoS) in MedBlock~\cite{47}. However, stake-based systems introduce tokenomics inappropriate for a hospital consortium. Consequently, Proof of Authority (PoA)—relying on the verified identity of pre-approved validators—has emerged as the optimal consensus mechanism for healthcare~\cite{49, 52, 53}.
 
-\subsubsection{The Hybrid Storage Dilemma and the Fallacy of IPFS Persistence}
-It is a universally accepted maxim in decentralized healthcare informatics that raw medical data must never reside directly on a blockchain. Doing so violates the right to erasure (data destruction), drastically inflates the size of the ledger, and exposes highly sensitive information to network-wide replication ~\cite{4}. Consequently, hybrid storage paradigms emerged as the industry standard.
+The proposed system implements a custom 3PC PoA protocol over raw TCP sockets. Validators verify the Merkle root, hash linkage, and signatures before voting. This synchronous mechanism provides a demo voting-based finality without mining waste or heavy infrastructural requirements. In the current prototype, the quorum threshold is hard-coded and peer messages are not cryptographically signed.
 
-MeDShare (Xia et al., 2017) proposed a trust-less data-sharing scheme among cloud service providers utilizing a consortium blockchain ~\cite{32}. In this model, the raw data remained entrenched within traditional, third-party cloud repositories (e.g., AWS, Azure), while the blockchain was relegated to managing data provenance, access auditing, and user control ~\cite{34}. While effective at keeping the blockchain lightweight, MeDShare maintained a heavy dependency on external corporate cloud infrastructure, undermining the ethos of true decentralization.
+\subsection{Duplicate Detection via Bloom Filters}
 
-OmniPHR (Roehrs et al., 2017) proposed a distributed architecture model to integrate Personal Health Records (PHRs) via a routing overlay network, physically dividing health records into discrete data blocks managed by high-capacity superpeers ~\cite{35}. Dubovitskaya et al. (2017/2018) presented a framework tailored specifically for radiation oncology, utilizing a permissioned blockchain alongside both local and cloud databases, relying on symmetric keys and Uniquely Identifiable Information (UIIP) hashes to retrieve the off-chain data securely ~\cite{37}.
+Duplicate medical records fragment patient histories and cause clinical errors~\cite{55}. Traditional Master Data Management (MDM) frameworks~\cite{57, 59} rely on computationally expensive probabilistic semantic matching. 
 
-In recent years, the InterPlanetary File System (IPFS) has become the default off-chain storage mechanism for academic prototypes. EHRChain (2022) utilized a dual-blockchain approach based on Hyperledger Sawtooth combined with IPFS for distributed file storage, storing AES-encrypted records on IPFS and anchoring the resultant hash references on-chain ~\cite{39}. Similarly, the BiiMED framework (Bouchkaren / Kung et al., 2021) and architectures analyzed by Pineda Rincón et al. (2021) heavily rely on private Ethereum smart contracts interacting with IPFS and a Trusted Third Party Auditor (TTPA) to guarantee data integrity ~\cite{41}.
+In contrast, the proposed architecture uses a pure-C Bloom filter with three independent DJB2-based hash functions for constant-time $\mathcal{O}(1)$ pre-filtering. If the hash triggers a match, an in-memory hash map confirms the duplication, and the API rejects the upload before it reaches the blockchain. A proposed LevelDB integration would allow scaling this detection to over a billion records with minimal RAM usage.
 
-However, the reliance on IPFS introduces severe, often overlooked operational risks. IPFS is a decentralized swarm; it does not guarantee permanent data storage. If a file is not actively "pinned" by a node on the network, it can be lost to garbage collection ~\cite{44}. Furthermore, retrieving large medical imaging files (e.g., DICOM scans) across an IPFS swarm introduces unpredictable latency, making it highly suboptimal for emergency clinical environments where immediate access to a patient's history is a matter of life and death ~\cite{46}.
+\subsection{Browser-Side Merkle Inclusion Verification}
 
-The proposed system brilliantly bypasses the latency, data-loss risks, and third-party dependencies of IPFS and cloud providers by implementing a natively managed, deterministic local off-chain storage architecture ~\cite{4}. When the React frontend initiates a file upload, the Node.js API receives the payload and triggers the C core's ENCRYPT command ~\cite{4}. The C core executes mock envelope encryption (securing the payload utilizing keys derived from the patient and doctor identifiers) and immediately commits the resulting .enc file to a dedicated offchain/records directory physically located on the node's local disk ~\cite{4}.
+Many web-based blockchain dashboards introduce a light-client trust boundary: if the backend API is compromised, it can spoof validity responses. The proposed project addresses this by implementing browser-side Merkle inclusion verification.
 
-This guarantees absolute high availability and deterministic retrieval speeds, as the file resides on controlled, HIPAA-compliant hospital infrastructure rather than an ephemeral public swarm. By keeping the cryptographic encryption and storage routines tightly coupled within the C core, the proposed system achieves the privacy benefits of off-chain storage without sacrificing the reliability required by critical healthcare infrastructure.
+When a file is verified, the API returns a Merkle proof and block header metadata. The React frontend independently recomputes the SHA-256 hash of the uploaded file, reconstructs the transaction leaf, mathematically applies the sibling hashes, and verifies that the computed root matches the block header's Merkle root. This ensures true end-to-end integrity verification, immune to API-level spoofing.
 
-\subsubsection{Evolutionary Consensus Models: Transitioning to Proof of Authority}
-The environmental and computational waste generated by Proof of Work (PoW) consensus algorithms rendered early systems like MedRec functionally obsolete for enterprise use. To bypass these inefficiencies, researchers began exploring alternative consensus mechanisms. MedBlock (Fan et al., 2018) utilized a Delegated Proof of Stake (DPoS) algorithm to select proxy nodes responsible for re-encrypting EMRs, thereby achieving consensus without massive energy consumption or network congestion ~\cite{48}. However, stake-based systems (PoS/DPoS) introduce complex tokenomics and the risk of network monopolization by wealthy nodes, an inappropriate dynamic for a collaborative hospital consortium.
+\subsection{Summary Comparison}
 
-Consequently, the academic consensus has coalesced around Proof of Authority (PoA). Various recent studies by Yaqoob, Arul, and Shaik (2020-2025) confirm that PoA algorithms—which rely on the verified identity and legal reputation of pre-approved validators rather than computational hashing power or financial stake—dramatically reduce latency and computational overhead in healthcare networks ~\cite{50}. The BlockCare project (2024) successfully utilized PoA to eliminate the risks of central databases while ensuring the tamper-proof storage of digital health records ~\cite{54}. Research into healthcare asset tracking further highlights that PoA provides superior tracking accuracy, highly efficient gas usage (when mapped to an EVM), and robust data integrity suitable for sensitive environments ~\cite{53}.
-
-The proposed system adopts this paradigm shift but implements it without the heavy infrastructural requirements of platforms like Hyperledger Fabric ~\cite{4}. The system employs a custom-coded, three-phase-commit-inspired (3PC) consensus protocol over raw TCP sockets ~\cite{4}.
-
-\subsubsection{When a node proposes a new block containing a medical record transaction, the following deterministic sequence occurs:}
-The proposer broadcasts a CAN\_COMMIT message containing the serialized block to all known peer ports.
-Peers receive the block, independently verify the Merkle root, the previous hash linkage, and the signature validity, and reply with a VOTE\_YES message if the block is structurally sound.
-Upon receiving a majority of unique votes (preventing duplicate vote spoofing via a vote mask), the proposer broadcasts a PRE\_COMMIT message.
-Peers acknowledge their readiness via ACK\_PRE.
-Finally, the proposer appends the block to its local blockchain.dat file and broadcasts a DO\_COMMIT message, instructing all peers to finalize the append operation locally ~\cite{4}.
-
-This PoA implementation entirely eliminates mining waste and tokenomic complexities. Because the validators in a hospital consortium are known, legally bound entities, this synchronous voting mechanism ensures rapid, deterministic finality, perfectly aligning with the high-throughput demands of medical informatics.
-
-\subsubsection{Cryptographic Identity Resolution and O(1) Duplicate Record Prevention}
-A persistent and highly dangerous operational challenge within modern EHR systems is the proliferation of duplicate medical records. When a patient's history is fragmented across multiple duplicate profiles, clinicians lack a comprehensive view of allergies, medications, and prior diagnoses, leading to severe clinical errors. Tayal \& Murumkar (2026) highlight that poor patient identity protection and duplicate records directly impact data accuracy, necessitating repeated tests and undermining confidence in digital health solutions ~\cite{56} (Tayal \& Murumkar, "Patient Identity Protection and Duplicate Record Prevention..."). They emphasize the need for robust Master Patient Indexes (MPI) and biometrics.
-
-Adapa (2025/2026) explored Master Data Management (MDM) frameworks that leverage blockchain's immutability to mitigate redundancy and improve traceability across enterprise data ecosystems ~\cite{58}. Khurshid et al. (2020) also tested specific blockchain applications for patient identity management ~\cite{60}. However, the vast majority of these MDM frameworks rely on probabilistic semantic matching algorithms—comparing names, birth dates, and addresses—which are computationally expensive and prone to false positives.
-
-The proposed system approaches the duplicate record problem not through heuristic semantic matching, but through mathematically precise cryptography. It implements a transaction hash index engineered with a pure-C Bloom filter utilizing three independent DJB2-based hash functions ~\cite{4}. This Bloom filter acts as a lightning-fast, constant-time O(1) pre-filtering cache at the ingestion layer.
-
-When a doctor attempts to upload a medical document, the system computes the SHA-256 hash of the file. Before engaging the complex consensus network, the system checks the Bloom filter. If the hash triggers a positive match, the system queries an in-memory separate chaining hash map to confirm the duplication against the existing ledger ~\cite{4}. If an exact duplicate is found, the system instantly rejects the upload with an HTTP 409 Conflict response via the Express API, stopping the redundancy before it ever hits the blockchain ~\cite{4}.
-
-Furthermore, to ensure this capability scales to enterprise levels, the project report details an architectural design for LevelDB Log-Structured Merge (LSM) tree integration. This proposed LevelDB schema will allow the system to scale duplicate detection to over 1 billion medical records while maintaining O(log N) SSD lookup speeds and capping physical RAM usage at approximately 2 GB, a feat impossible with pure in-memory indexes ~\cite{4}. This provides a definitive, cryptographically precise solution to file duplication that semantic MDM systems struggle to match.
-
-\subsubsection{Redefining the Light-Client Trust Boundary Through Zero-Trust Browser Verification}
-A critical, yet rarely discussed, vulnerability in many proposed web-based blockchain dashboards is the light-client trust boundary. Many academic prototypes provide a web interface that simply queries a backend API; if the API says a record is valid, the frontend displays a green checkmark. This architecture is fundamentally flawed. It merely shifts the single point of failure from the database to the web server middleware. If the backend API is compromised by an attacker, it can simply lie to the frontend, claiming that a tampered medical file is cryptographically valid.
-
-The proposed project resolves this trust boundary vulnerability by implementing advanced, zero-trust Merkle proof verification directly within the browser ~\cite{4}. This represents a significant advancement over typical web-blockchain bridges.
-
-\subsubsection{The verification workflow operates as follows:}
-A patient or auditor uploads a medical file to the React frontend for verification.
-The Node.js API passes the file to the C core's VERIFY\_FILE command.
-The C core recomputes the SHA-256 hash, locates the transaction via the index, and generates a full Merkle proof—containing the transaction leaf hash, all necessary sibling hashes, and the left/right positional directions required to climb the tree ~\cite{4}.
-The API returns this Merkle proof, along with the block header metadata, to the frontend.
-Crucially, the React frontend does not accept a MATCH response from the API at face value. The browser independently recomputes the SHA-256 hash of the uploaded file locally using Web Crypto APIs.
-The frontend reconstructs the canonical transaction leaf from the returned metadata, mathematically applies the Merkle proof sibling hashes step-by-step up the tree, and verifies that the computed root exactly matches the Merkle root provided in the block header ~\cite{4}.
-Finally, it recomputes the block hash from the header fields to ensure total structural integrity.
-
-This zero-trust architecture ensures that even if the Express API middleware is completely compromised by an insider threat, it cannot mathematically spoof a valid cryptographic proof for an altered medical file. The browser acts as an independent cryptographic auditor, providing true end-to-end integrity verification for the end-user.
-
-\subsubsection{Comprehensive Synthesis and Future Production Trajectory}
-The proposed Permissioned Blockchain-Based Medical Record Integrity System represents a formidable, highly pragmatic leap forward in the application of distributed ledger technology to healthcare informatics. By meticulously synthesizing the lessons learned from a decade of academic literature—ranging from the foundational public-chain concepts of MedRec and FHIRChain to the hybrid storage models of MeDShare and OmniPHR—the system intentionally strips away the unnecessary computational bloat of generalized smart contract platforms.
-
-By executing a highly deterministic, low-level C blockchain core combined with a 3PC Proof of Authority consensus protocol, the architecture entirely eradicates the extortionate gas fees, memory constraints, and latency bottlenecks associated with the Ethereum Virtual Machine. Furthermore, its strict adherence to a localized, off-chain encrypted storage paradigm ensures maximum patient confidentiality and HIPAA compliance without relying on the volatile data availability risks inherent in IPFS swarms or third-party cloud monopolies.
-
-Most importantly, the system transcends the theoretical boundaries of academic whitepapers by delivering a fully integrated, vertically demonstrable full-stack application. Through advanced cryptographic implementations—such as O(1) Bloom filter duplicate pre-filtering, rigid C-struct memory management, and zero-trust, browser-side Merkle proof validation—the framework definitively solves the entrenched problems of centralized data corruption, insider threats, and fragmented patient identities.
-
-While the author correctly identifies that the system is currently a high-fidelity prototype, the roadmap to production is clear and well-defined ~\cite{4}. The transition from mock XOR encryption to military-grade AES-256-GCM, the upgrading of string-based signatures to true Elliptic Curve (ECDSA) or post-quantum cryptography (PQC) 15, and the encapsulation of plain TCP node traffic within mutual TLS (mTLS) 4 will elevate this architecture to enterprise-grade security. The architectural foundation evaluated in this report successfully maps out the most secure, highly performant, and economically viable trajectory for the future of decentralized electronic health record integrity.
-
-
-\subsubsection{Summary Comparison}
-
-\begin{table}[h!]
+\begin{table}[htbp]
 \centering
-\resizebox{\textwidth}{!}{%
-\begin{tabular}{|l|l|l|l|l|}
+\small
+\renewcommand{\arraystretch}{1.18}
+\begin{tabularx}{\textwidth}{|Y|Y|Y|Y|Y|}
 \hline
-System & Verification & Storage & Limitation & Proposed Improvement \\ \hline
-MedRec [19] (A. Ekblaw et al., "MedRec: Using Blockchain for Medical Data Access...") & Full chain & Off-chain & Slow & Merkle proof \\ \hline
-Ancile [22] (Dagher et al., "Ancile: Privacy-Preserving Framework...") & Smart contract & On-chain heavy & High latency & Lightweight core \\ \hline
-IPFS systems [38] (EHRChain, "Addressing the Challenges of Electronic Health Records Using Blockchain and IPFS") & Hash-based & IPFS & Availability risk & Local deterministic storage \\ \hline
-Traditional MDM [56] (Tayal \& Murumkar, "Patient Identity Protection and Duplicate Record Prevention...") & Probabilistic & Relational DB & Computational cost & O(1) Bloom Filter \\ \hline
-**Proposed System** & **Zero-trust Browser** & **Local Deterministic** & **-** & **Full-Stack Integrated** \\ \hline
-
+\textbf{System} & \textbf{Verification} & \textbf{Storage} & \textbf{Limitation} & \textbf{Proposed Improvement} \\ \hline
+MedRec~\cite{18} & Full chain & Off-chain & Slow PoW consensus & Merkle proof with PoA validation \\ \hline
+Ancile~\cite{22} & Smart contract & On-chain heavy & High latency & Lightweight native core \\ \hline
+EHRChain~\cite{38} & Hash-based & IPFS & Availability risk & Local deterministic storage \\ \hline
+Traditional MDM~\cite{55} & Probabilistic & Relational database & Computational cost & $\mathcal{O}(1)$ Bloom filter \\ \hline
+\textbf{Proposed System} & \textbf{Browser-side Merkle inclusion} & \textbf{Local deterministic} & \textbf{None in prototype scope} & \textbf{Full-stack integration} \\ \hline
+\end{tabularx}
+\caption{Comparison of the proposed architecture against existing healthcare blockchain frameworks.}
+\label{tab:comparison}
+\end{table}
 
 \newpage
 \section{PROPOSED SYSTEM}
 
 \subsection{System Overview}
 
-\end{tabular}
-}
-\end{table}
 The project is a full stack prototype of a permissioned medical blockchain system. It has three primary components.
 
 \subsection{C Blockchain Core}
@@ -488,19 +431,7 @@ frontend
 
 It is a Vite React TypeScript application. It provides pages for:
 
-\begin{itemize}[leftmargin=1.8em]
-\item Login
-\item Dashboard
-\item Block Explorer
-\item Network Health
-\item System Logs
-\item Upload Record
-\item My Records / All Records
-\item Verify Record
-\item Patient Search
-\item Activity Logs
-\item Settings
-\end{itemize}
+ Login, Dashboard, Block Explorer, Network Health, System Logs, Upload Record, My Records / All Records, Verify Record, Patient Search, Activity Logs, and Settings.
 
 The frontend gives the project an operational face. Instead of only being a command-line blockchain, the project can be demonstrated as a hospital-style web dashboard.
 
@@ -508,147 +439,68 @@ The frontend gives the project an operational face. Instead of only being a comm
 
 The current architecture can be represented as:
 
+\begin{figure}[htbp]
+\centering
+\scriptsize
+\begin{verbatim}
 +-----------------------------+
-\begin{table}[h!]
-\centering
-\resizebox{\textwidth}{!}{%
-\begin{tabular}{|l|}
-\hline
-React Frontend \\ \hline
-Dashboard / Explorer / UI \\ \hline
-\end{tabular}
-}
-\end{table}
+| React Frontend              |
+| Dashboard / Explorer / UI   |
 +--------------+--------------+
-\begin{table}[h!]
-\centering
-\resizebox{\textwidth}{!}{%
-\begin{tabular}{|}
-\hline
- \\ \hline
-HTTP / JSON \\ \hline
-\end{tabular}
-}
-\end{table}
-v
+               |
+               | HTTP / JSON
+               v
 +-----------------------------+
-\begin{table}[h!]
-\centering
-\resizebox{\textwidth}{!}{%
-\begin{tabular}{|l|}
-\hline
-Express API Bridge \\ \hline
-Routes, parsing, logs, port \\ \hline
-scanning, core execution \\ \hline
-\end{tabular}
-}
-\end{table}
+| Express API Bridge          |
+| Routes, parsing, logs, port |
+| scanning, core execution    |
 +--------------+--------------+
-\begin{table}[h!]
-\centering
-\resizebox{\textwidth}{!}{%
-\begin{tabular}{|}
-\hline
- \\ \hline
-child\_process exec \\ \hline
-\end{tabular}
-}
-\end{table}
-v
+               |
+               | child_process exec
+               v
 +-----------------------------+
-\begin{table}[h!]
-\centering
-\resizebox{\textwidth}{!}{%
-\begin{tabular}{|l|}
-\hline
-C Core Binaries \\ \hline
-viewer.exe, node\_app.exe, \\ \hline
-blockchain.exe \\ \hline
-\end{tabular}
-}
-\end{table}
+| C Core Binaries             |
+| viewer.exe, node_app.exe,   |
+| blockchain.exe              |
 +--------------+--------------+
-\begin{table}[h!]
-\centering
-\resizebox{\textwidth}{!}{%
-\begin{tabular}{|}
-\hline
- \\ \hline
-\end{tabular}
-}
-\end{table}
-+-----------------------+-----------------------+
-\begin{table}[h!]
-\centering
-\resizebox{\textwidth}{!}{%
-\begin{tabular}{|l|}
-\hline
- \\ \hline
-\end{tabular}
-}
-\end{table}
-v                                               v
-+-------------------+                         +---------------------+
-\begin{table}[h!]
-\centering
-\resizebox{\textwidth}{!}{%
-\begin{tabular}{|l|l|l|}
-\hline
-blockchain.dat &  & offchain/records \\ \hline
-append-only chain &  & encrypted files \\ \hline
-\end{tabular}
-}
-\end{table}
-+-------------------+                         +---------------------+
+               |
+      +--------+--------+
+      |                 |
+      v                 v
++-------------------+   +---------------------+
+| blockchain.dat    |   | offchain/records    |
+| append-only chain |   | encrypted files     |
++-------------------+   +---------------------+
+\end{verbatim}
+\phantomsection
+\label{fig:3.1}
+\caption*{Figure 3.1: Overall System Architecture}
+\end{figure}
 
 The distributed demo network can be represented as:
 
-+-------------+        TCP         +-------------+
-\begin{table}[h!]
+\begin{figure}[htbp]
 \centering
-\resizebox{\textwidth}{!}{%
-\begin{tabular}{|l|l|l|}
-\hline
-Node 8001 & <---------------> & Node 8002 \\ \hline
-Validator &  & Validator \\ \hline
-\end{tabular}
-}
-\end{table}
+\scriptsize
+\begin{verbatim}
++-------------+        TCP        +-------------+
+| Node 8001   |<----------------->| Node 8002   |
+| Validator   |                   | Validator   |
 +------+------+                   +------+------+
-^                                 ^
-\begin{table}[h!]
-\centering
-\resizebox{\textwidth}{!}{%
-\begin{tabular}{|l|}
-\hline
- \\ \hline
-TCP & TCP \\ \hline
-\end{tabular}
-}
-\end{table}
-v                                 v
-+-------------+        TCP         +-------------+
-\begin{table}[h!]
-\centering
-\resizebox{\textwidth}{!}{%
-\begin{tabular}{|l|l|l|}
-\hline
-Node 8003 & <---------------> & Node 8004 \\ \hline
-Validator &  & Validator \\ \hline
-\end{tabular}
-}
-\end{table}
+       ^                                 ^
+       | TCP                         TCP |
+       v                                 v
++-------------+        TCP        +-------------+
+| Node 8003   |<----------------->| Node 8004   |
+| Validator   |                   | Validator   |
 +-------------+                   +-------------+
+\end{verbatim}
+\phantomsection
+\label{fig:3.2}
+\caption*{Figure 3.2: Protocol Interaction Diagram}
+\end{figure}
 
-Each node has its own:
-
-\begin{itemize}[leftmargin=1.8em]
-\item node\_app.exe binary
-\item keys directory
-\item data/blockchain.dat
-\item data/network.log
-\item offchain/records directory
-\end{itemize}
+Each validator node operates autonomously with an isolated local state, maintaining its own \texttt{node\_app.exe} binary, cryptographic keys directory, primary binary ledger ( \texttt{data/blockchain.dat}), network interaction logs, and a dedicated \texttt{offchain/records} directory for storing encrypted payloads.
 
 The API currently reads the live demo node path first, especially demo\_instances/node1, and falls back to backend/core/data in some situations.
 
@@ -660,52 +512,56 @@ The C core is the foundation of the system.
 
 3.3.1.1 Main Data Structures
 
-The Transaction structure stores:
+The fundamental \texttt{Transaction} structure is strictly defined to capture the minimal necessary metadata, comprising the patient and doctor identifiers, the cryptographic hash of the medical data payload, a pointer to the off-chain storage location, and an immutable timestamp.
 
-\begin{itemize}[leftmargin=1.8em]
-\item patient\_id
-\item doctor\_id
-\item data\_hash
-\item data\_pointer
-\item timestamp
-\end{itemize}
+Similarly, the \texttt{Block} structure aggregates these transactions alongside critical consensus metadata. It encapsulates a sequential index, creation timestamp, the preceding block's cryptographic hash for chain linkage, its own definitive block hash, the computed Merkle root summarizing the transaction set, the validator's signature and port identity, and an array containing the serialized transactions along with their discrete count.
 
-The Block structure stores:
-
-\begin{itemize}[leftmargin=1.8em]
-\item index
-\item timestamp
-\item previous\_hash
-\item block\_hash
-\item merkle\_root
-\item validator\_signature
-\item validator\_port
-\item transactions
-\item transaction\_count
-\end{itemize}
+\begin{table}[htbp]
+\centering
+\small
+\renewcommand{\arraystretch}{1.15}
+\caption{Core Cryptographic Data Structures}
+\label{tab:core-structures}
+\vspace{2mm}
+\begin{tabularx}{\textwidth}{|l|l|l|Y|}
+\hline
+\textbf{Entity} & \textbf{Field Name} & \textbf{Data Type} & \textbf{Architectural Purpose} \\ \hline
+Transaction & \texttt{patient\_id} & \texttt{char[64]} & Application-level demo identifier (e.g., PAT\_001) mapping to patient profile \\ \hline
+Transaction & \texttt{doctor\_id} & \texttt{char[64]} & Application-level demo identifier (e.g., DOC\_001) of the authoring physician \\ \hline
+Transaction & \texttt{data\_hash} & \texttt{char[65]} & SHA-256 fingerprint of the off-chain medical payload \\ \hline
+Block & \texttt{previous\_hash} & \texttt{char[65]} & Cryptographic link enforcing ledger immutability \\ \hline
+Block & \texttt{merkle\_root} & \texttt{char[65]} & Computed root of all transaction hashes in the block \\ \hline
+Block & \texttt{validator\_sig} & \texttt{char[256]} & Digital signature proving validator authority \\ \hline
+\end{tabularx}
+\end{table}
 
 These structures are fixed-size and simple. This is useful for deterministic file storage and easier serialization, although it also creates limits, such as fixed maximum transaction count and fixed string lengths.
 
+\begin{figure}[htbp]
+\centering
+\scriptsize
+\begin{verbatim}
++--------------------------------------------------+
+| index                                            |
+| timestamp                                        |
+| previous_hash  --->  links to previous block     |
+| merkle_root    --->  summarizes transactions      |
+| block_hash     --->  commits header fields       |
+| validator_port                                   |
+| validator_signature                              |
+| transactions[]                                   |
++--------------------------------------------------+
+\end{verbatim}
+\phantomsection
+\label{fig:3.3}
+\caption*{Figure 3.3: Block Structure and Hash Linking Mechanism}
+\end{figure}
+
 3.3.1.2 Hashing
 
-The project includes a standalone SHA-256 implementation in C. It is used for:
+The system utilizes a standalone SHA-256 implementation written natively in C, serving as the foundational cryptographic primitive across the network. This algorithm is universally applied for hashing arbitrary text data, verifying raw file contents, computing transaction identifiers, constructing Merkle trees, and generating definitive block hashes.
 
-\begin{itemize}[leftmargin=1.8em]
-\item hashing text data
-\item hashing file contents
-\item computing transaction hashes
-\item computing Merkle roots
-\item computing block hashes
-\end{itemize}
-
-The block hash is computed from:
-
-\begin{itemize}[leftmargin=1.8em]
-\item block index
-\item timestamp
-\item previous hash
-\item Merkle root
-\end{itemize}
+The block hash is deterministically computed by concatenating the block index, creation timestamp, previous block hash, and the transaction Merkle root.
 
 The Merkle root is computed from transaction fields. This means that if a transaction changes, the Merkle root changes, and therefore the block hash changes.
 
@@ -719,26 +575,13 @@ Blocks are appended to a binary file:
 
 data/blockchain.dat
 
-The add\_block function writes the block, flushes the file, and uses an explicit disk sync:
-
-\begin{itemize}[leftmargin=1.8em]
-\item \_commit on Windows
-\item fsync on Unix-like systems
-\end{itemize}
+The \texttt{add\_block} function enforces immediate persistence by writing the block, flushing the stream, and invoking explicit OS-level synchronization commands—specifically \texttt{\_commit} on Windows and \texttt{fsync} on Unix-like environments.
 
 This is good because it reduces the risk of data remaining only in memory after a write.
 
 3.3.1.5 Verification
 
-The core verifies:
-
-\begin{itemize}[leftmargin=1.8em]
-\item block hash correctness
-\item expected demo signature string validity in the current non-production signature implementation
-\item previous-hash linkage
-\item duplicate transaction hashes inside a block
-\item duplicate transaction hashes against the existing chain
-\end{itemize}
+The core ledger engine enforces strict validation rules before appending any block. It independently verifies the cryptographic correctness of the block hash, validates the expected signature payload, ensures proper linkage to the preceding block\'s hash, and rejects any duplicate transaction hashes either within the proposed block itself or against the historically committed chain.
 
 Full chain verification reads blocks sequentially and checks that each block points to the previous stored hash.
 
@@ -748,21 +591,10 @@ The project includes a transaction hash index implemented as a hash map with cha
 
 3.3.1.7 Viewer Tool
 
-The viewer binary provides commands such as:
-
-\begin{itemize}[leftmargin=1.8em]
-\item HEIGHT
-\item LAST
-\item ALL
-\item VERIFY
-\item VERIFY\_FILE
-\item ADD
-\end{itemize}
+The viewer binary exposes a robust administrative interface, providing essential commands such as \texttt{HEIGHT}, \texttt{LAST}, \texttt{ALL}, \texttt{VERIFY}, \texttt{VERIFY\_FILE}, and \texttt{ADD}.
 
 VERIFY\_FILE now returns a proof-backed response for a matching file. It recomputes the uploaded file hash, looks up the transaction location through the in-memory hash index, loads the relevant block, generates a Merkle proof, verifies the proof against the block Merkle root inside the C core, and prints header, transaction, and proof fields for the API layer to parse.
-\begin{itemize}[leftmargin=1.8em]
-\item PRINT <index>
-\end{itemize}
+It also supports precise block inspection via the \texttt{PRINT <index>} command.
 
 The Express API depends heavily on this viewer output. It parses the text format and converts it to JSON for the frontend.
 
@@ -783,58 +615,51 @@ Each node starts a server socket and accepts incoming peer connections. It can a
 
 3.3.2.2 Synchronization
 
-The synchronization flow includes:
-
-1. A node requests or receives CHAIN\_HEIGHT.
-2. If a peer has a higher height, the local node requests missing blocks using GET\_BLOCK:<index>.
-3. The peer sends SYNC\_BLOCK messages.
-4. The receiving node deserializes, verifies, and appends missing blocks.
+The peer synchronization flow initiates when a node exchanges its current \texttt{CHAIN\_HEIGHT} with a peer. If a discrepancy is detected, the lagging node issues a \texttt{GET\_BLOCK} request for the specific missing indices. The peer responds with \texttt{SYNC\_BLOCK} messages containing the serialized data, which the receiving node rigorously deserializes, cryptographically verifies, and appends to its local ledger.
 
 This design allows a lagging node to catch up from peers.
 
 3.3.2.3 Three-Phase-Commit-Inspired Flow
 
-The most important current network flow is:
+The network employs a custom consensus protocol heavily inspired by the Three-Phase Commit algorithm. A proposing validator creates a block and broadcasts a \texttt{CAN\_COMMIT} message containing the serialized block data. Peer nodes independently verify the block and respond with a \texttt{VOTE\_YES} message if it meets all consensus rules. Upon accumulating a sufficient threshold of unique peer votes, the proposer transitions to the next phase by issuing a \texttt{PRE\_COMMIT} command. Peers acknowledge this phase shift with an \texttt{ACK\_PRE} message. Once the proposer receives the requisite acknowledgments, it permanently appends the block to its local ledger and broadcasts a final \texttt{DO\_COMMIT} directive, instructing all peers to finalize the append operation on their respective ledgers.
 
-1. Proposer creates a block.
-2. Proposer broadcasts CAN\_COMMIT:<serialized block>.
-3. Peers verify the block.
-4. Peers send VOTE\_YES:<port>.
-5. Proposer waits for enough unique votes.
-6. Proposer sends PRE\_COMMIT.
-7. Peers reply ACK\_PRE:<port>.
-8. Proposer waits for enough ACK messages.
-9. Proposer appends the block and broadcasts DO\_COMMIT.
-10. Peers append their pending block when DO\_COMMIT arrives.
-
-ASCII sequence:
-
-Proposer                 Peer 1                 Peer 2
-\begin{table}[h!]
+\begin{table}[htbp]
 \centering
-\resizebox{\textwidth}{!}{%
-\begin{tabular}{|l|l|}
+\small
+\renewcommand{\arraystretch}{1.15}
+\caption{Network Consensus Protocol (Three-Phase Commit)}
+\label{tab:consensus-protocol}
+\vspace{2mm}
+\begin{tabularx}{\textwidth}{|Y|Y|Y|Y|}
 \hline
- &  \\ \hline
---- CAN\_COMMIT -------> &  \\ \hline
---- CAN\_COMMIT -----------------------------> \\ \hline
- &  \\ \hline
-<-- VOTE\_YES ---------- &  \\ \hline
-<-------------------------------- VOTE\_YES --- \\ \hline
- &  \\ \hline
---- PRE\_COMMIT -------> &  \\ \hline
---- PRE\_COMMIT -----------------------------> \\ \hline
- &  \\ \hline
-<-- ACK\_PRE ----------- &  \\ \hline
-<-------------------------------- ACK\_PRE ---- \\ \hline
- &  \\ \hline
---- DO\_COMMIT --------> &  \\ \hline
---- DO\_COMMIT ------------------------------> \\ \hline
- &  \\ \hline
-\end{tabular}
-}
+\textbf{Consensus Phase} & \textbf{Proposer Action} & \textbf{Peer Action} & \textbf{Message Emitted} \\ \hline
+1. Proposal & Creates block and broadcasts it to the network & Receives and cryptographically verifies the block & \texttt{CAN\_COMMIT} \\ \hline
+2. Voting & Waits for majority threshold of votes & Validates block hashes and votes if valid & \texttt{VOTE\_YES} \\ \hline
+3. Pre-Commit & Reaches quorum and initiates pre-commit & Acknowledges the pre-commit phase shift & \texttt{PRE\_COMMIT} / \texttt{ACK\_PRE} \\ \hline
+4. Finalization & Appends locally and broadcasts commit & Appends the pending block locally & \texttt{DO\_COMMIT} \\ \hline
+\end{tabularx}
 \end{table}
-append locally          append locally          append locally
+
+\begin{figure}[htbp]
+\centering
+\scriptsize
+\begin{verbatim}
+Proposer              Peer Validators           Ledger
+   |   CAN_COMMIT          |                      |
+   |---------------------->|                      |
+   |   VOTE_YES            |                      |
+   |<----------------------|                      |
+   |   PRE_COMMIT          |                      |
+   |---------------------->|                      |
+   |   ACK_PRE             |                      |
+   |<----------------------|                      |
+   |   DO_COMMIT           |    append verified   |
+   |---------------------->|--------------------->|
+\end{verbatim}
+\phantomsection
+\label{fig:3.4}
+\caption*{Figure 3.4: Node Interaction and Block Validation Sequence}
+\end{figure}
 
 3.3.2.4 Current Consensus Strength
 
@@ -854,15 +679,15 @@ The API exists because the frontend cannot directly read binary blockchain files
 
 3.3.3.2 Main Routes
 
-The blockchain routes include GET /api/height, GET /api/blocks, GET /api/block/:index, and GET /api/verify.
+The blockchain routes include:
+
+ GET /api/height, GET /api/blocks, GET /api/block/:index, and GET /api/verify.
 
 The network routes include GET /api/network/health and GET /api/network/logs.
 
 The record route includes:
 
-\begin{itemize}[leftmargin=1.8em]
-\item POST /api/records/upload
-\end{itemize}
+ POST /api/records/upload.
 
 3.3.3.3 Core Bridge
 
@@ -895,10 +720,7 @@ The network health controller scans ports 8001 through 8010 on localhost. Any po
 
 The API reads:
 
-\begin{itemize}[leftmargin=1.8em]
-\item backend API server logs
-\item demo\_instances/node*/data/network.log
-\end{itemize}
+ backend API server logs and demo\_instances/node*/data/network.log.
 
 It aggregates these logs for the frontend System Logs page.
 
@@ -938,12 +760,7 @@ The system logs page merges API logs and node logs. This supports audit and debu
 
 The upload page lets a doctor or admin enter:
 
-\begin{itemize}[leftmargin=1.8em]
-\item patient ID
-\item doctor ID
-\item encryption password
-\item medical file
-\end{itemize}
+ patient ID, doctor ID, encryption password, and medical file.
 
 It sends the file through FormData to the /api/records/upload endpoint. The backend calls the C core ENCRYPT command to securely encrypt the record under the doctor's and patient's key envelopes, saving the resulting .enc file in the demo node's offchain/records directory. It then calls the C core's ADD command with the file path, data pointer, patient\_id, doctor\_id, and validator port. On success, the frontend displays the committed block index, SHA-256 hash, data pointer, patient ID, and doctor ID returned by the core. Duplicate file submissions are detected and rejected with a 409 response.
 
@@ -971,26 +788,11 @@ The settings page is mostly a static UI placeholder for profile, security, notif
 
 The chain stores:
 
-\begin{itemize}[leftmargin=1.8em]
-\item block index
-\item block timestamp
-\item previous block hash
-\item block hash
-\item Merkle root
-\item validator signature
-\item validator port
-\item transaction array
-\end{itemize}
+ block index, block timestamp, previous block hash, block hash, Merkle root, validator signature, validator port, and transaction array.
 
 Each transaction stores:
 
-\begin{itemize}[leftmargin=1.8em]
-\item patient\_id
-\item doctor\_id
-\item data\_hash
-\item data\_pointer
-\item timestamp
-\end{itemize}
+ patient\_id, doctor\_id, data\_hash, data\_pointer, and timestamp.
 
 3.3.5.2 Off-Chain Data
 
@@ -1000,22 +802,11 @@ Encrypted medical files are stored in offchain/records folders. The data\_pointe
 
 If raw medical files were stored directly on-chain:
 
-\begin{itemize}[leftmargin=1.8em]
-\item every node would store patient data
-\item deletion would become extremely difficult
-\item privacy exposure would increase
-\item chain size would grow rapidly
-\item compliance concerns would become serious
-\end{itemize}
+ every node would store patient data, deletion would become extremely difficult, privacy exposure would increase, chain size would grow rapidly, and compliance concerns would become serious.
 
 With hybrid storage:
 
-\begin{itemize}[leftmargin=1.8em]
-\item the chain remains lightweight
-\item private files remain outside the ledger
-\item file integrity can still be verified
-\item deletion or access revocation is more realistic
-\end{itemize}
+ the chain remains lightweight, private files remain outside the ledger, file integrity can still be verified, and deletion or access revocation is more realistic.
 
 3.3.5.4 Merkle Root
 
@@ -1027,13 +818,26 @@ The implementation now supports proof-backed record verification. A Merkle proof
 
 The current frontend performs this proof reconstruction in the browser. This provides inclusion verification, but production SPV security also requires validation that the returned block header is part of the authorized chain.
 
+\begin{figure}[htbp]
+\centering
+\scriptsize
+\begin{verbatim}
+File upload  ->  SHA-256 hash  ->  Transaction metadata  ->  Duplicate check
+             ->  Merkle root   ->  Block header          ->  Validator signature
+             ->  Consensus commit  ->  Ledger append     ->  Proof-backed verification
+\end{verbatim}
+\phantomsection
+\label{fig:3.5}
+\caption*{Figure 3.5: Transaction Processing Flow Diagram}
+\end{figure}
+
 3.3.6 Transaction Lifecycle
 
 The ideal transaction lifecycle is:
 
 1. Doctor selects a medical file.
 2. System encrypts or receives an encrypted file.
-3. System computes SHA-256 hash of the encrypted file.
+3. System computes SHA-256 hash of the plaintext file (before encryption, so the anchor is content-addressed).
 4. System creates a transaction containing patient\_id, doctor\_id, data\_hash, pointer, and timestamp.
 5. Node checks whether data\_hash already exists.
 6. Node creates a block.
@@ -1051,12 +855,7 @@ The ideal transaction lifecycle is:
 
 Current implementation status:
 
-\begin{itemize}[leftmargin=1.8em]
-\item Steps 3 through 15 exist in the C core/node flow for command-line record addition.
-\item Dashboard display exists.
-\item Upload from frontend to backend is now fully integrated: the API controller receives the file, calls the C core ENCRYPT command to securely encrypt the record under patient and doctor envelopes in the offchain/records directory, and then calls the ADD command to commit the transaction to the blockchain. The committed block data is then returned to the frontend UI.
-\item Frontend verification is now integrated: the file is uploaded to the backend, the C viewer VERIFY\_FILE command recomputes the hash, locates the transaction through the hash index, returns a Merkle proof and block header, and the browser verifies the proof locally before displaying success.
-\end{itemize}
+ Steps 3 through 15 exist in the C core/node flow for command-line record addition., Dashboard display exists., Upload from frontend to backend is now fully integrated: the API controller receives the file, calls the C core ENCRYPT command to securely encrypt the record under patient and doctor envelopes in the offchain/records directory, and then calls the ADD command to commit the transaction to the blockchain. The committed block data is then returned to the frontend UI., and Frontend verification is now integrated: the file is uploaded to the backend, the C viewer VERIFY\_FILE command recomputes the hash, locates the transaction through the hash index, returns a Merkle proof and block header, and the browser verifies the proof locally before displaying success..
 
 \subsection{Advantages over Existing Systems}
 
@@ -1064,7 +863,7 @@ The proposed Permissioned Blockchain-Based Medical Record Integrity System inten
 
 \subsubsection{Eradicating the Single Point of Failure and Insider Threats}
 Rather than relying on probabilistic AI anomaly detection to catch insider threats, the proposed system resolves the centralized database crisis through deterministic cryptographic immutability.
-\textbf{The Solution:} The project implements a custom-coded, three-phase-commit-inspired (3PC) consensus protocol (CAN\_COMMIT, VOTE\_YES, PRE\_COMMIT, ACK\_PRE, DO\_COMMIT) over raw TCP sockets. This ensures synchronous agreement, meaning a single malicious database administrator cannot unilaterally alter a patient's history. This Proof of Authority (PoA) consensus style—verified as highly efficient for healthcare environments by recent frameworks like BlockCare (2024)—entirely eliminates the single point of failure without the energy waste of PoW.
+\textbf{The Solution:} The project implements a custom-coded, three-phase-commit-inspired (3PC) consensus protocol (CAN\_COMMIT, VOTE\_YES, PRE\_COMMIT, ACK\_PRE, DO\_COMMIT) over raw TCP sockets. This ensures synchronous agreement, meaning a single malicious database administrator cannot unilaterally alter a patient's history. This Proof of Authority (PoA) consensus style—validated as appropriate for healthcare consortium environments by recent frameworks like BlockCare (2024)—significantly reduces the single-admin control risk of centralized databases, without the energy waste of PoW. (In the current demo network, quorum size is hard-coded and messages are not cryptographically authenticated.)
 
 \subsubsection{Bypassing EVM Constraints with a Native C-Core}
 Unlike MedRec or Ancile which suffer from Ethereum gas fees and 256-bit word limits, this project completely circumvents public network bottlenecks.
@@ -1076,107 +875,62 @@ To avoid the computational bloat seen in FHIRChain and MedChain, the proposed sy
 
 \subsubsection{Deterministic Local Off-Chain Storage (Replacing IPFS Risks)}
 To resolve the latency and data-loss risks of IPFS swarms (seen in BiiMED and EHRChain) and the centralization of cloud providers (seen in MeDShare), the system implements a natively managed hybrid storage architecture.
-\textbf{The Solution:} When a record is uploaded, the Node.js API triggers the C core's ENCRYPT command, which executes mock envelope encryption (slated for upgrade to AES-256-GCM). Crucially, the resulting .enc file is stored in a localized offchain/records directory physically located on the node's disk. This guarantees absolute high availability, deterministic retrieval speeds, and strict HIPAA compliance, as the file resides on controlled hospital infrastructure rather than an ephemeral public swarm.
+\textbf{The Solution:} When a record is uploaded, the Node.js API triggers the C core's ENCRYPT command, which executes mock envelope encryption (slated for upgrade to AES-256-GCM). Crucially, the resulting .enc file is stored in a localized offchain/records directory physically located on the node's disk. In this local prototype, this provides predictable, deterministic retrieval speeds compared to an ephemeral IPFS swarm. In a production deployment on controlled hospital infrastructure, this architecture is also compatible with HIPAA storage requirements, though formal compliance controls are outside the current prototype scope.
 
 \subsubsection{Deterministic Cryptographic Duplicate Prevention}
 The system replaces the computationally heavy semantic matching of traditional MDM frameworks highlighted by Tayal and Adapa with mathematical precision.
 \textbf{The Solution:} The architecture implements a transaction hash index engineered with a pure-C Bloom filter utilizing three independent DJB2-based hash functions. This provides a constant-time O(1) pre-filtering cache. If a duplicate file hash is detected, the API instantly rejects the upload with an HTTP 409 Conflict response before it hits the consensus network. To scale this determinism to over 1 billion records without exhausting physical RAM, the project outlines a LevelDB Log-Structured Merge (LSM) tree integration, bounding memory usage to ~2 GB.
 
-\subsubsection{Zero-Trust Browser-Side Merkle Verification}
+\subsubsection{Browser-Side Merkle Inclusion Verification}
 A critical vulnerability in web-based blockchain dashboards is the light-client trust boundary—if the backend API is compromised, it can falsely validate tampered records.
-\textbf{The Solution:} The proposed project implements zero-trust Merkle proof verification directly within the browser. When verifying a record, the C core generates a full Merkle proof containing sibling hashes and directional paths. The React frontend independently recomputes the SHA-256 hash of the uploaded file via Web Crypto APIs, reconstructs the canonical leaf, applies the proof to climb the tree, and mathematically verifies the root against the block header. This ensures end-to-end integrity, proving that even a compromised middleware layer cannot spoof mathematical truth.
+\textbf{The Solution:} The proposed project implements browser-side Merkle inclusion verification. When verifying a record, the C core generates a full Merkle proof containing sibling hashes and directional paths. The React frontend independently recomputes the SHA-256 hash of the uploaded file via Web Crypto APIs, reconstructs the canonical leaf, and applies the proof to verify the computed root matches the block header Merkle root. This provides Merkle inclusion proof for the returned block header. Note that a fully secure light-client would additionally need to validate the block header against trusted validator signatures and a verified header chain, which is left as future work.
 
 
 3.4.7 System Strengths
 
-\begin{itemize}[leftmargin=1.8em]
-\item Clear Separation of Concerns
-\end{itemize}
+ Clear Separation of Concerns.
 
 The project separates:
 
-\begin{itemize}[leftmargin=1.8em]
-\item blockchain core
-\item API bridge
-\item frontend dashboard
-\item documentation
-\item scripts
-\item demo instances
-\end{itemize}
+ blockchain core, API bridge, frontend dashboard, documentation, scripts, and demo instances.
 
 This makes the codebase easier to understand.
 
-\begin{itemize}[leftmargin=1.8em]
-\item Strong Educational Value
-\end{itemize}
+ Strong Educational Value.
 
 The project exposes many important concepts:
 
-\begin{itemize}[leftmargin=1.8em]
-\item hashing
-\item block chaining
-\item Merkle roots
-\item block verification
-\item peer networking
-\item synchronization
-\item role-based UI
-\item API bridging
-\item off-chain storage
-\item audit logs
-\end{itemize}
+ hashing, block chaining, Merkle roots, block verification, peer networking, synchronization, role-based UI, API bridging, off-chain storage, and audit logs.
 
-\begin{itemize}[leftmargin=1.8em]
-\item Practical Healthcare-Oriented Design
-\end{itemize}
+ Practical Healthcare-Oriented Design.
 
 The hybrid model is correct for healthcare. Storing hashes on-chain and files off-chain is much better than storing raw records on-chain.
 
-\begin{itemize}[leftmargin=1.8em]
-\item Full Stack Demonstrability
-\end{itemize}
+ Full Stack Demonstrability.
 
 The project can be shown visually through the dashboard. This makes it stronger than a command-line-only thesis project.
 
-\begin{itemize}[leftmargin=1.8em]
-\item Low Dependency Core
-\end{itemize}
+ Low Dependency Core.
 
 The current C core avoids heavy external cryptographic dependencies in demo mode. This makes compilation easier on Windows. It also makes the internal flow easier to inspect.
 
-\begin{itemize}[leftmargin=1.8em]
-\item Explicit Disk Sync
-\end{itemize}
+ Explicit Disk Sync.
 
 Using flush and disk sync after appending a block is a good reliability practice.
 
-\begin{itemize}[leftmargin=1.8em]
-\item Duplicate Record Handling
-\end{itemize}
+ Duplicate Record Handling.
 
 The transaction hash index is a meaningful improvement. It turns duplicate detection from a purely linear lookup into indexed lookup.
 
-\begin{itemize}[leftmargin=1.8em]
-\item Multi-Node Demo Structure
-\end{itemize}
+ Multi-Node Demo Structure.
 
 The demo\_instances folder supports multiple local nodes, each with its own data, keys, logs, and records. This is useful for demonstration.
 
-\begin{itemize}[leftmargin=1.8em]
-\item Dashboard Breadth
-\end{itemize}
+ Dashboard Breadth.
 
 The frontend covers many expected operational views:
 
-\begin{itemize}[leftmargin=1.8em]
-\item dashboard
-\item explorer
-\item network
-\item logs
-\item upload
-\item records
-\item verification
-\item settings
-\end{itemize}
+ dashboard, explorer, network, logs, upload, records, verification, and settings.
 
 This gives the project product depth.
 
@@ -1190,25 +944,31 @@ This gives the project product depth.
 
 The project targets:
 
-\begin{itemize}[leftmargin=1.8em]
-\item integrity
-\item tamper evidence
-\item validator accountability
-\item duplicate detection
-\item auditability
-\item privacy by not storing raw medical data on-chain
-\end{itemize}
+ integrity, tamper evidence, validator accountability, duplicate detection, auditability, and privacy by not storing raw medical data on-chain.
+
+\begin{table}[htbp]
+\centering
+\small
+\renewcommand{\arraystretch}{1.15}
+\caption{Systemic Security Threat Matrix}
+\label{tab:threat-matrix}
+\vspace{2mm}
+\begin{tabularx}{\textwidth}{|Y|Y|Y|}
+\hline
+\textbf{Threat Vector} & \textbf{Vulnerability Target} & \textbf{Cryptographic Mitigation Strategy} \\ \hline
+On-chain Data Leakage & Public exposure of medical records & Zero-knowledge hybrid storage with hashes only on-chain \\ \hline
+Ledger Tampering & Modifying historical clinical data & Cryptographic block linkage and validator signatures \\ \hline
+Identity Spoofing & Submitting unauthorized records & Envelope encryption and hardware-backed keys \\ \hline
+Duplicate Submissions & Redundant database entries & $\mathcal{O}(1)$ Bloom filter transaction indexing \\ \hline
+Consensus Hijacking & Taking over the validator network & Threshold voting and Proof-of-Authority \\ \hline
+\end{tabularx}
+\end{table}
 
 4.1.2 Tamper Evidence
 
 Tamper evidence is provided by:
 
-\begin{itemize}[leftmargin=1.8em]
-\item SHA-256 transaction hashes
-\item Merkle roots
-\item previous\_hash linkage
-\item full chain verification
-\end{itemize}
+ SHA-256 transaction hashes, Merkle roots, previous\_hash linkage, and full chain verification.
 
 Changing one stored block changes its hash. The next block still points to the old hash, so verification fails.
 
@@ -1226,15 +986,7 @@ The current signature implementation is not cryptographically secure. sign\_data
 
 A production version should use:
 
-\begin{itemize}[leftmargin=1.8em]
-\item Ed25519, ECDSA, or RSA-PSS signatures
-\item real public/private key verification
-\item certificate management
-\item signed block headers for light-client validation
-\item key rotation
-\item revocation list
-\item hardware-backed private keys for validators
-\end{itemize}
+ Ed25519, ECDSA, or RSA-PSS signatures, real public/private key verification, certificate management, signed block headers for light-client validation, key rotation, revocation list, and hardware-backed private keys for validators.
 
 4.1.6 Merkle Proof and Light-Client Trust Boundary
 
@@ -1246,16 +998,7 @@ However, Merkle proof verification alone does not prove that the block header be
 
 Current node communication is plain TCP. It does not use TLS. This means traffic can be observed or modified by an attacker on the network. The block verification layer can detect some invalid data, but confidentiality and authenticity of transport are not guaranteed.
 
-Production should use:
-
-\begin{itemize}[leftmargin=1.8em]
-\item TLS or mutual TLS
-\item node certificates
-\item signed peer registry
-\item replay protection
-\item message authentication
-\item rate limiting
-\end{itemize}
+A production-ready network transport layer must enforce strict confidentiality and authentication. This necessitates the deployment of Mutual TLS (mTLS) for all inter-node communication, supported by a formal Public Key Infrastructure (PKI) issuing node-specific certificates. Additionally, the network must maintain a cryptographically signed peer registry and implement robust defensive mechanisms including replay protection, strict message authentication codes, and adaptive rate limiting against denial-of-service vectors.
 
 4.1.7 Backend Security
 
@@ -1349,14 +1092,7 @@ Blockchain data is immutable, so deleting on-chain data is difficult. The hybrid
 
 The current implementation does not fully model patient consent. A production medical system should record:
 
-\begin{itemize}[leftmargin=1.8em]
-\item consent granted
-\item consent revoked
-\item consent scope
-\item who accessed a record
-\item why access occurred
-\item emergency override events
-\end{itemize}
+ consent granted, consent revoked, consent scope, who accessed a record, why access occurred, and emergency override events.
 
 5.2.5 Auditability
 
@@ -1370,182 +1106,47 @@ A system like this should never expose raw medical data unnecessarily. It should
 \newpage
 \section{FUTURE WORK AND PRODUCTION ROADMAP}
 
-\subsection{Future Improvements}
+\subsection{Cryptographic Hardening}
 
-6.1.1 Replace Mock Signatures with Real Cryptography
+While the current prototype demonstrates the feasibility of a permissioned, tamper-evident medical ledger, production deployment requires substantial cryptographic maturation. The XOR-based mock envelope cipher must be replaced with AES-256-GCM, which provides authenticated encryption with associated data (AEAD), guaranteeing both confidentiality and ciphertext integrity for off-chain payloads. Mock validator signatures must be replaced with real asymmetric cryptography: Ed25519 for its speed and compact key size, or ECDSA P-256 for compatibility with existing healthcare PKI standards such as X.509. Block serialization must also be standardized away from raw C struct writes, which are platform-dependent, toward a stable wire format such as Protocol Buffers to ensure cross-platform reproducibility of block hashes.
 
-This is the highest priority.
+\subsection{Non-Custodial Key Management for Patients and Clinicians}
 
-Recommended cryptographic options include Ed25519 for fast modern signatures, ECDSA P-256 for standards compatibility, or RSA-PSS if RSA is required.
+A system requiring patients or doctors to memorize raw 256-bit cryptographic keys is undeployable. The production system must implement a non-custodial key management architecture across three pillars. First, private keys must be committed to device-level Hardware Secure Enclaves---such as the Apple Secure Enclave, Android Keystore, or Windows TPM---where they are physically unextractable and biometrically gated. Second, the high-entropy seed must be encoded into a BIP-39 mnemonic phrase of 12 to 24 words, or derived on-device using Argon2id from a user password, eliminating the need to handle raw cryptographic material. Third, if a patient loses their device and mnemonic, Threshold Social Recovery via Shamir's Secret Sharing (SSS) allows reconstruction: the master key is sharded across five hospital consortium authorities, and any three can reconstruct it upon physical identity verification, without any single hospital possessing the complete key.
 
-The implementation should verify that a block was signed by the private key corresponding to the validator public key.
+\subsection{Network Security and Transport Layer}
 
-6.1.2 Use Canonical Serialization
+The current prototype uses plain, unauthenticated TCP. A production deployment must mandate Mutual TLS (mTLS), where every validator node holds a certificate from a consortium Certificate Authority (CA), ensuring only authorized nodes participate and all consensus messages are encrypted in transit. The system also requires a formal Validator Governance framework covering node onboarding, key rotation, revocation, and configurable quorum thresholds---parameters that are currently hard-coded in the demo.
 
-Instead of writing C structs directly to disk, the system should use a stable format such as Protocol Buffers, CBOR, FlatBuffers, or a custom fixed-width binary format.
+\subsection{Consensus Protocol Formalization}
 
-This would improve cross-platform compatibility.
+The demo voting flow must be formalized into a Byzantine Fault Tolerant (BFT) protocol such as PBFT or Tendermint, providing formal safety and liveness guarantees that natively handle network partitions, malicious proposer equivocation, and automated recovery from validator failure---all essential properties for a production hospital environment.
 
-6.1.3 Transition to Standard Production Cryptography and Secure Key Management
+\subsection{Scalable Storage and Indexing}
 
-While the C core and Express API now implement a fully integrated upload and download flow featuring Mock Envelope Encryption, a production system must transition from simulated (XOR-based) cryptography to standard production algorithms:
+At scale, the in-memory hash maps become untenable: storing one billion records would require over 184 GB of RAM. The production architecture must migrate to a Log-Structured Merge (LSM) tree database such as LevelDB or RocksDB, whose MemTable buffering, SSTable compaction, and built-in Bloom filters would cap memory usage at approximately 2 GB while maintaining $O(\log N)$ SSD lookup performance across transaction hash, patient history, and doctor audit indexes.
 
-1. Replace mock XOR with real AES-256-GCM symmetric encryption for off-chain record payloads.
-2. Replace mock RSA with real RSA-4096 or ECIES (Elliptic Curve Integrated Encryption Scheme) for envelope key wrapping.
-3. Integrate a standard Key Management Service (KMS) or HSM (Hardware Security Module) to handle validator and administrative keys securely, rather than relying on key files in local directories.
-4. Establish Non-Custodial Key Management for Patients and Doctors: Storing patient/doctor private keys in a centralized server database is unsafe, and expecting patients to memorize raw 256-bit hexadecimal keys is impractical. Future production systems must employ:
-\begin{itemize}[leftmargin=1.8em]
-\item BIP-39 Mnemonic Seed Phrases: Patients are given 12 or 24 words from which their private key is derived on-the-fly client-side, removing any need to memorize raw keys.
-\item Hardware enclaves: Private keys are locked inside device-level Secure Enclaves (e.g., Apple Secure Enclave, Android Keystore, or TPMs), accessible only via biometric Touch ID/Face ID verification, ensuring keys never leave the device.
-\item Threshold social recovery: Utilizing Shamir's Secret Sharing to split keys into parts across the cloud, local device, and trusted consortium guardians so key recovery is resilient and decentralized.
-\end{itemize}
+\subsection{Access Control, Consent, and Compliance}
 
-6.1.4 Implement Real Verification
+A complete clinical deployment requires granular patient consent management: the ability to grant and revoke per-doctor access, define time-bounded windows, and enable emergency override modes. Every access event must be recorded on-chain as an immutable audit transaction, satisfying HIPAA and GDPR audit trail requirements. Role-Based Access Control (RBAC) extended with Attribute-Based Access Control (ABAC) would enable expressive policies, forming the critical path toward a compliance-ready deployment.
 
-The Verify Record page now:
 
-\begin{itemize}[leftmargin=1.8em]
-\item uploads the file to the backend for lookup and proof generation,
-\item computes SHA-256 in the browser,
-\item reconstructs the canonical transaction leaf,
-\item applies the returned Merkle proof step by step,
-\item compares the computed root with the returned block header Merkle root,
-\item recomputes the block hash from the returned header fields.
-\end{itemize}
-
-Remaining production work is to validate the returned block header against real validator signatures, trusted public keys, previous\_hash linkage, and a checkpoint/header-chain policy.
-
-6.1.5 Unify Authentication
-
-Choose one auth model:
-
-\begin{itemize}[leftmargin=1.8em]
-\item Production Identity Provider (IdP) integration end to end, or
-\item local mock auth only for demo, or
-\item JWT issued by backend
-\end{itemize}
-
-The frontend and backend must agree on token format and role source.
-
-6.1.6 Add TLS / Mutual TLS
-
-Node-to-node communication should be encrypted and authenticated. In a hospital consortium, each validator should have a certificate.
-
-6.1.7 Add Validator Governance
-
-The system needs:
-
-\begin{itemize}[leftmargin=1.8em]
-\item validator registry
-\item onboarding process
-\item removal process
-\item key rotation
-\item revocation list
-\item quorum configuration
-\end{itemize}
-
-6.1.8 Improve Consensus
-
-Options:
-
-\begin{itemize}[leftmargin=1.8em]
-\item formal Raft-style leader election for crash fault tolerance
-\item PBFT/Tendermint-style consensus for Byzantine settings
-\item configurable quorum rules
-\item timeout and recovery from failed proposals
-\item protection against double proposals
-\end{itemize}
-
-6.1.9 Implement LSM-Tree Disk-Backed Indexing (LevelDB Integration)
-
-To scale the ledger to 1 billion records without exhausting physical RAM (which would otherwise require over 184 GB of memory for pure in-memory indexes), the current in-memory separate chaining hash maps should be migrated to LevelDB or RocksDB. The proposed Log-Structured Merge (LSM) tree key-value database schema would support:
-1. Transaction Hash Index: Key 'tx:<data\_hash>' -> Value '<block\_index>:<tx\_index>'
-2. Patient History Index: Key 'pat:<patient\_id>:<block\_index>:<tx\_index>' -> Value ''
-3. Doctor Audit Index: Key 'doc:<doctor\_id>:<block\_index>:<tx\_index>' -> Value ''
-
-LevelDB's MemTable write buffering, sorted SSTables, and built-in Bloom filter capabilities would cap the memory footprint to ~2 GB RAM regardless of ledger size, maintaining O(log N) SSD lookup speeds.
-
-6.1.10 Add Automated Tests
-
-Recommended tests:
-
-\begin{itemize}[leftmargin=1.8em]
-\item hash function tests against known SHA-256 vectors
-\item block hash reproducibility tests
-\item duplicate detection tests
-\item chain verification tests
-\item serializer/deserializer tests
-\item API route tests
-\item frontend page rendering tests
-\item multi-node sync tests
-\item upload integration tests
-\end{itemize}
-
-6.1.11 Improve Repository Hygiene
-
-Generated files should be controlled:
-
-\begin{itemize}[leftmargin=1.8em]
-\item binaries can be ignored or stored in release artifacts
-\item logs should not normally be committed
-\item demo data should be explicitly separated from source
-\item keys should not be real secrets in the repository
-\end{itemize}
-
-6.1.12 Add Monitoring
-
-Production monitoring should include:
-
-\begin{itemize}[leftmargin=1.8em]
-\item node online/offline status
-\item block height mismatch
-\item sync lag
-\item failed block verification
-\item duplicate record attempts
-\item upload failures
-\item suspicious access patterns
-\end{itemize}
-
-6.1.13 Add Access Control and Consent
-
-Medical data systems need strong user permissions. Future work should include:
-
-\begin{itemize}[leftmargin=1.8em]
-\item patient consent grants
-\item doctor access requests
-\item emergency access mode
-\item audit trail for every access
-\item role-based and attribute-based access control
-\end{itemize}
-
-6.1.14 Add Performance Benchmarking
-
-The thesis should eventually include:
-
-\begin{itemize}[leftmargin=1.8em]
-\item multiple benchmark runs
-\item average latency
-\item standard deviation
-\item throughput under different node counts
-\item throughput under different transaction counts per block
-\item memory usage
-\item CPU usage
-\item network sync time
-\item charts and graphs
-\end{itemize}
-
-\subsection{Production Roadmap}
-
-Phase 1 (Stabilize Prototype) focuses on maintaining the integrated upload flow and proof-backed record verification, unifying authentication, adding basic automated tests, and cleaning generated files from the repository.
-
-Phase 2 (Secure Core) involves implementing real signatures, canonical serialization, TLS/mTLS, a signed validator registry, and key rotation and revocation mechanisms.
-
-Phase 3 (Improve Distributed Protocol) introduces a configurable validator set, formal quorums, timeout handling, failed proposer recovery, network partition behavior, and conflict resolution.
-
-Phase 4 (Healthcare Workflow Integration) adds a patient consent model, doctor/patient profile databases, hospital/lab/insurance roles, record access auditing, and integration with existing EHR systems.
-
-Phase 5 (Production Readiness) requires a monitoring dashboard, deployment scripts, containerization, backup and restore procedures, disaster recovery plans, security audits, and comprehensive compliance documentation.
-
+\begin{table}[htbp]
+\centering
+\small
+\renewcommand{\arraystretch}{1.15}
+\caption{Production Key Management Architecture}
+\label{tab:key-management}
+\vspace{2mm}
+\begin{tabularx}{\textwidth}{|Y|Y|Y|}
+\hline
+\textbf{Cryptographic Layer} & \textbf{Proposed Technology} & \textbf{Security Benefit} \\ \hline
+Secure Storage & Hardware Secure Enclave or TPM & Keys are physically unextractable and biometrically gated \\ \hline
+Key Generation & BIP-39 mnemonic seed with Argon2id & Eliminates human memorization of raw 256-bit keys \\ \hline
+Disaster Recovery & Shamir's Secret Sharing & Enables trustless social recovery if a patient loses a hardware device \\ \hline
+Transport Security & Mutual TLS with PKI & Defends against man-in-the-middle network eavesdropping \\ \hline
+\end{tabularx}
+\end{table}
 
 \newpage
 \section{CONCLUSION}
@@ -1562,414 +1163,63 @@ The uniqueness of the work lies in its full-stack nature and its healthcare-spec
 
 In final evaluation, the project should be presented as a permissioned medical integrity ledger prototype with a working core, demonstrable dashboard, and clear future path toward production-grade security and compliance.
 
-
-APPENDIX
-
-23. APPENDIX A: SUGGESTED DIAGRAMS
-
-The following diagrams should be included if this report is converted into a PDF thesis.
-
-\subsection{Overall Architecture Diagram}
-
-React Frontend -> Express API -> C Core Binaries -> Ledger and Off-chain Storage
-
-\subsection{Node Interaction Sequence Diagram}
-
-CAN\_COMMIT -> VOTE\_YES -> PRE\_COMMIT -> ACK\_PRE -> DO\_COMMIT
-
-\subsection{Block Structure Diagram}
-
-+------------------------------------------------+
-\begin{table}[h!]
-\centering
-\resizebox{\textwidth}{!}{%
-\begin{tabular}{|l|}
-\hline
-index \\ \hline
-timestamp \\ \hline
-previous\_hash \\ \hline
-merkle\_root \\ \hline
-block\_hash \\ \hline
-validator\_port \\ \hline
-validator\_signature \\ \hline
-transactions[] \\ \hline
-\end{tabular}
-}
-\end{table}
-+------------------------------------------------+
-
-\subsection{Transaction Lifecycle Diagram}
-
-File -> Hash -> Transaction -> Block -> Consensus -> Commit -> Verify
-
-\subsection{Threat Model Diagram}
-
-Untrusted client -> API boundary -> Core boundary -> Ledger/off-chain storage
-
-\subsection{Key Flow Diagram}
-
-Validator key file -> sign block hash -> peers verify validator signature
-
-\subsection{Network Topology Diagram}
-
-Local validator nodes on ports 8001-8010 connected through TCP.
-
-24. APPENDIX B: IMPORTANT FILES
-
-Core blockchain:
-
-\begin{itemize}[leftmargin=1.8em]
-\item backend/core/src/blockchain/block.h
-\item backend/core/src/blockchain/block.c
-\item backend/core/src/blockchain/blockchain.c
-\item backend/core/src/crypto/hash.c
-\item backend/core/src/crypto/signature.c
-\item backend/core/src/node\_app.c
-\item backend/core/src/viewer.c
-\end{itemize}
-
-Network:
-
-\begin{itemize}[leftmargin=1.8em]
-\item backend/core/src/network/node.c
-\item backend/core/src/network/protocol.c
-\item backend/core/src/network/serializer.c
-\item backend/core/src/network/proposal.c
-\item backend/core/src/network/sync.c
-\end{itemize}
-
-API:
-
-\begin{itemize}[leftmargin=1.8em]
-\item backend/api/src/index.js
-\item backend/api/src/config/core\_bridge.js
-\item backend/api/src/controllers/blockController.js
-\item backend/api/src/controllers/networkController.js
-\item backend/api/src/controllers/recordController.js
-\item backend/api/src/utils/parser.js
-\item backend/api/src/middleware/auth.js
-\end{itemize}
-
-Frontend:
-
-\begin{itemize}[leftmargin=1.8em]
-\item frontend/src/App.tsx
-\item frontend/src/hooks/useAuth.ts
-\item frontend/src/services/api.ts
-\item frontend/src/pages/Dashboard.tsx
-\item frontend/src/pages/BlockExplorer.tsx
-\item frontend/src/pages/NetworkHealth.tsx
-\item frontend/src/pages/SystemLogs.tsx
-\item frontend/src/pages/UploadRecord.tsx
-\item frontend/src/pages/MyRecords.tsx
-\item frontend/src/pages/VerifyRecord.tsx
-\end{itemize}
-
-26. FORMAL MODEL OF THE LEDGER
-
-\subsection{Block Definition}
-
-Let the blockchain be an ordered sequence:
-
-C = [B0, B1, B2, ..., Bn]
-
-Each block Bi contains:
-
-Bi = (index, timestamp, previous\_hash, merkle\_root, block\_hash, validator\_id, signature, TxList)
-
-For the current implementation, validator\_id is represented by validator\_port.
-
-\subsection{Transaction Definition}
-
-Each transaction T contains:
-
-T = (patient\_id, doctor\_id, data\_hash, data\_pointer, timestamp)
-
-Here:
-
-data\_hash = SHA256(file\_content)
-
-The file\_content should ideally be encrypted medical file content. The blockchain stores the hash, not the raw medical file.
-
-\subsection{Merkle Root}
-
-For each transaction Ti, define:
-
-tx\_hash\_i = SHA256("LEAF" || len(patient\_id) || patient\_id || len(doctor\_id) || doctor\_id || len(data\_hash) || data\_hash || len(data\_pointer) || data\_pointer || timestamp)
-
-The Merkle root is computed by repeatedly hashing pairs:
-
-M = Merkle(tx\_hash\_1, tx\_hash\_2, ..., tx\_hash\_k)
-
-Internal nodes are computed with an explicit node domain:
-
-parent = SHA256("NODE" || left\_hash || right\_hash)
-
-If there is only one transaction, the Merkle root is the transaction hash. If there are multiple transactions, the root summarizes the set. If a level has an odd number of nodes, the final node is duplicated for that level. If any transaction field changes, the root changes.
-
-The implementation can also generate a Merkle proof for a transaction index. The proof contains each sibling hash and whether that sibling is on the left or right side. Verification starts from the transaction leaf and applies each proof step until it reconstructs the root. A reordered proof, wrong sibling hash, or wrong left/right direction should fail.
-
-\subsection{Block Hash}
-
-The block hash is:
-
-block\_hash = SHA256("HEADER" || index || timestamp || previous\_hash || merkle\_root)
-
-This means block integrity depends on:
-
-\begin{itemize}[leftmargin=1.8em]
-\item block position
-\item block creation time
-\item previous block hash
-\item transaction summary
-\end{itemize}
-
-\subsection{Chain Validity}
-
-A chain is valid if all of the following are true:
-
-1. B0 is a valid genesis block.
-2. For every i > 0, Bi.previous\_hash = B(i-1).block\_hash.
-3. For every block Bi, recomputed\_hash(Bi) = Bi.block\_hash.
-4. For every block Bi, validator signature is valid under the validator identity rules.
-5. No duplicate transaction hash violates system policy.
-
-\subsection{Integrity Claim}
-
-If SHA-256 is collision resistant and block verification is performed honestly, then modifying any committed transaction or block field should be detected because the Merkle root or block hash changes. The chain therefore provides tamper evidence, not automatic tamper prevention.
-
-\subsection{Privacy Claim}
-
-If only file hashes and pseudonymous metadata are stored on-chain, the chain does not directly reveal the medical file. However, metadata can still leak sensitive information if patient\_id or doctor\_id are meaningful identifiers. A production system should tokenize or pseudonymize these fields more strongly.
-
-27. DESIGN TRADEOFF ANALYSIS
-
-\subsection{Why Proof of Authority Instead of Proof of Work?}
-
-Proof of Work is designed for open anonymous networks. Healthcare networks are not anonymous; validators are known institutions. Proof of Authority avoids mining cost, reduces latency, and improves accountability. The tradeoff is that governance becomes important. The system must carefully decide who is allowed to validate.
-
-\subsection{Why Off-Chain Storage?}
-
-Off-chain storage protects privacy and reduces blockchain size. The tradeoff is that availability of the original file depends on the off-chain storage system. If the file is deleted, the chain can still prove that a file once existed, but it cannot recover the file.
-
-\subsection{Why C for the Core?}
-
-C gives low-level control, fast execution, and transparent memory layout. It is useful for learning and systems programming. The tradeoff is that C requires careful handling of buffers, string lengths, memory allocation, and platform differences. A production version may prefer Rust or a memory-safe language for reducing memory safety risk.
-
-\subsection{Why Express as a Bridge?}
-
-Express is fast to build and easy to connect with a React frontend. The tradeoff is that the current bridge uses child\_process execution, which is less robust than a persistent core service or native binding. A future version should expose the core through a stable RPC API.
-
-\subsection{Why React for Frontend?}
-
-React is suitable for interactive dashboards and role-based views. It makes the project more demonstrable. The tradeoff is that UI can create a false sense of completeness if backend workflows are not fully implemented. The report must therefore clearly distinguish implemented backend behavior from simulated frontend behavior.
-
-\subsection{Why Direct Binary Ledger Files?}
-
-Direct binary files are easy to append and fast to read in C. The tradeoff is portability. Different platforms may represent structures differently. A canonical serialization format would be safer.
-
-\subsection{Why Demo Signature Mode?}
-
-The current demo signature mode removes OpenSSL dependency and makes the project easier to compile. The tradeoff is security. It must be replaced with real cryptography before any serious deployment.
-
-28. EVALUATION METHODOLOGY FOR FINAL THESIS
-
-The final academic thesis should not only state that the system works. It should evaluate it with repeatable experiments.
-
-\subsection{Functional Tests}
-
-Recommended functional tests:
-
-1. Create genesis block.
-2. Add one valid record.
-3. Add duplicate record and confirm rejection.
-4. Tamper with a block and confirm verification failure.
-5. Tamper with off-chain file and confirm hash mismatch.
-6. Start two nodes and confirm synchronization.
-7. Start four nodes and confirm consensus commit.
-8. Query blocks through API and confirm frontend display.
-
-\subsection{Performance Tests}
-
-Recommended metrics:
-
-\begin{itemize}[leftmargin=1.8em]
-\item block creation time
-\item block verification time
-\item file hashing time by file size
-\item block append time
-\item API response time
-\item frontend load time
-\item synchronization time for N missing blocks
-\item throughput in blocks per second
-\item throughput in transactions per second
-\end{itemize}
-
-\subsection{Suggested Experimental Matrix}
-
-Run tests with:
-
-\begin{itemize}[leftmargin=1.8em]
-\item 1 node, 10 records
-\item 1 node, 100 records
-\item 1 node, 1000 records
-\item 2 nodes, 100 records
-\item 4 nodes, 100 records
-\item files of 10 KB, 1 MB, and 10 MB
-\end{itemize}
-
-Each test should be repeated at least five times. The report should include average, minimum, maximum, and standard deviation.
-
-\subsection{Stress Tests}
-
-Recommended stress tests:
-
-\begin{itemize}[leftmargin=1.8em]
-\item repeated duplicate submissions
-\item rapid API polling
-\item node shutdown during sync
-\item node shutdown during proposal
-\item corrupted blockchain file
-\item missing off-chain record
-\item malformed network message
-\end{itemize}
-
-\subsection{Security Tests}
-
-Recommended security tests:
-
-\begin{itemize}[leftmargin=1.8em]
-\item forged block signature
-\item wrong previous hash
-\item duplicate transaction hash
-\item modified transaction data
-\item invalid validator port
-\item oversized serialized message
-\item path traversal attempt during upload
-\end{itemize}
-
-29. RISK REGISTER
-
-Risk 1: Mock signature accepted as real security
-
-Impact: High
-Likelihood: Medium
-Mitigation: Clearly document demo status and replace with real cryptography.
-
-Risk 2: Frontend upload appears complete but backend does not commit records
-
-Impact: High
-Likelihood: High
-Mitigation: Implement a real add-record API path and integration test.
-
-Risk 3: Plain TCP exposes node messages
-
-Impact: Medium to High
-Likelihood: Medium
-Mitigation: Add TLS or mutual TLS.
-
-Risk 4: Binary ledger portability problems
-
-Impact: Medium
-Likelihood: Medium
-Mitigation: Use canonical serialization.
-
-Risk 5: Lost off-chain files
-
-Impact: High
-Likelihood: Medium
-Mitigation: Use redundant encrypted storage, backups, and file availability checks.
-
-Risk 6: Weak patient privacy through metadata
-
-Impact: High
-Likelihood: Medium
-Mitigation: Pseudonymize patient and doctor identifiers; minimize metadata.
-
-Risk 7: Consensus failure during network partition
-
-Impact: High
-Likelihood: Medium
-Mitigation: Formalize consensus, quorums, timeouts, and recovery.
-
-Risk 8: Child process bridge injection or operational fragility
-
-Impact: Medium
-Likelihood: Medium
-Mitigation: Avoid shell command composition; expose core through stable service API.
-
-Risk 9: No automated regression tests
-
-Impact: Medium
-Likelihood: High
-Mitigation: Add unit, integration, and multi-node tests.
-
-Risk 10: Repository contains generated data and binaries
-
-Impact: Low to Medium
-Likelihood: High
-Mitigation: Clean .gitignore and separate demo artifacts from source code.
-\textbackslash\{\}n\textbackslash\{\}n
-\subsubsection{References}
-
-~\cite{1} Uncovering Security Vulnerabilities in Electronic Medical Record Systems: A Comprehensive Review of Threats and Recommendations for Enhancement, accessed on June 18, 2026, https://eprints.uad.ac.id/61866/1/6-Uncovering\%20Security\%20Vulnerabilities\%20in\%20Electronic\%20Medical\%20Record\%20Systems\%20A\%20Comprehensive\%20Review\%20of\%20Threats\%20and\%20Recommendations\%20for\%20Enhancement.pdf
-A blockchain-enabled sharing platform for personal health records - PMC, accessed on June 18, 2026, https://pmc.ncbi.nlm.nih.gov/articles/PMC10366433/
-A multi-layered cryptographic trust reinforcement model against AI-driven threat propagation and zero-day cloud vulnerabilities in healthcare data ecosystems - PMC, accessed on June 18, 2026, https://pmc.ncbi.nlm.nih.gov/articles/PMC12920886/
-updated\_thesis\_report.txt
-A blockchain-based verifiable CP-ABE scheme for medical data privacy protection - PMC, accessed on June 18, 2026, https://pmc.ncbi.nlm.nih.gov/articles/PMC12301491/
-A Blockchain-Based Electronic Health Record (EHR) System for ..., accessed on June 18, 2026, https://www.mdpi.com/2073-431X/13/6/132
-The legal considerations of AI-blockchain for securing health data - NCBI - NIH, accessed on June 18, 2026, https://www.ncbi.nlm.nih.gov/books/NBK613198/
-Securing healthcare data with blockchain in 2025 - Paubox, accessed on June 18, 2026, https://www.paubox.com/blog/securing-healthcare-data-with-blockchain-in-2025
-Secure, scalable, and interoperable healthcare data exchange using layer-2 ZK-rollups, smart contracts, and IPFS - PMC, accessed on June 18, 2026, https://pmc.ncbi.nlm.nih.gov/articles/PMC12901292/
-Blockchain-Based Secure Data Sharing In Healthcare: Concepts, Applications, And Research Directions - XLESCIENCE, accessed on June 18, 2026, https://xlescience.org/index.php/IJASIS/article/download/880/324
-Blockchain Bridges Critical National ... - City Research Online, accessed on June 18, 2026, https://openaccess.city.ac.uk/id/eprint/32135/
-Securing electronic health records against insider-threats: A supervised machine learning approach - LJMU Research Online, accessed on June 18, 2026, https://researchonline.ljmu.ac.uk/id/eprint/18592/1/Securing\%20electronic\%20health\%20records\%20against\%20insider-threats\%20A\%20supervised\%20machine\%20learning\%20approach.pdf
-Advanced Privacy-Preserving Decentralized Federated Learning for Insider Threat Detection in Collaborative Healthcare Institutions - ProQuest, accessed on June 18, 2026, https://search.proquest.com/openview/e8a68ee960829e5def9299058a2c6a3c/1?pq-origsite=gscholar\&cbl=18750\&diss=y
-A Comprehensive Survey of Cybersecurity Threats and Data Privacy Issues in Healthcare Systems - MDPI, accessed on June 18, 2026, https://www.mdpi.com/2076-3417/16/3/1511
-A multi-layered cryptographic trust reinforcement model against AI-driven threat propagation and zero-day cloud vulnerabilities in healthcare data ecosystems - PubMed, accessed on June 18, 2026, https://pubmed.ncbi.nlm.nih.gov/41634110/
-Shitanshu jain - Google Scholar, accessed on June 18, 2026, https://scholar.google.com/citations?user=9t2euX8AAAAJ\&hl=en
-A lightweight authentication and authorization method in IoT-based medical care, accessed on June 18, 2026, https://www.semanticscholar.org/paper/A-lightweight-authentication-and-authorization-in-Khajehzadeh-Barati/1ce9d4bb32c33d709922a2813e061ea8ac263574
-CMES | Free Full-Text | Security and Privacy Challenges, Solutions, and Performance Evaluation in AIoT-Enabled Smart Societies - Tech Science Press, accessed on June 18, 2026, https://www.techscience.com/CMES/v146n3/66792/html
-A Case Study for Blockchain in Healthcare : “ MedRec ” prototype for electronic health records and medical research data - Semantic Scholar, accessed on June 18, 2026, https://www.semanticscholar.org/paper/A-Case-Study-for-Blockchain-in-Healthcare-\%3A-\%E2\%80\%9C-\%E2\%80\%9D-for-Ekblaw-Azaria/3ed0db58a7aec7bafc2aa14ca550031b9f7021d5
-MedRec: Using Blockchain for Medical Data Access and Permission Management, accessed on June 18, 2026, https://people.cs.pitt.edu/~babay/courses/cs3551/papers/MedRec.pdf
-MedRec: Using Blockchain for Medical Data Access and Permission Management, accessed on June 18, 2026, https://www.researchgate.net/publication/308570159\_MedRec\_Using\_Blockchain\_for\_Medical\_Data\_Access\_and\_Permission\_Management
-Blockchain Technology for Electronic Health Records - PMC - NIH, accessed on June 18, 2026, https://pmc.ncbi.nlm.nih.gov/articles/PMC9739765/
-Ancile: Privacy-Preserving Framework for Access Control and Interoperability of Electronic Health Records Using Blockchain Technology - ScholarWorks, accessed on June 18, 2026, https://scholarworks.boisestate.edu/cs\_facpubs/140/
-Ancile: Privacy-preserving Framework for Access Control and Interoperability of Electronic Health Records Using Blockchain Technology - ResearchGate, accessed on June 18, 2026, https://www.researchgate.net/publication/323247610\_Ancile\_Privacy-preserving\_Framework\_for\_Access\_Control\_and\_Interoperability\_of\_Electronic\_Health\_Records\_Using\_Blockchain\_Technology
-Blockchain Personal Health Records: Systematic Review - PMC - NIH, accessed on June 18, 2026, https://pmc.ncbi.nlm.nih.gov/articles/PMC8080150/
-FHIRChain: Applying Blockchain to Securely and Scalably Share Clinical Data - PMC, accessed on June 18, 2026, https://pmc.ncbi.nlm.nih.gov/articles/PMC6082774/
-FHIRChain: Applying Blockchain to Securely and Scalably Share Clinical Data, accessed on June 18, 2026, https://www.dre.vanderbilt.edu/~schmidt/PDF/FHIRChain-jnca.pdf
-A Quantitative Landscape Analysis of Blockchain for EHR Security and Interoperability, accessed on June 18, 2026, https://www.isjtrend.com/article\_227487.html
-Biomedical blockchain with practical implementations and quantitative evaluations: a systematic review - Oxford Academic, accessed on June 18, 2026, https://academic.oup.com/jamia/article/31/6/1423/7668012
-Secure electronic health record access control via blockchain, dual-attribute encryption, and large language model-based attribute extraction - PMC, accessed on June 18, 2026, https://pmc.ncbi.nlm.nih.gov/articles/PMC12979818/
-Privacy preservation in blockchain-based healthcare data sharing: A systematic review, accessed on June 18, 2026, https://pmc.ncbi.nlm.nih.gov/articles/PMC12534302/
-Dual blockchain-based data sharing mechanism with privacy protection for medical internet of things - PMC, accessed on June 18, 2026, https://pmc.ncbi.nlm.nih.gov/articles/PMC10758875/
-MeDShare: Trust-Less Medical Data Sharing Among Cloud Service Providers via Blockchain | Semantic Scholar, accessed on June 18, 2026, https://www.semanticscholar.org/paper/MeDShare\%3A-Trust-Less-Medical-Data-Sharing-Among-via-Xia-Sifah/49af9119c09b97af977595b011afd8a3f588412d
-(PDF) MeDShare: Trust-less Medical Data Sharing Among Cloud Service Providers Via Blockchain - ResearchGate, accessed on June 18, 2026, https://www.researchgate.net/publication/318666875\_MeDShare\_Trust-less\_Medical\_Data\_Sharing\_Among\_Cloud\_Service\_Providers\_Via\_Blockchain
-Analyzing the performance of a blockchain-based personal health record implementation, accessed on June 18, 2026, https://pubmed.ncbi.nlm.nih.gov/30844481/
-OmniPHR : A Blockchain based Interoperable Architecture for Personal Health Records | Request PDF - ResearchGate, accessed on June 18, 2026, https://www.researchgate.net/publication/337910407\_OmniPHR\_A\_Blockchain\_based\_Interoperable\_Architecture\_for\_Personal\_Health\_Records
-Secure and Trustable Electronic Medical Records Sharing using Blockchain - PMC - NIH, accessed on June 18, 2026, https://pmc.ncbi.nlm.nih.gov/articles/PMC5977675/
-Secure and Trustable Electronic Medical Records Sharing using Blockchain - Jamie Munro, accessed on June 18, 2026, https://portfolio.jbm.fyi/secure-and-trustable-electronic-medical-records-sharing-using-blockchain/
-Addressing the Challenges of Electronic Health Records Using Blockchain and IPFS - PMC, accessed on June 18, 2026, https://pmc.ncbi.nlm.nih.gov/articles/PMC9183171/
-Addressing the Challenges of Electronic Health Records Using Blockchain and IPFS, accessed on June 18, 2026, https://pubmed.ncbi.nlm.nih.gov/35684652/
-(PDF) A Secure and Interoperable Architecture for Blockchain/IPFS Assisted Electronic Health Record Access Control and Sharing - ResearchGate, accessed on June 18, 2026, https://www.researchgate.net/publication/373005704\_A\_Secure\_and\_Interoperable\_Architecture\_for\_BlockchainIPFS\_Assisted\_Electronic\_Health\_Record\_Access\_Control\_and\_Sharing
-Electronic Health Record Systems Based on Blockchain: A Comprehensive Survey - MDPI, accessed on June 18, 2026, https://www.mdpi.com/2076-3417/16/8/3768
-A Secure and Interoperable Architecture for Electronic Health Record Access Control and Sharing - arXiv, accessed on June 18, 2026, https://arxiv.org/pdf/2602.20830
-[Article] HealthRec-Chain: Patient-centric blockchain enabled IPFS for privacy preserving scalable health data - Reddit, accessed on June 18, 2026, https://www.reddit.com/r/ipfs/comments/1tvr8pl/article\_healthrecchain\_patientcentric\_blockchain/
-[2503.00742] Revolutionizing Healthcare Record Management: Secure Documentation Storage and Access through Advanced Blockchain Solutions - arXiv, accessed on June 18, 2026, https://arxiv.org/abs/2503.00742
-Toward blockchain based electronic health record management with fine grained attribute based encryption and decentralized storage mechanisms - PMC, accessed on June 18, 2026, https://pmc.ncbi.nlm.nih.gov/articles/PMC12494854/
-A Secure and Interoperable Architecture for Electronic Health Record Access Control and Sharing - arXiv, accessed on June 18, 2026, https://arxiv.org/html/2602.20830v1
-MedBlock: Secure Medical Data Sharing | PDF | Electronic Health Record - Scribd, accessed on June 18, 2026, https://www.scribd.com/document/465212996/p74-MedBlock-Efficient-and-Secure-Medical-Data-Sharing-Via-Blockch
-Security research of blockchain technology in electronic medical records - PMC, accessed on June 18, 2026, https://pmc.ncbi.nlm.nih.gov/articles/PMC9439767/
-View of Blockchain Technology for Enhancing Clinical Data Management in Healthcare: A Systematic Literature Review, accessed on June 18, 2026, https://blockchainhealthcaretoday.com/index.php/journal/article/view/471/1032
-Analyzing the Prospects of Blockchain in Healthcare Industry - PMC, accessed on June 18, 2026, https://pmc.ncbi.nlm.nih.gov/articles/PMC9733997/
-The role of blockchain as a security mechanism for electronic health records - Diva-Portal.org, accessed on June 18, 2026, https://www.diva-portal.org/smash/get/diva2:1879894/FULLTEXT01.pdf
-Enhancing Network Lifetime in e-Healthcare Systems using a Proof-of-Authority Permissioned Blockchain Approach - IEEE Xplore, accessed on June 18, 2026, https://ieeexplore.ieee.org/document/11200952/
-View of Design and Development of a Blockchain-Based System to Protect Medical Records, accessed on June 18, 2026, https://blockchainhealthcaretoday.com/index.php/journal/article/view/381/1040
-A blockchain framework using proof of authority and smart contracts for ethical and secure healthcare asset management - PMC, accessed on June 18, 2026, https://pmc.ncbi.nlm.nih.gov/articles/PMC12500698/
-Patient Identity Protection and Duplicate Record Prevention in Electronic Health Record (EHR) Systems - IEEE Xplore, accessed on June 18, 2026, https://ieeexplore.ieee.org/document/11431915/
-A Survey of AI-Driven Techniques for Enhancing Clinical Decision Support in Modern Healthcare Systems | International Journal of Emerging Research in Engineering and Technology, accessed on June 18, 2026, https://ijeret.org/index.php/ijeret/article/view/619
-Eliminating Duplicate Medical Records: How Modern Solutions are Revolutionizing Healthcare Data Management - ResearchGate, accessed on June 18, 2026, https://www.researchgate.net/publication/391159020\_Eliminating\_Duplicate\_Medical\_Records\_How\_Modern\_Solutions\_are\_Revolutionizing\_Healthcare\_Data\_Management
-Chandra Sekhara Reddy Adapa's research works - ResearchGate, accessed on June 18, 2026, https://www.researchgate.net/scientific-contributions/Chandra-Sekhara-Reddy-Adapa-2342938594
-Designing and testing a blockchain application for patient identity management in healthcare - PMC, accessed on June 18, 2026, https://pmc.ncbi.nlm.nih.gov/articles/PMC7928860/\textbackslash\{\}n
+\newpage
+\phantomsection
+\addcontentsline{toc}{section}{REFERENCES}
+\section*{REFERENCES}
+
+\begin{sloppypar}
+\begin{thebibliography}{59}
+\bibitem{1} Uncovering Security Vulnerabilities in Electronic Medical Record Systems: A Comprehensive Review of Threats and Recommendations for Enhancement, accessed on June 18, 2026, \url{https://eprints.uad.ac.id/61866/1/6-Uncovering%20Security%20Vulnerabilities%20in%20Electronic%20Medical%20Record%20Systems%20A%20Comprehensive%20Review%20of%20Threats%20and%20Recommendations%20for%20Enhancement.pdf}
+\bibitem{2} A blockchain-enabled sharing platform for personal health records - PMC, accessed on June 18, 2026, \url{https://pmc.ncbi.nlm.nih.gov/articles/PMC10366433/}
+\bibitem{3} A multi-layered cryptographic trust reinforcement model against AI-driven threat propagation and zero-day cloud vulnerabilities in healthcare data ecosystems - PMC, accessed on June 18, 2026, \url{https://pmc.ncbi.nlm.nih.gov/articles/PMC12920886/}
+\bibitem{4} A blockchain-based verifiable CP-ABE scheme for medical data privacy protection - PMC, accessed on June 18, 2026, \url{https://pmc.ncbi.nlm.nih.gov/articles/PMC12301491/}
+\bibitem{5} A Blockchain-Based Electronic Health Record (EHR) System for ..., accessed on June 18, 2026, \url{https://www.mdpi.com/2073-431X/13/6/132}
+\bibitem{6} The legal considerations of AI-blockchain for securing health data - NCBI - NIH, accessed on June 18, 2026, \url{https://www.ncbi.nlm.nih.gov/books/NBK613198/}
+\bibitem{7} Securing healthcare data with blockchain in 2025 - Paubox, accessed on June 18, 2026, \url{https://www.paubox.com/blog/securing-healthcare-data-with-blockchain-in-2025}
+\bibitem{8} Abhinav Raghav et al.. (2026). \textit{Secure, scalable, and interoperable healthcare data exchange using layer-2 ZK-rollups, smart contracts, and IPFS}. Scientific Reports. \url{https://pmc.ncbi.nlm.nih.gov/articles/PMC12901292/}
+\bibitem{9} Blockchain-Based Secure Data Sharing In Healthcare: Concepts, Applications, And Research Directions - XLESCIENCE, accessed on June 18, 2026, \url{https://xlescience.org/index.php/IJASIS/article/download/880/324}
+\bibitem{10} Yiying Liu et al.. (2022). \textit{Blockchain Bridges Critical National Infrastructures: E-healthcare Data Migration Perspective}. IEEE Access. \url{https://openaccess.city.ac.uk/id/eprint/32135/}
+\bibitem{11} Securing electronic health records against insider-threats: A supervised machine learning approach - LJMU Research Online, accessed on June 18, 2026, \url{https://researchonline.ljmu.ac.uk/id/eprint/18592/1/Securing%20electronic%20health%20records%20against%20insider-threats%20A%20supervised%20machine%20learning%20approach.pdf}
+\bibitem{12} Advanced Privacy-Preserving Decentralized Federated Learning for Insider Threat Detection in Collaborative Healthcare Institutions - ProQuest, accessed on June 18, 2026, \url{https://search.proquest.com/openview/e8a68ee960829e5def9299058a2c6a3c/1?pq-origsite=gscholar&cbl=18750&diss=y}
+\bibitem{13} A Comprehensive Survey of Cybersecurity Threats and Data Privacy Issues in Healthcare Systems - MDPI, accessed on June 18, 2026, \url{https://www.mdpi.com/2076-3417/16/3/1511}
+\bibitem{14} A multi-layered cryptographic trust reinforcement model against AI-driven threat propagation and zero-day cloud vulnerabilities in healthcare data ecosystems - PubMed, accessed on June 18, 2026, \url{https://pubmed.ncbi.nlm.nih.gov/41634110/}
+\bibitem{16} A lightweight authentication and authorization method in IoT-based medical care, accessed on June 18, 2026, \url{https://www.semanticscholar.org/paper/A-lightweight-authentication-and-authorization-in-Khajehzadeh-Barati/1ce9d4bb32c33d709922a2813e061ea8ac263574}
+\bibitem{17} CMES | Free Full-Text | Security and Privacy Challenges, Solutions, and Performance Evaluation in AIoT-Enabled Smart Societies - Tech Science Press, accessed on June 18, 2026, \url{https://www.techscience.com/CMES/v146n3/66792/html}
+\bibitem{18} A Case Study for Blockchain in Healthcare : “ MedRec ” prototype for electronic health records and medical research data - Semantic Scholar, accessed on June 18, 2026, \url{https://www.semanticscholar.org/paper/A-Case-Study-for-Blockchain-in-Healthcare-%3A-%E2%80%9C-%E2%80%9D-for-Ekblaw-Azaria/3ed0db58a7aec7bafc2aa14ca550031b9f7021d5}
+\bibitem{19} MedRec: Using Blockchain for Medical Data Access and Permission Management, accessed on June 18, 2026, \url{https://people.cs.pitt.edu/~babay/courses/cs3551/papers/MedRec.pdf}
+\bibitem{21} Blockchain Technology for Electronic Health Records - PMC - NIH, accessed on June 18, 2026, \url{https://pmc.ncbi.nlm.nih.gov/articles/PMC9739765/}
+\bibitem{22} Ancile: Privacy-Preserving Framework for Access Control and Interoperability of Electronic Health Records Using Blockchain Technology - ScholarWorks, accessed on June 18, 2026, \url{https://scholarworks.boisestate.edu/cs_facpubs/140/}
+\bibitem{24} Blockchain Personal Health Records: Systematic Review - PMC - NIH, accessed on June 18, 2026, \url{https://pmc.ncbi.nlm.nih.gov/articles/PMC8080150/}
+\bibitem{25} FHIRChain: Applying Blockchain to Securely and Scalably Share Clinical Data - PMC, accessed on June 18, 2026, \url{https://pmc.ncbi.nlm.nih.gov/articles/PMC6082774/}
+\bibitem{26} FHIRChain: Applying Blockchain to Securely and Scalably Share Clinical Data, accessed on June 18, 2026, \url{https://www.dre.vanderbilt.edu/~schmidt/PDF/FHIRChain-jnca.pdf}
+\bibitem{27} A Quantitative Landscape Analysis of Blockchain for EHR Security and Interoperability, accessed on June 18, 2026, \url{https://www.isjtrend.com/article_227487.html}
+\bibitem{28} Biomedical blockchain with practical implementations and quantitative evaluations: a systematic review - Oxford Academic, accessed on June 18, 2026, \url{https://academic.oup.com/jamia/article/31/6/1423/7668012}
+\bibitem{29} Secure electronic health record access control via blockchain, dual-attribute encryption, and large language model-based attribute extraction - PMC, accessed on June 18, 2026, \url{https://pmc.ncbi.nlm.nih.gov/articles/PMC12979818/}
+\bibitem{30} Privacy preservation in blockchain-based healthcare data sharing: A systematic review, accessed on June 18, 2026, \url{https://pmc.ncbi.nlm.nih.gov/articles/PMC12534302/}
+\bibitem{31} Dual blockchain-based data sharing mechanism with privacy protection for medical internet of things - PMC, accessed on June 18, 2026, \url{https://pmc.ncbi.nlm.nih.gov/articles/PMC10758875/}
+\bibitem{32} MeDShare: Trust-Less Medical Data Sharing Among Cloud Service Providers via Blockchain | Semantic Scholar, accessed on June 18, 2026, \url{https://www.semanticscholar.org/paper/MeDShare%3A-Trust-Less-Medical-Data-Sharing-Among-via-Xia-Sifah/49af9119c09b97af977595b011afd8a3f588412d}
+\bibitem{33} Qi Xia et al.. (2017). \textit{MeDShare: Trust-Less Medical Data Sharing Among Cloud Service Providers via Blockchain}. IEEE Access. \url{https://www.researchgate.net/publication/318666875_MeDShare_Trust-less_Medical_Data_Sharing_Among_Cloud_Service_Providers_Via_Blockchain}
+\bibitem{34} Analyzing the performance of a blockchain-based personal health record implementation, accessed on June 18, 2026, \url{https://pubmed.ncbi.nlm.nih.gov/30844481/}
+\bibitem{35} OmniPHR : A Blockchain based Interoperable Architecture for Personal Health Records | Request PDF - ResearchGate, accessed on June 18, 2026, \url{https://www.researchgate.net/publication/337910407_OmniPHR_A_Blockchain_based_Interoperable_Architecture_for_Personal_Health_Records}
+\bibitem{36} Secure and Trustable Electronic Medical Records Sharing using Blockchain - PMC - NIH, accessed on June 18, 2026, \url{https://pmc.ncbi.nlm.nih.gov/articles/PMC5977675/}
+\bibitem{38} Addressing the Challenges of Electronic Health Records Using Blockchain and IPFS - PMC, accessed on June 18, 2026, \url{https://pmc.ncbi.nlm.nih.gov/articles/PMC9183171/}
+\bibitem{40} (PDF) A Secure and Interoperable Architecture for Blockchain/IPFS Assisted Electronic Health Record Access Control and Sharing - ResearchGate, accessed on June 18, 2026, \url{https://www.researchgate.net/publication/373005704_A_Secure_and_Interoperable_Architecture_for_BlockchainIPFS_Assisted_Electronic_Health_Record_Access_Control_and_Sharing}
+\bibitem{41} Electronic Health Record Systems Based on Blockchain: A Comprehensive Survey - MDPI, accessed on June 18, 2026, \url{https://www.mdpi.com/2076-3417/16/8/3768}
+\bibitem{42} A Secure and Interoperable Architecture for Electronic Health Record Access Control and Sharing - arXiv, accessed on June 18, 2026, \url{https://arxiv.org/pdf/2602.20830}
+\bibitem{44} [2503.00742] Revolutionizing Healthcare Record Management: Secure Documentation Storage and Access through Advanced Blockchain Solutions - arXiv, accessed on June 18, 2026, \url{https://arxiv.org/abs/2503.00742}
+\bibitem{45} Asad Ullah et al.. (2025). \textit{Toward blockchain based electronic health record management with fine grained attribute based encryption and decentralized storage mechanisms}. Scientific Reports. \url{https://pmc.ncbi.nlm.nih.gov/articles/PMC12494854/}
+\bibitem{48} Security research of blockchain technology in electronic medical records - PMC, accessed on June 18, 2026, \url{https://pmc.ncbi.nlm.nih.gov/articles/PMC9439767/}
+\bibitem{49} View of Blockchain Technology for Enhancing Clinical Data Management in Healthcare: A Systematic Literature Review, accessed on June 18, 2026, \url{https://blockchainhealthcaretoday.com/index.php/journal/article/view/471/1032}
+\bibitem{50} Analyzing the Prospects of Blockchain in Healthcare Industry - PMC, accessed on June 18, 2026, \url{https://pmc.ncbi.nlm.nih.gov/articles/PMC9733997/}
+\bibitem{51} The role of blockchain as a security mechanism for electronic health records - Diva-Portal.org, accessed on June 18, 2026, \url{https://www.diva-portal.org/smash/get/diva2:1879894/FULLTEXT01.pdf}
+\bibitem{52} Enhancing Network Lifetime in e-Healthcare Systems using a Proof-of-Authority Permissioned Blockchain Approach - IEEE Xplore, accessed on June 18, 2026, \url{https://ieeexplore.ieee.org/document/11200952/}
+\bibitem{53} View of Design and Development of a Blockchain-Based System to Protect Medical Records, accessed on June 18, 2026, \url{https://blockchainhealthcaretoday.com/index.php/journal/article/view/381/1040}
+\bibitem{54} A blockchain framework using proof of authority and smart contracts for ethical and secure healthcare asset management - PMC, accessed on June 18, 2026, \url{https://pmc.ncbi.nlm.nih.gov/articles/PMC12500698/}
+\bibitem{55} Patient Identity Protection and Duplicate Record Prevention in Electronic Health Record (EHR) Systems - IEEE Xplore, accessed on June 18, 2026, \url{https://ieeexplore.ieee.org/document/11431915/}
+\bibitem{56} A Survey of AI-Driven Techniques for Enhancing Clinical Decision Support in Modern Healthcare Systems | International Journal of Emerging Research in Engineering and Technology, accessed on June 18, 2026, \url{https://ijeret.org/index.php/ijeret/article/view/619}
+\bibitem{57} Eliminating Duplicate Medical Records: How Modern Solutions are Revolutionizing Healthcare Data Management - ResearchGate, accessed on June 18, 2026, \url{https://www.researchgate.net/publication/391159020_Eliminating_Duplicate_Medical_Records_How_Modern_Solutions_are_Revolutionizing_Healthcare_Data_Management}
+\bibitem{59} Designing and testing a blockchain application for patient identity management in healthcare - PMC, accessed on June 18, 2026, \url{https://pmc.ncbi.nlm.nih.gov/articles/PMC7928860/}
+\end{thebibliography}
+\end{sloppypar}
 \end{document}

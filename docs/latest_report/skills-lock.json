@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "skills": {
+    "academic-editor": {
+      "source": "Swpn0neel/academic-skills",
+      "sourceType": "github",
+      "skillPath": "skills/academic-editor/SKILL.md",
+      "computedHash": "ef55784dfa08e84bb98364d7caf9cc25159a9aaa68c260aac3ce2b4e77ce6679"
+    },
+    "conf-finder": {
+      "source": "Swpn0neel/academic-skills",
+      "sourceType": "github",
+      "skillPath": "skills/conf-finder/SKILL.md",
+      "computedHash": "cd460de4ab02318e0e666e8a3c2f876a2a99a40a1ab2ab87814fe15d1a6908ff"
+    },
+    "ref-builder": {
+      "source": "Swpn0neel/academic-skills",
+      "sourceType": "github",
+      "skillPath": "skills/ref-builder/SKILL.md",
+      "computedHash": "981a69009988eeb9c8c102553263d2267050007b4b536ad071f6b299b24fa125"
+    },
+    "research-scout": {
+      "source": "Swpn0neel/academic-skills",
+      "sourceType": "github",
+      "skillPath": "skills/research-scout/SKILL.md",
+      "computedHash": "b39796f1955e0565d4f4c7488ec27c762ffd114df90cd08b8ffcb07eb2bc20bb"
+    }
+  }
+}
